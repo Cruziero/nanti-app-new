@@ -1,0 +1,18 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".output",
+  "framework": null,
+  "installCommand": "npm install",
+  "env": {
+    "SUPABASE_URL": "@supabase-url",
+    "SUPABASE_PUBLISHABLE_KEY": "@supabase-publishable-key",
+    "SUPABASE_SERVICE_ROLE_KEY": "@supabase-service-role-key",
+    "GEMINI_API_KEY": "@gemini-api-key"
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
