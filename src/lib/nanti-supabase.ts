@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
 const SUPABASE_URL = process.env["SUPABASE_URL"];
@@ -9,8 +10,6 @@ function getAdminClient() {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error("Supabase credentials not configured");
   }
-  // Dynamic import to avoid client bundle
-  const { createClient } = require("@supabase/supabase-js");
   return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 }
 
