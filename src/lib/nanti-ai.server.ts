@@ -1,6 +1,6 @@
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
-const TEXT_MODEL = "gemini-2.0-flash";
-const VISION_MODEL = "gemini-2.0-flash";
+const TEXT_MODEL = "gemini-2.5-flash";
+const VISION_MODEL = "gemini-2.5-flash";
 
 type Content = string | Array<Record<string, unknown>>;
 
@@ -46,9 +46,10 @@ async function chat(
   const requestBody: Record<string, unknown> = {
     contents,
     ...(systemInstruction ? { systemInstruction } : {}),
-    ...(opts.json
-      ? { generationConfig: { responseMimeType: "application/json" } }
-      : {}),
+    generationConfig: {
+      ...(opts.json ? { responseMimeType: "application/json" } : {}),
+      thinkingConfig: { thinkingBudget: 0 },
+    },
   };
 
   const res = await fetch(
