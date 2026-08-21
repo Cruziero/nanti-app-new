@@ -1,6 +1,6 @@
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
-const TEXT_MODEL = "gemini-2.5-flash";
-const VISION_MODEL = "gemini-2.5-flash";
+const TEXT_MODEL = "gemini-3.5-flash";
+const VISION_MODEL = "gemini-3.5-flash";
 
 type Content = string | Array<Record<string, unknown>>;
 
