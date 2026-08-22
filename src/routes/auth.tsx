@@ -61,7 +61,8 @@ function AuthLayout() {
             Jangan pernah kehilangan komitmen di WhatsApp lagi.
           </h1>
           <p className="mt-4 text-lg text-gray-400">
-            Ubah percakapan WhatsApp Anda menjadi tugas, deadline, dan follow-up yang terorganisir.
+            Forward atau paste percakapan WhatsApp Anda, dan AI akan mengekstrak tugas, deadline,
+            dan follow-up secara otomatis.
           </p>
         </div>
       </div>

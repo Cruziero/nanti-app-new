@@ -10,7 +10,7 @@ export const Route = createFileRoute("/how-it-works")({
       {
         name: "description",
         content:
-          "Paste a WhatsApp conversation. NANTI reads it, finds commitments, and tracks them for you.",
+          "Paste or forward a WhatsApp conversation. NANTI AI finds commitments and tracks them for you.",
       },
     ],
   }),
@@ -24,8 +24,8 @@ function HowItWorksPage() {
         <p className="eyebrow text-primary">How it works</p>
         <h1 className="display-lg mt-5 text-foreground">You don't create tasks. You just talk.</h1>
         <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-muted-foreground">
-          NANTI reads your WhatsApp conversations and extracts commitments automatically. No manual
-          entry. No forgotten promises.
+          Forward or paste your WhatsApp conversations. AI extracts commitments, deadlines, and
+          follow-ups — no manual entry needed.
         </p>
 
         <div className="mt-16 space-y-8">

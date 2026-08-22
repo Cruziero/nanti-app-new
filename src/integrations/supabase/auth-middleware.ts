@@ -41,9 +41,13 @@ export const requireSupabaseAuth = createMiddleware({ type: "function" }).server
         ...(!SUPABASE_URL ? ["SUPABASE_URL"] : []),
         ...(!SUPABASE_PUBLISHABLE_KEY ? ["SUPABASE_PUBLISHABLE_KEY"] : []),
       ];
-      const message = `Missing Supabase environment variable(s): ${missing.join(", ")}. Connect Supabase in Lovable Cloud.`;
-      console.error(`[Supabase] ${message}`);
-      throw new Error(message);
+      console.error(
+        `[Supabase] Missing environment variable(s): ${missing.join(", ")}. ` +
+          `Add these to your Vercel project settings (Settings → Environment Variables).`,
+      );
+      throw new Error(
+        "Supabase is not configured. Please set the required environment variables in your hosting dashboard.",
+      );
     }
 
     const request = getRequest();

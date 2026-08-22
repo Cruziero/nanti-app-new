@@ -38,12 +38,17 @@ function createSupabaseClient() {
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [
-      ...(!SUPABASE_URL ? ["SUPABASE_URL"] : []),
-      ...(!SUPABASE_PUBLISHABLE_KEY ? ["SUPABASE_PUBLISHABLE_KEY"] : []),
+      ...(!SUPABASE_URL ? ["VITE_SUPABASE_URL / SUPABASE_URL"] : []),
+      ...(!SUPABASE_PUBLISHABLE_KEY
+        ? ["VITE_SUPABASE_PUBLISHABLE_KEY / SUPABASE_PUBLISHABLE_KEY"]
+        : []),
     ];
-    const message = `Missing Supabase environment variable(s): ${missing.join(", ")}. Connect Supabase in Lovable Cloud.`;
-    console.error(`[Supabase] ${message}`);
-    throw new Error(message);
+    console.error(
+      `[Supabase] Missing environment variable(s): ${missing.join(", ")}. ` +
+        `Add these to your Vercel project settings (Settings → Environment Variables).`,
+    );
+    // Return null instead of throwing — callers check with isSupabaseConfigured()
+    return null;
   }
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
@@ -60,11 +65,25 @@ function createSupabaseClient() {
 
 let _supabase: ReturnType<typeof createSupabaseClient> | undefined;
 
+/**
+ * Returns true when Supabase env vars are configured.
+ * Use this in UI to show a setup message instead of crashing.
+ */
+export function isSupabaseConfigured(): boolean {
+  if (!_supabase) _supabase = createSupabaseClient();
+  return _supabase !== null;
+}
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
-export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient>, {
+export const supabase = new Proxy({} as NonNullable<ReturnType<typeof createSupabaseClient>>, {
   get(_, prop, receiver) {
     if (!_supabase) _supabase = createSupabaseClient();
+    if (_supabase === null) {
+      throw new Error(
+        "[Supabase] Environment variables are not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in your hosting dashboard.",
+      );
+    }
     return Reflect.get(_supabase, prop, receiver);
   },
 });

@@ -8,7 +8,10 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
         try {
           const authHeader = request.headers.get("Authorization");
           if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-            return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
+            return new Response(JSON.stringify({ error: "Unauthorized" }), {
+              status: 401,
+              headers: { "Content-Type": "application/json" },
+            });
           }
 
           const supabase = createClient(
@@ -25,7 +28,11 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
             .from("user_preferences")
             .select("user_id, quiet_hours_start, quiet_hours_end, reminder_channels");
 
-          if (!users) return new Response(JSON.stringify({ processed: 0 }), { status: 200, headers: { "Content-Type": "application/json" } });
+          if (!users)
+            return new Response(JSON.stringify({ processed: 0 }), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            });
 
           let processed = 0;
 
@@ -105,10 +112,16 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
             }
           }
 
-          return new Response(JSON.stringify({ processed, timestamp: now.toISOString() }), { status: 200, headers: { "Content-Type": "application/json" } });
+          return new Response(JSON.stringify({ processed, timestamp: now.toISOString() }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
         } catch (error) {
           console.error("Reminder check error:", error);
-          return new Response(JSON.stringify({ error: "Internal error" }), { status: 500, headers: { "Content-Type": "application/json" } });
+          return new Response(JSON.stringify({ error: "Internal error" }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          });
         }
       },
     },

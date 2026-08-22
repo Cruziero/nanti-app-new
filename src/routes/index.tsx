@@ -19,13 +19,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Never lose a commitment in WhatsApp again. NANTI turns conversations into tasks, commitments, reminders and follow-ups — automatically.",
+          "Never lose a commitment in WhatsApp again. Forward or paste your conversations into NANTI, and AI turns them into tracked commitments, reminders and follow-ups.",
       },
       { property: "og:title", content: "NANTI · Your AI memory for WhatsApp" },
       {
         property: "og:description",
         content:
-          "Never lose a commitment in WhatsApp again. NANTI turns conversations into tasks, commitments, reminders and follow-ups.",
+          "Never lose a commitment in WhatsApp again. Forward or paste your conversations into NANTI, and AI turns them into tracked commitments, reminders and follow-ups.",
       },
     ],
   }),
@@ -195,8 +195,8 @@ function HowItWorks() {
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="display-lg text-foreground">You don't create tasks. You just talk.</h2>
           <p className="mt-4 text-[16px] leading-relaxed text-muted-foreground">
-            NANTI reads your WhatsApp conversations and extracts commitments automatically. No
-            manual entry. No forgotten promises.
+            Forward or paste your WhatsApp conversations into NANTI. AI extracts commitments,
+            deadlines, and follow-ups — no manual entry needed.
           </p>
         </div>
 

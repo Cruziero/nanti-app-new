@@ -142,7 +142,8 @@ function Welcome() {
             </div>
             <h1 className="text-[30px] font-bold leading-tight">Halo. Saya NANTI.</h1>
             <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-              Saya akan membantu Anda mengingat hal-hal penting dari percakapan WhatsApp.
+              Saya akan membantu Anda mengingat hal-hal penting dari percakapan WhatsApp. Cukup
+              forward atau paste pesan, dan saya akan mengekstrak komitmen untuk Anda.
             </p>
             <Button className="mt-8 w-full" size="lg" onClick={next}>
               Mulai <ArrowRight className="ml-2 size-4" />

@@ -8,7 +8,10 @@ export const Route = createFileRoute("/api/cron/sync-calendar")({
         try {
           const authHeader = request.headers.get("Authorization");
           if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-            return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
+            return new Response(JSON.stringify({ error: "Unauthorized" }), {
+              status: 401,
+              headers: { "Content-Type": "application/json" },
+            });
           }
 
           const supabase = createClient(
@@ -22,7 +25,11 @@ export const Route = createFileRoute("/api/cron/sync-calendar")({
             .eq("provider", "google")
             .eq("sync_enabled", true);
 
-          if (!integrations) return new Response(JSON.stringify({ synced: 0 }), { status: 200, headers: { "Content-Type": "application/json" } });
+          if (!integrations)
+            return new Response(JSON.stringify({ synced: 0 }), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            });
 
           let synced = 0;
 
@@ -100,10 +107,16 @@ export const Route = createFileRoute("/api/cron/sync-calendar")({
             }
           }
 
-          return new Response(JSON.stringify({ synced, timestamp: new Date().toISOString() }), { status: 200, headers: { "Content-Type": "application/json" } });
+          return new Response(JSON.stringify({ synced, timestamp: new Date().toISOString() }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
         } catch (error) {
           console.error("Calendar sync cron error:", error);
-          return new Response(JSON.stringify({ error: "Internal error" }), { status: 500, headers: { "Content-Type": "application/json" } });
+          return new Response(JSON.stringify({ error: "Internal error" }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          });
         }
       },
     },

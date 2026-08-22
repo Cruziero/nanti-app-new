@@ -60,7 +60,10 @@ export const Route = createFileRoute("/api/invoices/pdf")({
             },
           });
         } catch (error) {
-          return new Response(JSON.stringify({ error: "Failed to generate invoice" }), { status: 500, headers: { "Content-Type": "application/json" } });
+          return new Response(JSON.stringify({ error: "Failed to generate invoice" }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          });
         }
       },
     },

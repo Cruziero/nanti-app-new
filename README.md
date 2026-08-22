@@ -1100,3 +1100,52 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Environment Variables
+
+Set these in your hosting dashboard (Vercel → Settings → Environment Variables).
+
+### Required (Supabase)
+
+| Variable | Where | Description |
+|---|---|---|
+| `VITE_SUPABASE_URL` | Client | Supabase project URL (e.g. `https://xxx.supabase.co`) |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Client | Supabase publishable/anon key |
+| `SUPABASE_URL` | Server | Same as above, for server-side code |
+| `SUPABASE_PUBLISHABLE_KEY` | Server | Same as above, for server-side code |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server | Supabase service role key (bypasses RLS — server-only) |
+
+### AI Extraction
+
+| Variable | Where | Description |
+|---|---|---|
+| `GEMINI_API_KEY` | Server | Google Gemini API key for AI conversation extraction |
+
+### Push Notifications (optional)
+
+| Variable | Where | Description |
+|---|---|---|
+| `VITE_VAPID_PUBLIC_KEY` | Client | VAPID public key for web push |
+| `VAPID_PUBLIC_KEY` | Server | Same as above, server-side |
+| `VAPID_PRIVATE_KEY` | Server | VAPID private key (server-only) |
+
+### WhatsApp Business API (optional)
+
+| Variable | Where | Description |
+|---|---|---|
+| `WHATSAPP_ACCESS_TOKEN` | Server | WhatsApp Business API access token |
+| `WHATSAPP_PHONE_NUMBER_ID` | Server | WhatsApp Business phone number ID |
+| `WHATSAPP_VERIFY_TOKEN` | Server | Webhook verification token |
+
+### Google Calendar (optional)
+
+| Variable | Where | Description |
+|---|---|---|
+| `GOOGLE_CLIENT_ID` | Server | Google OAuth 2.0 client ID |
+| `GOOGLE_CLIENT_SECRET` | Server | Google OAuth 2.0 client secret |
+
+### Cron / Security
+
+| Variable | Where | Description |
+|---|---|---|
+| `CRON_SECRET` | Server | Secret token for Vercel cron job authentication |

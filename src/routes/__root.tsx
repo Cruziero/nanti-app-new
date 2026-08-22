@@ -7,10 +7,11 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, type ReactNode, useState } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { isSupabaseConfigured } from "@/integrations/supabase/client";
 import { NantiProvider } from "@/lib/nanti-store";
 import { ItemDetailProvider } from "@/components/nanti/item-detail";
 import { Toaster } from "@/components/ui/sonner";
@@ -84,14 +85,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "NANTI turns your WhatsApp conversations into tracked commitments, reminders and follow-ups.",
+          "Forward or paste your WhatsApp conversations into NANTI. AI turns them into tracked commitments, reminders and follow-ups.",
       },
       { name: "author", content: "NANTI" },
       { property: "og:title", content: "NANTI · AI memory for WhatsApp" },
       {
         property: "og:description",
         content:
-          "NANTI turns your WhatsApp conversations into tracked commitments, reminders and follow-ups.",
+          "Forward or paste your WhatsApp conversations into NANTI. AI turns them into tracked commitments, reminders and follow-ups.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -100,7 +101,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "twitter:description",
         content:
-          "NANTI turns your WhatsApp conversations into tracked commitments, reminders and follow-ups.",
+          "Forward or paste your WhatsApp conversations into NANTI. AI turns them into tracked commitments, reminders and follow-ups.",
       },
       {
         property: "og:image",
@@ -149,6 +150,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const [supabaseOk] = useState(() => isSupabaseConfigured());
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
@@ -158,6 +160,31 @@ function RootComponent() {
         .catch((err) => console.error("SW registration failed:", err));
     }
   }, []);
+
+  if (!supabaseOk) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="max-w-md text-center">
+          <h1 className="text-2xl font-bold text-foreground">NANTI</h1>
+          <p className="mt-4 text-sm text-muted-foreground">
+            Supabase is not configured. Please set the following environment variables in your
+            hosting dashboard:
+          </p>
+          <ul className="mt-3 space-y-1 text-left text-xs text-muted-foreground">
+            <li className="rounded bg-surface px-3 py-1.5 font-mono">VITE_SUPABASE_URL</li>
+            <li className="rounded bg-surface px-3 py-1.5 font-mono">
+              VITE_SUPABASE_PUBLISHABLE_KEY
+            </li>
+          </ul>
+          <p className="mt-4 text-xs text-muted-foreground">
+            For server-side features also set: <code>SUPABASE_URL</code>,{" "}
+            <code>SUPABASE_SERVICE_ROLE_KEY</code>, <code>SUPABASE_PUBLISHABLE_KEY</code>,
+            <code>GEMINI_API_KEY</code>, <code>CRON_SECRET</code>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>

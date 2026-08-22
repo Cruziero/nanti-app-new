@@ -10,12 +10,18 @@ export const Route = createFileRoute("/api/push/subscribe")({
           const { endpoint, keys } = body;
 
           if (!endpoint) {
-            return new Response(JSON.stringify({ error: "endpoint is required" }), { status: 400, headers: { "Content-Type": "application/json" } });
+            return new Response(JSON.stringify({ error: "endpoint is required" }), {
+              status: 400,
+              headers: { "Content-Type": "application/json" },
+            });
           }
 
           const authHeader = request.headers.get("Authorization");
           if (!authHeader?.startsWith("Bearer ")) {
-            return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
+            return new Response(JSON.stringify({ error: "Unauthorized" }), {
+              status: 401,
+              headers: { "Content-Type": "application/json" },
+            });
           }
 
           const token = authHeader.replace("Bearer ", "");
@@ -29,7 +35,10 @@ export const Route = createFileRoute("/api/push/subscribe")({
           } = await supabase.auth.getUser(token);
 
           if (!user) {
-            return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
+            return new Response(JSON.stringify({ error: "Unauthorized" }), {
+              status: 401,
+              headers: { "Content-Type": "application/json" },
+            });
           }
 
           await supabase.from("push_subscriptions").upsert(
@@ -43,9 +52,15 @@ export const Route = createFileRoute("/api/push/subscribe")({
             { onConflict: "endpoint" },
           );
 
-          return new Response(JSON.stringify({ success: true }), { status: 200, headers: { "Content-Type": "application/json" } });
+          return new Response(JSON.stringify({ success: true }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
         } catch (error) {
-          return new Response(JSON.stringify({ error: "Failed to save subscription" }), { status: 500, headers: { "Content-Type": "application/json" } });
+          return new Response(JSON.stringify({ error: "Failed to save subscription" }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          });
         }
       },
     },

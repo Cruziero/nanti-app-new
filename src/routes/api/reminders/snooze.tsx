@@ -8,7 +8,10 @@ export const Route = createFileRoute("/api/reminders/snooze")({
           const { itemId, minutes } = await request.json();
 
           if (!itemId) {
-            return new Response(JSON.stringify({ error: "itemId is required" }), { status: 400, headers: { "Content-Type": "application/json" } });
+            return new Response(JSON.stringify({ error: "itemId is required" }), {
+              status: 400,
+              headers: { "Content-Type": "application/json" },
+            });
           }
 
           const { createClient } = await import("@supabase/supabase-js");
@@ -24,9 +27,15 @@ export const Route = createFileRoute("/api/reminders/snooze")({
             .update({ snooze_until: snoozeUntil })
             .eq("item_id", itemId);
 
-          return new Response(JSON.stringify({ success: true, snoozeUntil }), { status: 200, headers: { "Content-Type": "application/json" } });
+          return new Response(JSON.stringify({ success: true, snoozeUntil }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
         } catch (error) {
-          return new Response(JSON.stringify({ error: "Failed to snooze reminder" }), { status: 500, headers: { "Content-Type": "application/json" } });
+          return new Response(JSON.stringify({ error: "Failed to snooze reminder" }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          });
         }
       },
     },
