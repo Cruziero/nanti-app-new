@@ -14,7 +14,9 @@ function AuthLayout() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setUser(user);
       setLoading(false);
       if (user) {
@@ -23,7 +25,9 @@ function AuthLayout() {
     };
     getUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser(session.user);
         navigate({ to: "/app/today" });
@@ -66,7 +70,9 @@ function AuthLayout() {
       <div className="flex w-full items-center justify-center px-6 lg:w-1/2">
         <div className="w-full max-w-md">
           <div className="mb-8 lg:hidden">
-            <Link to="/" className="text-2xl font-bold text-foreground">NANTI</Link>
+            <Link to="/" className="text-2xl font-bold text-foreground">
+              NANTI
+            </Link>
           </div>
           <Outlet />
         </div>

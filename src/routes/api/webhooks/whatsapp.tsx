@@ -1,4 +1,4 @@
-import { createFileRoute, json } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/webhooks/whatsapp")({
   server: {
@@ -27,25 +27,39 @@ export const Route = createFileRoute("/api/webhooks/whatsapp")({
           const entry = body.entry?.[0];
           const changes = entry?.changes?.[0];
 
-          if (!changes || changes.field !== "messages") {
+          if (!changes) {
             return new Response("OK", { status: 200 });
           }
 
-          const messages = changes.value?.messages;
-          if (!messages || messages.length === 0) {
-            return new Response("OK", { status: 200 });
+          if (changes.field === "messages") {
+            const messages = changes.value?.messages;
+            if (messages && messages.length > 0) {
+              for (const message of messages) {
+                await handleWhatsAppMessage({
+                  from: message.from,
+                  type: message.type,
+                  text: message.text?.body,
+                  image: message.image,
+                  document: message.document,
+                  timestamp: message.timestamp,
+                  messageId: message.id,
+                });
+              }
+            }
           }
 
-          for (const message of messages) {
-            await handleWhatsAppMessage({
-              from: message.from,
-              type: message.type,
-              text: message.text?.body,
-              image: message.image,
-              document: message.document,
-              timestamp: message.timestamp,
-              messageId: message.id,
-            });
+          if (changes.field === "statuses") {
+            const statuses = changes.value?.statuses;
+            if (statuses && statuses.length > 0) {
+              for (const status of statuses) {
+                await handleWhatsAppStatus({
+                  messageId: status.id,
+                  status: status.status,
+                  timestamp: status.timestamp,
+                  recipientId: status.recipient_id,
+                });
+              }
+            }
           }
 
           return new Response("OK", { status: 200 });
@@ -144,5 +158,45 @@ async function handleWhatsAppMessage(message: WhatsAppMessage) {
       mime_type: document.mime_type,
       file_id: document.id,
     });
+  }
+}
+
+interface WhatsAppStatus {
+  messageId: string;
+  status: string;
+  timestamp: string;
+  recipientId: string;
+}
+
+async function handleWhatsAppStatus(statusUpdate: WhatsAppStatus) {
+  const { messageId, status, timestamp } = statusUpdate;
+
+  console.log(`[WhatsApp] Status update for ${messageId}: ${status}`);
+
+  const { createClient } = await import("@supabase/supabase-js");
+  const supabase = createClient(
+    process.env.VITE_SUPABASE_URL || "",
+    process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+  );
+
+  const statusMap: Record<string, string> = {
+    sent: "sent",
+    delivered: "delivered",
+    read: "read",
+    failed: "failed",
+  };
+
+  const mappedStatus = statusMap[status] || status;
+
+  await supabase
+    .from("whatsapp_messages")
+    .update({
+      status: mappedStatus,
+      updated_at: new Date(Number(timestamp) * 1000).toISOString(),
+    })
+    .eq("wa_message_id", messageId);
+
+  if (status === "failed") {
+    console.log(`[WhatsApp] Message ${messageId} failed to deliver`);
   }
 }

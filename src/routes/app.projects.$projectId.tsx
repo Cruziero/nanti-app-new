@@ -9,7 +9,10 @@ export const Route = createFileRoute("/app/projects/$projectId")({
   head: () => ({
     meta: [
       { title: "Project detail · NANTI" },
-      { name: "description", content: "All tasks, waiting items, people and conversation sources for this project." },
+      {
+        name: "description",
+        content: "All tasks, waiting items, people and conversation sources for this project.",
+      },
       { property: "og:title", content: "Project detail · NANTI" },
       { property: "og:description", content: "Complete work memory per project." },
     ],
@@ -33,7 +36,10 @@ function ProjectDetail() {
 
   return (
     <div>
-      <Link to="/app/projects" className="mb-4 inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground">
+      <Link
+        to="/app/projects"
+        className="mb-4 inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground"
+      >
         <ArrowLeft className="size-3.5" /> All projects
       </Link>
       <PageHeader title={project.name} subtitle={project.description} />
@@ -52,7 +58,11 @@ function ProjectDetail() {
       </div>
 
       <Section title="Tasks" count={tasks.length}>
-        {tasks.length ? tasks.map((i, n) => <ItemRow key={i.id} item={i} index={n} />) : <EmptyState title="No open tasks." />}
+        {tasks.length ? (
+          tasks.map((i, n) => <ItemRow key={i.id} item={i} index={n} />)
+        ) : (
+          <EmptyState title="No open tasks." />
+        )}
       </Section>
 
       <Section title="Waiting" count={waiting.length}>
@@ -80,7 +90,10 @@ function ProjectDetail() {
       <Section title="Conversation sources">
         <div className="flex flex-wrap gap-2 px-3">
           {project.sources.map((s) => (
-            <span key={s} className="rounded-full bg-secondary px-3 py-1 text-[12.5px] text-secondary-foreground">
+            <span
+              key={s}
+              className="rounded-full bg-secondary px-3 py-1 text-[12.5px] text-secondary-foreground"
+            >
               {s}
             </span>
           ))}

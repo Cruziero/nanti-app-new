@@ -28,7 +28,14 @@ const plans = [
     price: "Rp 149K",
     period: "/month",
     desc: "For professionals who live in WhatsApp.",
-    features: ["Unlimited tracked items", "AI conversation import", "Daily briefing & end-of-day sweep", "Ask NANTI AI assistant", "People & project memory", "Priority AI processing"],
+    features: [
+      "Unlimited tracked items",
+      "AI conversation import",
+      "Daily briefing & end-of-day sweep",
+      "Ask NANTI AI assistant",
+      "People & project memory",
+      "Priority AI processing",
+    ],
     cta: "Get started",
     to: "/welcome" as const,
     highlight: true,
@@ -38,7 +45,14 @@ const plans = [
     price: "Custom",
     period: "",
     desc: "For teams that run on WhatsApp.",
-    features: ["Everything in Pro", "Shared workspaces", "Team collaboration", "API access", "Custom AI training", "Dedicated support"],
+    features: [
+      "Everything in Pro",
+      "Shared workspaces",
+      "Team collaboration",
+      "API access",
+      "Custom AI training",
+      "Dedicated support",
+    ],
     cta: "Contact us",
     to: "/welcome" as const,
     highlight: false,
@@ -51,7 +65,9 @@ function PricingPage() {
       <section className="mx-auto max-w-5xl px-5 py-20 sm:px-8 sm:py-28">
         <div className="mx-auto max-w-2xl text-center">
           <p className="eyebrow text-primary">Pricing</p>
-          <h1 className="display-lg mt-5 text-foreground">Simple pricing for every kind of work.</h1>
+          <h1 className="display-lg mt-5 text-foreground">
+            Simple pricing for every kind of work.
+          </h1>
           <p className="mt-5 text-[17px] leading-relaxed text-muted-foreground">
             Start free. Upgrade when NANTI becomes indispensable.
           </p>

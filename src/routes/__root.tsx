@@ -83,21 +83,35 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "NANTI · AI memory for WhatsApp" },
       {
         name: "description",
-        content: "NANTI turns your WhatsApp conversations into tracked commitments, reminders and follow-ups.",
+        content:
+          "NANTI turns your WhatsApp conversations into tracked commitments, reminders and follow-ups.",
       },
       { name: "author", content: "NANTI" },
       { property: "og:title", content: "NANTI · AI memory for WhatsApp" },
       {
         property: "og:description",
-        content: "NANTI turns your WhatsApp conversations into tracked commitments, reminders and follow-ups.",
+        content:
+          "NANTI turns your WhatsApp conversations into tracked commitments, reminders and follow-ups.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "NANTI · AI memory for WhatsApp" },
-      { name: "twitter:description", content: "NANTI turns your WhatsApp conversations into tracked commitments, reminders and follow-ups." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/844d94b3-6ea1-4852-8ad5-b5ded283e4f0" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/844d94b3-6ea1-4852-8ad5-b5ded283e4f0" },
+      {
+        name: "twitter:description",
+        content:
+          "NANTI turns your WhatsApp conversations into tracked commitments, reminders and follow-ups.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/844d94b3-6ea1-4852-8ad5-b5ded283e4f0",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/844d94b3-6ea1-4852-8ad5-b5ded283e4f0",
+      },
     ],
     links: [
       {
@@ -136,14 +150,23 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then((reg) => console.log("SW registered:", reg.scope))
+        .catch((err) => console.error("SW registration failed:", err));
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <NantiProvider>
-          <ItemDetailProvider>
-            {/* Required: nested routes render here. */}
-            <Outlet />
-            <Toaster position="top-center" />
-          </ItemDetailProvider>
+        <ItemDetailProvider>
+          {/* Required: nested routes render here. */}
+          <Outlet />
+          <Toaster position="top-center" />
+        </ItemDetailProvider>
       </NantiProvider>
     </QueryClientProvider>
   );

@@ -1,4 +1,4 @@
-import { createFileRoute, json } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/reminders/snooze")({
   server: {
@@ -8,7 +8,7 @@ export const Route = createFileRoute("/api/reminders/snooze")({
           const { itemId, minutes } = await request.json();
 
           if (!itemId) {
-            return json({ error: "itemId is required" }, { status: 400 });
+            return new Response(JSON.stringify({ error: "itemId is required" }), { status: 400, headers: { "Content-Type": "application/json" } });
           }
 
           const { createClient } = await import("@supabase/supabase-js");
@@ -24,9 +24,9 @@ export const Route = createFileRoute("/api/reminders/snooze")({
             .update({ snooze_until: snoozeUntil })
             .eq("item_id", itemId);
 
-          return json({ success: true, snoozeUntil });
+          return new Response(JSON.stringify({ success: true, snoozeUntil }), { status: 200, headers: { "Content-Type": "application/json" } });
         } catch (error) {
-          return json({ error: "Failed to snooze reminder" }, { status: 500 });
+          return new Response(JSON.stringify({ error: "Failed to snooze reminder" }), { status: 500, headers: { "Content-Type": "application/json" } });
         }
       },
     },

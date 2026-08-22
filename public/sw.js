@@ -4,21 +4,17 @@ const CACHE_NAME = "nanti-v1";
 const STATIC_ASSETS = ["/", "/app", "/offline"];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS)),
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS)));
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key)),
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))),
       ),
-    ),
   );
   self.clients.claim();
 });
@@ -51,9 +47,7 @@ self.addEventListener("push", (event) => {
     silent: false,
   };
 
-  event.waitUntil(
-    self.registration.showNotification(data.title || "NANTI", options),
-  );
+  event.waitUntil(self.registration.showNotification(data.title || "NANTI", options));
 });
 
 self.addEventListener("notificationclick", (event) => {

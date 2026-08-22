@@ -1,4 +1,4 @@
-import { createFileRoute, json } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import type { InvoiceTemplate } from "@/lib/nanti-types";
 
 export const Route = createFileRoute("/api/invoices/pdf")({
@@ -60,7 +60,7 @@ export const Route = createFileRoute("/api/invoices/pdf")({
             },
           });
         } catch (error) {
-          return json({ error: "Failed to generate invoice" }, { status: 500 });
+          return new Response(JSON.stringify({ error: "Failed to generate invoice" }), { status: 500, headers: { "Content-Type": "application/json" } });
         }
       },
     },

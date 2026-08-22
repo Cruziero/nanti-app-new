@@ -59,7 +59,11 @@ export function ItemDetailProvider({ children }: { children: ReactNode }) {
                 <div className="flex items-center gap-2">
                   <KindBadge kind={item.kind} />
                   <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                    {item.status === "done" ? "Selesai" : item.status === "inbox" ? "Belum dilacak" : "Terbuka"}
+                    {item.status === "done"
+                      ? "Selesai"
+                      : item.status === "inbox"
+                        ? "Belum dilacak"
+                        : "Terbuka"}
                   </span>
                 </div>
                 <SheetTitle className="text-xl leading-snug">{item.title}</SheetTitle>
@@ -69,21 +73,31 @@ export function ItemDetailProvider({ children }: { children: ReactNode }) {
               </SheetHeader>
 
               <div className="px-6 py-4">
-                <Field label="Orang">{person ? `${person.name} — ${person.org}` : (item.personName ?? "—")}</Field>
+                <Field label="Orang">
+                  {person ? `${person.name} — ${person.org}` : (item.personName ?? "—")}
+                </Field>
                 <Field label="Proyek">{project?.name ?? item.projectName ?? "—"}</Field>
                 <Field label="Tenggat">
-                  {item.kind === "waiting" ? `Sejak ${formatDate(item.since)}` : formatDate(item.due)}
+                  {item.kind === "waiting"
+                    ? `Sejak ${formatDate(item.since)}`
+                    : formatDate(item.due)}
                 </Field>
                 <Field label="Prioritas">{priorityLabel[item.priority]}</Field>
                 <Field label="Status">{dueLabel(item)}</Field>
                 <Field label="Terdeteksi dari">{item.source}</Field>
-                <Field label="Cara impor">{sourceTypeLabel[item.sourceType ?? "manual"] ?? "—"}</Field>
+                <Field label="Cara impor">
+                  {sourceTypeLabel[item.sourceType ?? "manual"] ?? "—"}
+                </Field>
                 <Field label="Dibuat oleh">{item.createdBy === "ai" ? "NANTI (AI)" : "Anda"}</Field>
                 <Field label="Keyakinan AI">{Math.round(item.confidence * 100)}%</Field>
 
                 <div className="mt-5 rounded-xl border border-border bg-surface-strong/60 p-4">
-                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Pesan asli</p>
-                  <p className="mt-2 text-[14px] italic leading-relaxed text-foreground">“{item.quote}”</p>
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                    Pesan asli
+                  </p>
+                  <p className="mt-2 text-[14px] italic leading-relaxed text-foreground">
+                    “{item.quote}”
+                  </p>
                 </div>
 
                 <div className="mt-3 rounded-xl border border-primary/20 bg-accent/50 p-4">
@@ -96,7 +110,9 @@ export function ItemDetailProvider({ children }: { children: ReactNode }) {
                 </div>
 
                 <div className="mt-3 rounded-xl border border-border p-4">
-                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Linimasa</p>
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                    Linimasa
+                  </p>
                   <ol className="mt-3 space-y-3">
                     {timeline(item).map((t, i) => (
                       <li key={i} className="flex gap-3">
@@ -111,13 +127,13 @@ export function ItemDetailProvider({ children }: { children: ReactNode }) {
                 </div>
 
                 <div className="mt-3 rounded-xl border border-dashed border-border p-4">
-                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Bukti</p>
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                    Bukti
+                  </p>
                   <p className="mt-2 text-[13px] text-muted-foreground">
                     Lampiran dan screenshot asli akan tersimpan di sini pada versi berikutnya.
                   </p>
                 </div>
-
-
 
                 <div className="mt-6 flex flex-wrap gap-2 pb-8">
                   <Button
@@ -130,7 +146,14 @@ export function ItemDetailProvider({ children }: { children: ReactNode }) {
                   >
                     Tandai selesai
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => { snooze(item.id, 1); toast("Ditunda ke besok"); }}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      snooze(item.id, 1);
+                      toast("Ditunda ke besok");
+                    }}
+                  >
                     Tunda 1 hari
                   </Button>
                   <Button
@@ -144,13 +167,22 @@ export function ItemDetailProvider({ children }: { children: ReactNode }) {
                   >
                     Tindak lanjut
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => { snooze(item.id, 7); toast("Dijadwalkan ulang"); }}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      snooze(item.id, 7);
+                      toast("Dijadwalkan ulang");
+                    }}
+                  >
                     Ubah ke minggu depan
                   </Button>
                   <select
                     className="h-8 rounded-md border border-input bg-surface px-2 text-[13px]"
                     value={item.projectId ?? ""}
-                    onChange={(e) => update(item.id, { projectId: e.target.value ? e.target.value : undefined })}
+                    onChange={(e) =>
+                      update(item.id, { projectId: e.target.value ? e.target.value : undefined })
+                    }
                   >
                     <option value="">Tanpa proyek</option>
                     {projects.map((p) => (
@@ -163,7 +195,11 @@ export function ItemDetailProvider({ children }: { children: ReactNode }) {
                     variant="ghost"
                     size="sm"
                     className="text-destructive hover:text-destructive"
-                    onClick={() => { remove(item.id); setId(null); toast("Dihapus"); }}
+                    onClick={() => {
+                      remove(item.id);
+                      setId(null);
+                      toast("Dihapus");
+                    }}
                   >
                     Hapus
                   </Button>

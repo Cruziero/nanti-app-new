@@ -14,7 +14,7 @@ import { Logo } from "@/components/nanti/logo";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useNanti } from "@/lib/nanti-store";
-import { askAssistant, generateFollowUpMessage } from "@/lib/nanti-ai.functions";
+import { askAssistant, generateFollowUpMessageServer } from "@/lib/nanti-ai.functions";
 import { dueLabel, kindLabel, openItems, waitingDays } from "@/lib/nanti-utils";
 import { cn } from "@/lib/utils";
 
@@ -102,12 +102,10 @@ function AiPage() {
       waitingItems.slice(0, 3).map(async (item) => {
         try {
           const person = personOf(item.personId);
-          const days = waitingDays(item);
-          const res = await generateFollowUpMessage({
+          const res = await generateFollowUpMessageServer({
             data: {
-              itemTitle: item.title,
               personName: person?.name || "teman Anda",
-              waitDays: days,
+              what: item.title,
               tone: "friendly",
             },
           });

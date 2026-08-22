@@ -29,9 +29,17 @@ export function ItemRow({ item, index = 0 }: { item: Item; index?: number }) {
         <Check className="size-3" strokeWidth={3} />
       </button>
 
-      <button onClick={() => open(item.id)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+      <button
+        onClick={() => open(item.id)}
+        className="flex min-w-0 flex-1 items-center gap-3 text-left"
+      >
         <div className="min-w-0 flex-1">
-          <p className={cn("truncate text-[14.5px] font-medium", item.status === "done" && "text-muted-foreground line-through")}>
+          <p
+            className={cn(
+              "truncate text-[14.5px] font-medium",
+              item.status === "done" && "text-muted-foreground line-through",
+            )}
+          >
             {item.title}
           </p>
           <p className="mt-0.5 truncate text-[12.5px] text-muted-foreground">

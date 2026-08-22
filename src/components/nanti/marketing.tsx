@@ -109,25 +109,67 @@ export function MarketingFooter() {
             </p>
           </div>
           <div>
-            <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Product</p>
+            <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Product
+            </p>
             <ul className="mt-3 space-y-2.5">
-              <li><Link to="/how-it-works" className="text-[14px] text-muted-foreground hover:text-foreground">How it works</Link></li>
-              <li><Link to="/pricing" className="text-[14px] text-muted-foreground hover:text-foreground">Pricing</Link></li>
-              <li><Link to="/app" className="text-[14px] text-muted-foreground hover:text-foreground">Workspace</Link></li>
+              <li>
+                <Link
+                  to="/how-it-works"
+                  className="text-[14px] text-muted-foreground hover:text-foreground"
+                >
+                  How it works
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/pricing"
+                  className="text-[14px] text-muted-foreground hover:text-foreground"
+                >
+                  Pricing
+                </Link>
+              </li>
+              <li>
+                <Link to="/app" className="text-[14px] text-muted-foreground hover:text-foreground">
+                  Workspace
+                </Link>
+              </li>
             </ul>
           </div>
           <div>
-            <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Use cases</p>
+            <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Use cases
+            </p>
             <ul className="mt-3 space-y-2.5">
-              <li><Link to="/business" className="text-[14px] text-muted-foreground hover:text-foreground">For Business</Link></li>
-              <li><Link to="/personal" className="text-[14px] text-muted-foreground hover:text-foreground">For Personal</Link></li>
+              <li>
+                <Link
+                  to="/business"
+                  className="text-[14px] text-muted-foreground hover:text-foreground"
+                >
+                  For Business
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/personal"
+                  className="text-[14px] text-muted-foreground hover:text-foreground"
+                >
+                  For Personal
+                </Link>
+              </li>
             </ul>
           </div>
           <div>
-            <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Legal</p>
+            <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Legal
+            </p>
             <ul className="mt-3 space-y-2.5">
-              <li><span className="text-[14px] text-muted-foreground">Privacy</span></li>
-              <li><span className="text-[14px] text-muted-foreground">Terms</span></li>
+              <li>
+                <span className="text-[14px] text-muted-foreground">Privacy</span>
+              </li>
+              <li>
+                <span className="text-[14px] text-muted-foreground">Terms</span>
+              </li>
             </ul>
           </div>
         </div>

@@ -23,27 +23,44 @@ function PersonalPage() {
           From work to family, remember what matters.
         </h1>
         <p className="mt-5 max-w-xl text-[18px] leading-relaxed text-muted-foreground">
-          NANTI isn't just for work. Birthday reminders, family commitments, household follow-ups — if it's in a
-          conversation, NANTI remembers it.
+          NANTI isn't just for work. Birthday reminders, family commitments, household follow-ups —
+          if it's in a conversation, NANTI remembers it.
         </p>
 
         <div className="mt-14 grid gap-6 sm:grid-cols-2">
           {[
-            { icon: Home, title: "Family commitments", desc: "Promises to your partner, your kids, your parents. NANTI catches them all." },
-            { icon: Heart, title: "Personal follow-ups", desc: "That restaurant recommendation, that book someone mentioned, that appointment you need to book." },
+            {
+              icon: Home,
+              title: "Family commitments",
+              desc: "Promises to your partner, your kids, your parents. NANTI catches them all.",
+            },
+            {
+              icon: Heart,
+              title: "Personal follow-ups",
+              desc: "That restaurant recommendation, that book someone mentioned, that appointment you need to book.",
+            },
           ].map((item, i) => (
-            <div key={item.title} className="rise rounded-2xl border border-border p-7" style={{ animationDelay: `${i * 80}ms` }}>
+            <div
+              key={item.title}
+              className="rise rounded-2xl border border-border p-7"
+              style={{ animationDelay: `${i * 80}ms` }}
+            >
               <div className="flex size-10 items-center justify-center rounded-xl bg-surface border border-border">
                 <item.icon className="size-5 text-foreground" />
               </div>
               <h3 className="mt-4 text-[17px] font-semibold">{item.title}</h3>
-              <p className="mt-2 text-[14.5px] leading-relaxed text-muted-foreground">{item.desc}</p>
+              <p className="mt-2 text-[14.5px] leading-relaxed text-muted-foreground">
+                {item.desc}
+              </p>
             </div>
           ))}
         </div>
 
         <div className="mt-14">
-          <Link to="/welcome" className="inline-flex items-center gap-2 rounded-xl bg-foreground px-6 py-3.5 text-[15px] font-semibold text-background">
+          <Link
+            to="/welcome"
+            className="inline-flex items-center gap-2 rounded-xl bg-foreground px-6 py-3.5 text-[15px] font-semibold text-background"
+          >
             Get started <ArrowRight className="size-4" />
           </Link>
         </div>

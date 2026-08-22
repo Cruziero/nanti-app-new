@@ -49,9 +49,7 @@ function ResetPasswordPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight text-foreground">Reset password</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Masukkan password baru Anda.
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">Masukkan password baru Anda.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">

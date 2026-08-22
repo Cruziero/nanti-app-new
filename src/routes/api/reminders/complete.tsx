@@ -1,4 +1,4 @@
-import { createFileRoute, json } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/reminders/complete")({
   server: {
@@ -8,7 +8,7 @@ export const Route = createFileRoute("/api/reminders/complete")({
           const { itemId } = await request.json();
 
           if (!itemId) {
-            return json({ error: "itemId is required" }, { status: 400 });
+            return new Response(JSON.stringify({ error: "itemId is required" }), { status: 400, headers: { "Content-Type": "application/json" } });
           }
 
           const { createClient } = await import("@supabase/supabase-js");
@@ -24,9 +24,9 @@ export const Route = createFileRoute("/api/reminders/complete")({
 
           await supabase.from("reminders").update({ enabled: false }).eq("item_id", itemId);
 
-          return json({ success: true });
+          return new Response(JSON.stringify({ success: true }), { status: 200, headers: { "Content-Type": "application/json" } });
         } catch (error) {
-          return json({ error: "Failed to complete item" }, { status: 500 });
+          return new Response(JSON.stringify({ error: "Failed to complete item" }), { status: 500, headers: { "Content-Type": "application/json" } });
         }
       },
     },

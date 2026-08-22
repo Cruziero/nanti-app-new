@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/app'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BusinessRouteImport } from './routes/business'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as PersonalRouteImport } from './routes/personal'
@@ -19,10 +20,25 @@ import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppImportRouteImport } from './routes/app.import'
 import { Route as AppInboxRouteImport } from './routes/app.inbox'
+import { Route as AppInvoicesRouteImport } from './routes/app.invoices'
 import { Route as AppPeopleRouteImport } from './routes/app.people'
+import { Route as AppRemindersRouteImport } from './routes/app.reminders'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppTodayRouteImport } from './routes/app.today'
 import { Route as AppWaitingRouteImport } from './routes/app.waiting'
+import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
+import { Route as AuthLoginRouteImport } from './routes/auth.login'
+import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
+import { Route as AuthSignupRouteImport } from './routes/auth.signup'
+import { Route as ApiAuthGoogleRouteImport } from './routes/api/auth/google'
+import { Route as ApiCronCheckRemindersRouteImport } from './routes/api/cron/check-reminders'
+import { Route as ApiCronSyncCalendarRouteImport } from './routes/api/cron/sync-calendar'
+import { Route as ApiInvoicesPdfRouteImport } from './routes/api/invoices/pdf'
+import { Route as ApiPushSubscribeRouteImport } from './routes/api/push/subscribe'
+import { Route as ApiPushUnsubscribeRouteImport } from './routes/api/push/unsubscribe'
+import { Route as ApiRemindersCompleteRouteImport } from './routes/api/reminders/complete'
+import { Route as ApiRemindersSnoozeRouteImport } from './routes/api/reminders/snooze'
+import { Route as ApiWebhooksWhatsappRouteImport } from './routes/api/webhooks/whatsapp'
 import { Route as AppProjectsIndexRouteImport } from './routes/app.projects.index'
 import { Route as AppProjectsProjectIdRouteImport } from './routes/app.projects.$projectId'
 
@@ -34,6 +50,11 @@ const IndexRoute = IndexRouteImport.update({
 const AppRoute = AppRouteImport.update({
   id: '/app',
   path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BusinessRoute = BusinessRouteImport.update({
@@ -76,9 +97,19 @@ const AppInboxRoute = AppInboxRouteImport.update({
   path: '/inbox',
   getParentRoute: () => AppRoute,
 } as any)
+const AppInvoicesRoute = AppInvoicesRouteImport.update({
+  id: '/invoices',
+  path: '/invoices',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppPeopleRoute = AppPeopleRouteImport.update({
   id: '/people',
   path: '/people',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRemindersRoute = AppRemindersRouteImport.update({
+  id: '/reminders',
+  path: '/reminders',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -96,6 +127,71 @@ const AppWaitingRoute = AppWaitingRouteImport.update({
   path: '/waiting',
   getParentRoute: () => AppRoute,
 } as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSignupRoute = AuthSignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => AuthRoute,
+} as any)
+const ApiAuthGoogleRoute = ApiAuthGoogleRouteImport.update({
+  id: '/api/auth/google',
+  path: '/api/auth/google',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCronCheckRemindersRoute = ApiCronCheckRemindersRouteImport.update({
+  id: '/api/cron/check-reminders',
+  path: '/api/cron/check-reminders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCronSyncCalendarRoute = ApiCronSyncCalendarRouteImport.update({
+  id: '/api/cron/sync-calendar',
+  path: '/api/cron/sync-calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiInvoicesPdfRoute = ApiInvoicesPdfRouteImport.update({
+  id: '/api/invoices/pdf',
+  path: '/api/invoices/pdf',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPushSubscribeRoute = ApiPushSubscribeRouteImport.update({
+  id: '/api/push/subscribe',
+  path: '/api/push/subscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPushUnsubscribeRoute = ApiPushUnsubscribeRouteImport.update({
+  id: '/api/push/unsubscribe',
+  path: '/api/push/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRemindersCompleteRoute = ApiRemindersCompleteRouteImport.update({
+  id: '/api/reminders/complete',
+  path: '/api/reminders/complete',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRemindersSnoozeRoute = ApiRemindersSnoozeRouteImport.update({
+  id: '/api/reminders/snooze',
+  path: '/api/reminders/snooze',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksWhatsappRoute = ApiWebhooksWhatsappRouteImport.update({
+  id: '/api/webhooks/whatsapp',
+  path: '/api/webhooks/whatsapp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppProjectsIndexRoute = AppProjectsIndexRouteImport.update({
   id: '/projects/',
   path: '/projects/',
@@ -110,6 +206,7 @@ const AppProjectsProjectIdRoute = AppProjectsProjectIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/auth': typeof AuthRouteWithChildren
   '/business': typeof BusinessRoute
   '/how-it-works': typeof HowItWorksRoute
   '/personal': typeof PersonalRoute
@@ -117,16 +214,32 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof WelcomeRoute
   '/app/import': typeof AppImportRoute
   '/app/inbox': typeof AppInboxRoute
+  '/app/invoices': typeof AppInvoicesRoute
   '/app/people': typeof AppPeopleRoute
+  '/app/reminders': typeof AppRemindersRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/today': typeof AppTodayRoute
   '/app/waiting': typeof AppWaitingRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/auth/signup': typeof AuthSignupRoute
   '/app/': typeof AppIndexRoute
+  '/api/auth/google': typeof ApiAuthGoogleRoute
+  '/api/cron/check-reminders': typeof ApiCronCheckRemindersRoute
+  '/api/cron/sync-calendar': typeof ApiCronSyncCalendarRoute
+  '/api/invoices/pdf': typeof ApiInvoicesPdfRoute
+  '/api/push/subscribe': typeof ApiPushSubscribeRoute
+  '/api/push/unsubscribe': typeof ApiPushUnsubscribeRoute
+  '/api/reminders/complete': typeof ApiRemindersCompleteRoute
+  '/api/reminders/snooze': typeof ApiRemindersSnoozeRoute
+  '/api/webhooks/whatsapp': typeof ApiWebhooksWhatsappRoute
   '/app/projects/$projectId': typeof AppProjectsProjectIdRoute
   '/app/projects/': typeof AppProjectsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRouteWithChildren
   '/business': typeof BusinessRoute
   '/how-it-works': typeof HowItWorksRoute
   '/personal': typeof PersonalRoute
@@ -134,11 +247,26 @@ export interface FileRoutesByTo {
   '/welcome': typeof WelcomeRoute
   '/app/import': typeof AppImportRoute
   '/app/inbox': typeof AppInboxRoute
+  '/app/invoices': typeof AppInvoicesRoute
   '/app/people': typeof AppPeopleRoute
+  '/app/reminders': typeof AppRemindersRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/today': typeof AppTodayRoute
   '/app/waiting': typeof AppWaitingRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/auth/signup': typeof AuthSignupRoute
   '/app': typeof AppIndexRoute
+  '/api/auth/google': typeof ApiAuthGoogleRoute
+  '/api/cron/check-reminders': typeof ApiCronCheckRemindersRoute
+  '/api/cron/sync-calendar': typeof ApiCronSyncCalendarRoute
+  '/api/invoices/pdf': typeof ApiInvoicesPdfRoute
+  '/api/push/subscribe': typeof ApiPushSubscribeRoute
+  '/api/push/unsubscribe': typeof ApiPushUnsubscribeRoute
+  '/api/reminders/complete': typeof ApiRemindersCompleteRoute
+  '/api/reminders/snooze': typeof ApiRemindersSnoozeRoute
+  '/api/webhooks/whatsapp': typeof ApiWebhooksWhatsappRoute
   '/app/projects/$projectId': typeof AppProjectsProjectIdRoute
   '/app/projects': typeof AppProjectsIndexRoute
 }
@@ -146,6 +274,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/auth': typeof AuthRouteWithChildren
   '/business': typeof BusinessRoute
   '/how-it-works': typeof HowItWorksRoute
   '/personal': typeof PersonalRoute
@@ -153,11 +282,26 @@ export interface FileRoutesById {
   '/welcome': typeof WelcomeRoute
   '/app/import': typeof AppImportRoute
   '/app/inbox': typeof AppInboxRoute
+  '/app/invoices': typeof AppInvoicesRoute
   '/app/people': typeof AppPeopleRoute
+  '/app/reminders': typeof AppRemindersRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/today': typeof AppTodayRoute
   '/app/waiting': typeof AppWaitingRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/auth/signup': typeof AuthSignupRoute
   '/app/': typeof AppIndexRoute
+  '/api/auth/google': typeof ApiAuthGoogleRoute
+  '/api/cron/check-reminders': typeof ApiCronCheckRemindersRoute
+  '/api/cron/sync-calendar': typeof ApiCronSyncCalendarRoute
+  '/api/invoices/pdf': typeof ApiInvoicesPdfRoute
+  '/api/push/subscribe': typeof ApiPushSubscribeRoute
+  '/api/push/unsubscribe': typeof ApiPushUnsubscribeRoute
+  '/api/reminders/complete': typeof ApiRemindersCompleteRoute
+  '/api/reminders/snooze': typeof ApiRemindersSnoozeRoute
+  '/api/webhooks/whatsapp': typeof ApiWebhooksWhatsappRoute
   '/app/projects/$projectId': typeof AppProjectsProjectIdRoute
   '/app/projects/': typeof AppProjectsIndexRoute
 }
@@ -166,6 +310,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/app'
+    | '/auth'
     | '/business'
     | '/how-it-works'
     | '/personal'
@@ -173,16 +318,32 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/app/import'
     | '/app/inbox'
+    | '/app/invoices'
     | '/app/people'
+    | '/app/reminders'
     | '/app/settings'
     | '/app/today'
     | '/app/waiting'
+    | '/auth/forgot-password'
+    | '/auth/login'
+    | '/auth/reset-password'
+    | '/auth/signup'
     | '/app/'
+    | '/api/auth/google'
+    | '/api/cron/check-reminders'
+    | '/api/cron/sync-calendar'
+    | '/api/invoices/pdf'
+    | '/api/push/subscribe'
+    | '/api/push/unsubscribe'
+    | '/api/reminders/complete'
+    | '/api/reminders/snooze'
+    | '/api/webhooks/whatsapp'
     | '/app/projects/$projectId'
     | '/app/projects/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
     | '/business'
     | '/how-it-works'
     | '/personal'
@@ -190,17 +351,33 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/app/import'
     | '/app/inbox'
+    | '/app/invoices'
     | '/app/people'
+    | '/app/reminders'
     | '/app/settings'
     | '/app/today'
     | '/app/waiting'
+    | '/auth/forgot-password'
+    | '/auth/login'
+    | '/auth/reset-password'
+    | '/auth/signup'
     | '/app'
+    | '/api/auth/google'
+    | '/api/cron/check-reminders'
+    | '/api/cron/sync-calendar'
+    | '/api/invoices/pdf'
+    | '/api/push/subscribe'
+    | '/api/push/unsubscribe'
+    | '/api/reminders/complete'
+    | '/api/reminders/snooze'
+    | '/api/webhooks/whatsapp'
     | '/app/projects/$projectId'
     | '/app/projects'
   id:
     | '__root__'
     | '/'
     | '/app'
+    | '/auth'
     | '/business'
     | '/how-it-works'
     | '/personal'
@@ -208,11 +385,26 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/app/import'
     | '/app/inbox'
+    | '/app/invoices'
     | '/app/people'
+    | '/app/reminders'
     | '/app/settings'
     | '/app/today'
     | '/app/waiting'
+    | '/auth/forgot-password'
+    | '/auth/login'
+    | '/auth/reset-password'
+    | '/auth/signup'
     | '/app/'
+    | '/api/auth/google'
+    | '/api/cron/check-reminders'
+    | '/api/cron/sync-calendar'
+    | '/api/invoices/pdf'
+    | '/api/push/subscribe'
+    | '/api/push/unsubscribe'
+    | '/api/reminders/complete'
+    | '/api/reminders/snooze'
+    | '/api/webhooks/whatsapp'
     | '/app/projects/$projectId'
     | '/app/projects/'
   fileRoutesById: FileRoutesById
@@ -220,11 +412,21 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  AuthRoute: typeof AuthRouteWithChildren
   BusinessRoute: typeof BusinessRoute
   HowItWorksRoute: typeof HowItWorksRoute
   PersonalRoute: typeof PersonalRoute
   PricingRoute: typeof PricingRoute
   WelcomeRoute: typeof WelcomeRoute
+  ApiAuthGoogleRoute: typeof ApiAuthGoogleRoute
+  ApiCronCheckRemindersRoute: typeof ApiCronCheckRemindersRoute
+  ApiCronSyncCalendarRoute: typeof ApiCronSyncCalendarRoute
+  ApiInvoicesPdfRoute: typeof ApiInvoicesPdfRoute
+  ApiPushSubscribeRoute: typeof ApiPushSubscribeRoute
+  ApiPushUnsubscribeRoute: typeof ApiPushUnsubscribeRoute
+  ApiRemindersCompleteRoute: typeof ApiRemindersCompleteRoute
+  ApiRemindersSnoozeRoute: typeof ApiRemindersSnoozeRoute
+  ApiWebhooksWhatsappRoute: typeof ApiWebhooksWhatsappRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -241,6 +443,13 @@ declare module '@tanstack/react-router' {
       path: '/app'
       fullPath: '/app'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/business': {
@@ -299,11 +508,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInboxRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/invoices': {
+      id: '/app/invoices'
+      path: '/invoices'
+      fullPath: '/app/invoices'
+      preLoaderRoute: typeof AppInvoicesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/people': {
       id: '/app/people'
       path: '/people'
       fullPath: '/app/people'
       preLoaderRoute: typeof AppPeopleRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/reminders': {
+      id: '/app/reminders'
+      path: '/reminders'
+      fullPath: '/app/reminders'
+      preLoaderRoute: typeof AppRemindersRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/settings': {
@@ -327,6 +550,97 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWaitingRouteImport
       parentRoute: typeof AppRoute
     }
+    '/auth/forgot-password': {
+      id: '/auth/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/auth/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/reset-password': {
+      id: '/auth/reset-password'
+      path: '/reset-password'
+      fullPath: '/auth/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/signup': {
+      id: '/auth/signup'
+      path: '/signup'
+      fullPath: '/auth/signup'
+      preLoaderRoute: typeof AuthSignupRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/api/auth/google': {
+      id: '/api/auth/google'
+      path: '/api/auth/google'
+      fullPath: '/api/auth/google'
+      preLoaderRoute: typeof ApiAuthGoogleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/check-reminders': {
+      id: '/api/cron/check-reminders'
+      path: '/api/cron/check-reminders'
+      fullPath: '/api/cron/check-reminders'
+      preLoaderRoute: typeof ApiCronCheckRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/sync-calendar': {
+      id: '/api/cron/sync-calendar'
+      path: '/api/cron/sync-calendar'
+      fullPath: '/api/cron/sync-calendar'
+      preLoaderRoute: typeof ApiCronSyncCalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/invoices/pdf': {
+      id: '/api/invoices/pdf'
+      path: '/api/invoices/pdf'
+      fullPath: '/api/invoices/pdf'
+      preLoaderRoute: typeof ApiInvoicesPdfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/subscribe': {
+      id: '/api/push/subscribe'
+      path: '/api/push/subscribe'
+      fullPath: '/api/push/subscribe'
+      preLoaderRoute: typeof ApiPushSubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/unsubscribe': {
+      id: '/api/push/unsubscribe'
+      path: '/api/push/unsubscribe'
+      fullPath: '/api/push/unsubscribe'
+      preLoaderRoute: typeof ApiPushUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/reminders/complete': {
+      id: '/api/reminders/complete'
+      path: '/api/reminders/complete'
+      fullPath: '/api/reminders/complete'
+      preLoaderRoute: typeof ApiRemindersCompleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/reminders/snooze': {
+      id: '/api/reminders/snooze'
+      path: '/api/reminders/snooze'
+      fullPath: '/api/reminders/snooze'
+      preLoaderRoute: typeof ApiRemindersSnoozeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/whatsapp': {
+      id: '/api/webhooks/whatsapp'
+      path: '/api/webhooks/whatsapp'
+      fullPath: '/api/webhooks/whatsapp'
+      preLoaderRoute: typeof ApiWebhooksWhatsappRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/projects/': {
       id: '/app/projects/'
       path: '/projects'
@@ -347,7 +661,9 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppImportRoute: typeof AppImportRoute
   AppInboxRoute: typeof AppInboxRoute
+  AppInvoicesRoute: typeof AppInvoicesRoute
   AppPeopleRoute: typeof AppPeopleRoute
+  AppRemindersRoute: typeof AppRemindersRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppTodayRoute: typeof AppTodayRoute
   AppWaitingRoute: typeof AppWaitingRoute
@@ -359,7 +675,9 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppImportRoute: AppImportRoute,
   AppInboxRoute: AppInboxRoute,
+  AppInvoicesRoute: AppInvoicesRoute,
   AppPeopleRoute: AppPeopleRoute,
+  AppRemindersRoute: AppRemindersRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppTodayRoute: AppTodayRoute,
   AppWaitingRoute: AppWaitingRoute,
@@ -370,14 +688,40 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface AuthRouteChildren {
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthResetPasswordRoute: typeof AuthResetPasswordRoute
+  AuthSignupRoute: typeof AuthSignupRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
+  AuthLoginRoute: AuthLoginRoute,
+  AuthResetPasswordRoute: AuthResetPasswordRoute,
+  AuthSignupRoute: AuthSignupRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  AuthRoute: AuthRouteWithChildren,
   BusinessRoute: BusinessRoute,
   HowItWorksRoute: HowItWorksRoute,
   PersonalRoute: PersonalRoute,
   PricingRoute: PricingRoute,
   WelcomeRoute: WelcomeRoute,
+  ApiAuthGoogleRoute: ApiAuthGoogleRoute,
+  ApiCronCheckRemindersRoute: ApiCronCheckRemindersRoute,
+  ApiCronSyncCalendarRoute: ApiCronSyncCalendarRoute,
+  ApiInvoicesPdfRoute: ApiInvoicesPdfRoute,
+  ApiPushSubscribeRoute: ApiPushSubscribeRoute,
+  ApiPushUnsubscribeRoute: ApiPushUnsubscribeRoute,
+  ApiRemindersCompleteRoute: ApiRemindersCompleteRoute,
+  ApiRemindersSnoozeRoute: ApiRemindersSnoozeRoute,
+  ApiWebhooksWhatsappRoute: ApiWebhooksWhatsappRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

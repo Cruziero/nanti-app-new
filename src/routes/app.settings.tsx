@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { useNanti } from "@/lib/nanti-store";
 import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
+import { usePushSubscription } from "@/hooks/use-push-subscription";
 import type {
   ConversationTone,
   AppLanguage,
@@ -14,7 +15,7 @@ import type {
   ReminderIntensity,
 } from "@/lib/nanti-types";
 import { cn } from "@/lib/utils";
-import { Check } from "lucide-react";
+import { Check, Bell, BellOff, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/app/settings")({
   head: () => ({
@@ -60,6 +61,13 @@ function SettingsPage() {
   const { settings, setSettings, reset } = useNanti();
   const { signOut } = useSupabaseAuth();
   const navigate = useNavigate();
+  const {
+    isSubscribed,
+    permission,
+    loading: pushLoading,
+    subscribe,
+    unsubscribe,
+  } = usePushSubscription();
 
   const handleSignOut = async () => {
     await signOut();
@@ -230,7 +238,46 @@ function SettingsPage() {
       </div>
 
       <div className="card-soft mb-4 p-5">
-        <h2 className="mb-2 text-[14px] font-semibold">Notifikasi</h2>
+        <h2 className="mb-4 text-[14px] font-semibold">Notifikasi</h2>
+        <div className="flex items-center justify-between border-b border-border/60 py-3">
+          <div className="flex items-center gap-3">
+            {isSubscribed ? (
+              <Bell className="size-4 text-primary" />
+            ) : (
+              <BellOff className="size-4 text-muted-foreground" />
+            )}
+            <div>
+              <p className="text-[13.5px] font-medium">Push Notification</p>
+              <p className="text-[12px] text-muted-foreground">
+                {permission === "granted"
+                  ? "Aktif — Anda akan menerima notifikasi"
+                  : permission === "denied"
+                    ? "Diblokir — Aktifkan di pengaturan browser"
+                    : "Belum diaktifkan"}
+              </p>
+            </div>
+          </div>
+          {permission === "denied" ? (
+            <span className="rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-medium text-red-600">
+              Diblokir
+            </span>
+          ) : (
+            <Button
+              variant={isSubscribed ? "outline" : "default"}
+              size="sm"
+              disabled={pushLoading}
+              onClick={isSubscribed ? unsubscribe : subscribe}
+            >
+              {pushLoading ? (
+                <Loader2 className="size-3 animate-spin" />
+              ) : isSubscribed ? (
+                "Nonaktifkan"
+              ) : (
+                "Aktifkan"
+              )}
+            </Button>
+          )}
+        </div>
         {Object.entries(settings.notifications).map(([k, v]) => (
           <div
             key={k}
@@ -263,16 +310,21 @@ function SettingsPage() {
             <p className="text-[13.5px] font-medium">Google Calendar</p>
             <p className="text-[12px] text-muted-foreground">Sinkron jadwal kalender</p>
           </div>
-          <span
-            className={cn(
-              "rounded-full px-2.5 py-1 text-[11px] font-medium",
-              settings.calendarConnected
-                ? "bg-primary/10 text-primary"
-                : "bg-secondary text-muted-foreground",
-            )}
-          >
-            {settings.calendarConnected ? "Tersambung" : "Belum aktif"}
-          </span>
+          {settings.calendarConnected ? (
+            <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">
+              Tersambung
+            </span>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                window.location.href = `/api/auth/google?state=${settings.preferredName || "user"}`;
+              }}
+            >
+              Hubungkan
+            </Button>
+          )}
         </div>
       </div>
 

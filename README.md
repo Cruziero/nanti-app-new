@@ -576,13 +576,13 @@ I found 3 unresolved commitments that may need attention.
 Then:
 
 1. Revised quotation — Budi
-You said you would send it yesterday.
+   You said you would send it yesterday.
 
 2. Shipping confirmation — Supplier
-No response for 3 days.
+   No response for 3 days.
 
 3. Factory progress
-Your team discussed a production delay but no person appears assigned.
+   Your team discussed a production delay but no person appears assigned.
 
 Each result should have actions.
 

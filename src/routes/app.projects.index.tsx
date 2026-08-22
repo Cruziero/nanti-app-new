@@ -7,7 +7,10 @@ export const Route = createFileRoute("/app/projects/")({
   head: () => ({
     meta: [
       { title: "Projects · NANTI" },
-      { name: "description", content: "NANTI groups work from your conversations into clear projects." },
+      {
+        name: "description",
+        content: "NANTI groups work from your conversations into clear projects.",
+      },
       { property: "og:title", content: "Projects · NANTI" },
       { property: "og:description", content: "All commitments grouped by project automatically." },
     ],
@@ -38,7 +41,9 @@ function ProjectsPage() {
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
                   <h3 className="text-[16px] font-semibold">{p.name}</h3>
-                  <p className="mt-1.5 line-clamp-1 text-[13px] text-muted-foreground">{p.description}</p>
+                  <p className="mt-1.5 line-clamp-1 text-[13px] text-muted-foreground">
+                    {p.description}
+                  </p>
                 </div>
                 <div className="flex shrink-0 gap-5 text-[12.5px]">
                   <span className="text-center">
@@ -50,7 +55,14 @@ function ProjectsPage() {
                     <span className="mt-1 block text-muted-foreground">waiting</span>
                   </span>
                   <span className="text-center">
-                    <b className={"block text-[18px] font-bold leading-none " + (overdue > 0 ? "text-destructive" : "")}>{overdue}</b>
+                    <b
+                      className={
+                        "block text-[18px] font-bold leading-none " +
+                        (overdue > 0 ? "text-destructive" : "")
+                      }
+                    >
+                      {overdue}
+                    </b>
                     <span className="mt-1 block text-muted-foreground">overdue</span>
                   </span>
                 </div>

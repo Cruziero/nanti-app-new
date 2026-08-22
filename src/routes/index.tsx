@@ -103,12 +103,16 @@ function ProductPreview() {
           <div className="bg-background p-6 sm:p-10">
             <div className="mx-auto max-w-2xl">
               <p className="text-[22px] font-semibold sm:text-[26px]">Good morning, Rizky.</p>
-              <p className="mt-1.5 text-[15px] text-muted-foreground">What do you need to get done?</p>
+              <p className="mt-1.5 text-[15px] text-muted-foreground">
+                What do you need to get done?
+              </p>
 
               {/* AI input */}
               <div className="mt-6 flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3.5">
                 <Sparkles className="size-5 shrink-0 text-primary" />
-                <span className="flex-1 text-[14.5px] text-muted-foreground">Ask NANTI anything...</span>
+                <span className="flex-1 text-[14.5px] text-muted-foreground">
+                  Ask NANTI anything...
+                </span>
                 <span className="rounded-lg bg-foreground px-3 py-1.5 text-[12.5px] font-medium text-background">
                   Ask
                 </span>
@@ -116,16 +120,18 @@ function ProductPreview() {
 
               {/* Suggested prompts */}
               <div className="mt-3 flex flex-wrap gap-2">
-                {["What am I forgetting today?", "Who am I waiting for?", "What did I promise this week?"].map(
-                  (s) => (
-                    <span
-                      key={s}
-                      className="rounded-full border border-border bg-background px-3 py-1.5 text-[12.5px] text-muted-foreground"
-                    >
-                      {s}
-                    </span>
-                  ),
-                )}
+                {[
+                  "What am I forgetting today?",
+                  "Who am I waiting for?",
+                  "What did I promise this week?",
+                ].map((s) => (
+                  <span
+                    key={s}
+                    className="rounded-full border border-border bg-background px-3 py-1.5 text-[12.5px] text-muted-foreground"
+                  >
+                    {s}
+                  </span>
+                ))}
               </div>
 
               {/* Day at a glance */}
@@ -139,7 +145,10 @@ function ProductPreview() {
                     { label: "Overdue", value: "2" },
                     { label: "Waiting", value: "5" },
                   ].map((s) => (
-                    <div key={s.label} className="rounded-xl border border-border bg-surface px-4 py-3.5">
+                    <div
+                      key={s.label}
+                      className="rounded-xl border border-border bg-surface px-4 py-3.5"
+                    >
                       <p className="text-[24px] font-bold leading-none">{s.value}</p>
                       <p className="mt-2 text-[12.5px] text-muted-foreground">{s.label}</p>
                     </div>
@@ -156,8 +165,8 @@ function ProductPreview() {
                   </p>
                 </div>
                 <p className="mt-3 text-[14.5px] leading-relaxed">
-                  "You promised Budi a revised quotation yesterday, but I couldn't find a follow-up after the
-                  conversation."
+                  "You promised Budi a revised quotation yesterday, but I couldn't find a follow-up
+                  after the conversation."
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <span className="rounded-lg bg-primary px-3.5 py-1.5 text-[12.5px] font-medium text-primary-foreground">
@@ -186,8 +195,8 @@ function HowItWorks() {
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="display-lg text-foreground">You don't create tasks. You just talk.</h2>
           <p className="mt-4 text-[16px] leading-relaxed text-muted-foreground">
-            NANTI reads your WhatsApp conversations and extracts commitments automatically. No manual entry. No
-            forgotten promises.
+            NANTI reads your WhatsApp conversations and extracts commitments automatically. No
+            manual entry. No forgotten promises.
           </p>
         </div>
 
@@ -209,7 +218,10 @@ function HowItWorks() {
           </div>
 
           {/* Step 2: NANTI AI */}
-          <div className="rise rounded-2xl border border-border bg-background p-7" style={{ animationDelay: "80ms" }}>
+          <div
+            className="rise rounded-2xl border border-border bg-background p-7"
+            style={{ animationDelay: "80ms" }}
+          >
             <div className="flex size-11 items-center justify-center rounded-xl bg-primary/10">
               <Brain className="size-5 text-primary" />
             </div>
@@ -226,7 +238,10 @@ function HowItWorks() {
           </div>
 
           {/* Step 3: Track */}
-          <div className="rise rounded-2xl border border-border bg-background p-7" style={{ animationDelay: "160ms" }}>
+          <div
+            className="rise rounded-2xl border border-border bg-background p-7"
+            style={{ animationDelay: "160ms" }}
+          >
             <div className="flex size-11 items-center justify-center rounded-xl bg-accent">
               <CheckCircle2 className="size-5 text-accent-foreground" />
             </div>
@@ -235,7 +250,8 @@ function HowItWorks() {
             </p>
             <h3 className="mt-2 text-[17px] font-semibold">Track</h3>
             <p className="mt-3 text-[14px] leading-relaxed text-muted-foreground">
-              The commitment appears automatically in your workspace. NANTI follows up so you don't have to.
+              The commitment appears automatically in your workspace. NANTI follows up so you don't
+              have to.
             </p>
           </div>
         </div>
@@ -287,7 +303,9 @@ function Capabilities() {
                 </div>
                 <div>
                   <h3 className="text-[20px] font-semibold">{item.title}</h3>
-                  <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">{item.desc}</p>
+                  <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
+                    {item.desc}
+                  </p>
                 </div>
               </div>
             </div>
@@ -305,8 +323,8 @@ function AiMemorySection() {
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="display-lg text-foreground">What am I forgetting?</h2>
           <p className="mt-4 text-[16px] leading-relaxed text-muted-foreground">
-            Ask NANTI anything about your work. It remembers every commitment, deadline and follow-up from your
-            conversations.
+            Ask NANTI anything about your work. It remembers every commitment, deadline and
+            follow-up from your conversations.
           </p>
         </div>
 
@@ -329,11 +347,22 @@ function AiMemorySection() {
             </p>
             <div className="mt-5 space-y-4">
               {[
-                { name: "Budi — PT ABC", text: "You promised a revised quotation yesterday.", icon: Clock },
+                {
+                  name: "Budi — PT ABC",
+                  text: "You promised a revised quotation yesterday.",
+                  icon: Clock,
+                },
                 { name: "Supplier China", text: "No response for 3 days.", icon: Hourglass },
-                { name: "Bali Villa", text: "The team discussed a production issue but nobody appears assigned.", icon: MessageSquareText },
+                {
+                  name: "Bali Villa",
+                  text: "The team discussed a production issue but nobody appears assigned.",
+                  icon: MessageSquareText,
+                },
               ].map((item, i) => (
-                <div key={i} className="flex items-start gap-3.5 rounded-xl border border-border bg-surface p-4">
+                <div
+                  key={i}
+                  className="flex items-start gap-3.5 rounded-xl border border-border bg-surface p-4"
+                >
                   <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-background border border-border">
                     <item.icon className="size-4 text-muted-foreground" />
                   </div>
@@ -387,7 +416,9 @@ function UseCases() {
               style={{ animationDelay: `${i * 60}ms` }}
             >
               <h3 className="text-[18px] font-semibold">{uc.title}</h3>
-              <p className="mt-2.5 text-[14.5px] leading-relaxed text-muted-foreground">{uc.desc}</p>
+              <p className="mt-2.5 text-[14.5px] leading-relaxed text-muted-foreground">
+                {uc.desc}
+              </p>
               <span className="mt-4 inline-flex items-center gap-1.5 text-[13.5px] font-medium text-primary">
                 Learn more
                 <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -407,10 +438,12 @@ function PrivacyTrust() {
         <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-background border border-border">
           <Brain className="size-7 text-primary" />
         </div>
-        <h2 className="mt-6 text-[28px] font-semibold tracking-tight sm:text-[32px]">Your conversations are yours.</h2>
+        <h2 className="mt-6 text-[28px] font-semibold tracking-tight sm:text-[32px]">
+          Your conversations are yours.
+        </h2>
         <p className="mx-auto mt-4 max-w-xl text-[16px] leading-relaxed text-muted-foreground">
-          NANTI processes your conversations to find commitments, but your data is never sold, never shared with
-          third parties, and always yours to delete.
+          NANTI processes your conversations to find commitments, but your data is never sold, never
+          shared with third parties, and always yours to delete.
         </p>
       </div>
     </section>

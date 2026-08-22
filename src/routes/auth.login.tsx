@@ -27,9 +27,11 @@ function LoginPage() {
     });
 
     if (error) {
-      toast.error(error.message === "Invalid login credentials"
-        ? "Email atau password salah."
-        : "Gagal masuk. Coba lagi.");
+      toast.error(
+        error.message === "Invalid login credentials"
+          ? "Email atau password salah."
+          : "Gagal masuk. Coba lagi.",
+      );
       setLoading(false);
       return;
     }

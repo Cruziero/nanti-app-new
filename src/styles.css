@@ -130,7 +130,9 @@
     text-rendering: optimizeLegibility;
   }
 
-  h1, h2, h3 {
+  h1,
+  h2,
+  h3 {
     letter-spacing: -0.028em;
   }
 }
@@ -175,8 +177,14 @@
 }
 
 @keyframes nanti-rise {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @utility rise {
@@ -184,9 +192,15 @@
 }
 
 @keyframes nanti-pulse-ring {
-  0% { box-shadow: 0 0 0 0 rgb(37 211 102 / 0.35); }
-  70% { box-shadow: 0 0 0 12px rgb(37 211 102 / 0); }
-  100% { box-shadow: 0 0 0 0 rgb(37 211 102 / 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgb(37 211 102 / 0.35);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgb(37 211 102 / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgb(37 211 102 / 0);
+  }
 }
 
 @utility pulse-ring {

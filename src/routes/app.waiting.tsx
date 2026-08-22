@@ -11,7 +11,10 @@ export const Route = createFileRoute("/app/waiting")({
   head: () => ({
     meta: [
       { title: "Waiting · NANTI" },
-      { name: "description", content: "People and things you're waiting on, with how long you've been waiting." },
+      {
+        name: "description",
+        content: "People and things you're waiting on, with how long you've been waiting.",
+      },
       { property: "og:title", content: "Waiting · NANTI" },
       { property: "og:description", content: "Don't let someone else's promise slip away." },
     ],
@@ -53,11 +56,20 @@ function WaitingPage() {
                     <h3 className="text-[15.5px] font-semibold">
                       {person ? `${person.name} — ${person.org}` : i.source}
                     </h3>
-                    <p className="mt-1 text-[13.5px] text-muted-foreground">Waiting for: {i.title}</p>
-                    <p className="mt-0.5 text-[12.5px] text-muted-foreground">Since {formatDate(i.since)}</p>
+                    <p className="mt-1 text-[13.5px] text-muted-foreground">
+                      Waiting for: {i.title}
+                    </p>
+                    <p className="mt-0.5 text-[12.5px] text-muted-foreground">
+                      Since {formatDate(i.since)}
+                    </p>
                   </button>
                   <div className="shrink-0 text-right">
-                    <p className={"text-[22px] font-bold leading-none " + (stale ? "text-warning-foreground" : "")}>
+                    <p
+                      className={
+                        "text-[22px] font-bold leading-none " +
+                        (stale ? "text-warning-foreground" : "")
+                      }
+                    >
                       {days}
                     </p>
                     <p className="mt-1.5 text-[11.5px] text-muted-foreground">days</p>
@@ -72,13 +84,32 @@ function WaitingPage() {
                   </div>
                 )}
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <Button size="sm" onClick={() => toast.success(`Follow-up reminder created for ${person?.name ?? i.source}`)}>
+                  <Button
+                    size="sm"
+                    onClick={() =>
+                      toast.success(`Follow-up reminder created for ${person?.name ?? i.source}`)
+                    }
+                  >
                     Follow up
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => { complete(i.id); toast.success("Marked received"); }}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      complete(i.id);
+                      toast.success("Marked received");
+                    }}
+                  >
                     Mark received
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => { snooze(i.id, 2); toast("Snoozed 2 days"); }}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      snooze(i.id, 2);
+                      toast("Snoozed 2 days");
+                    }}
+                  >
                     Snooze
                   </Button>
                 </div>

@@ -12,9 +12,15 @@ export const Route = createFileRoute("/app/inbox")({
   head: () => ({
     meta: [
       { title: "Inbox · NANTI" },
-      { name: "description", content: "Things NANTI found in your WhatsApp conversations, ready to track." },
+      {
+        name: "description",
+        content: "Things NANTI found in your WhatsApp conversations, ready to track.",
+      },
       { property: "og:title", content: "Inbox · NANTI" },
-      { property: "og:description", content: "Tasks, commitments, follow-ups and deadlines detected by AI." },
+      {
+        property: "og:description",
+        content: "Tasks, commitments, follow-ups and deadlines detected by AI.",
+      },
     ],
   }),
   component: InboxPage,
@@ -44,7 +50,9 @@ function InboxPage() {
             onClick={() => setTab(t.id)}
             className={
               "rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors " +
-              (tab === t.id ? "bg-foreground text-background" : "bg-secondary text-muted-foreground hover:text-foreground")
+              (tab === t.id
+                ? "bg-foreground text-background"
+                : "bg-secondary text-muted-foreground hover:text-foreground")
             }
           >
             {t.label}
@@ -53,7 +61,10 @@ function InboxPage() {
       </div>
 
       {list.length === 0 ? (
-        <EmptyState title="Inbox is clean." hint="Import a new conversation and NANTI will read it for you." />
+        <EmptyState
+          title="Inbox is clean."
+          hint="Import a new conversation and NANTI will read it for you."
+        />
       ) : (
         <div className="space-y-3">
           {list.map((i, n) => {
@@ -69,7 +80,9 @@ function InboxPage() {
                   <h3 className="text-[15.5px] font-semibold">{i.title}</h3>
                   <KindBadge kind={i.kind} />
                 </div>
-                <p className="mt-2.5 text-[14px] italic leading-relaxed text-muted-foreground">"{i.quote}"</p>
+                <p className="mt-2.5 text-[14px] italic leading-relaxed text-muted-foreground">
+                  "{i.quote}"
+                </p>
                 <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-[12.5px] sm:grid-cols-3">
                   <div>
                     <dt className="text-muted-foreground">Due</dt>
@@ -77,7 +90,9 @@ function InboxPage() {
                   </div>
                   <div>
                     <dt className="text-muted-foreground">Person</dt>
-                    <dd className="font-medium">{person ? `${person.name} — ${person.org}` : "—"}</dd>
+                    <dd className="font-medium">
+                      {person ? `${person.name} — ${person.org}` : "—"}
+                    </dd>
                   </div>
                   <div>
                     <dt className="text-muted-foreground">Project</dt>
@@ -85,10 +100,23 @@ function InboxPage() {
                   </div>
                 </dl>
                 <div className="mt-4 flex gap-2">
-                  <Button size="sm" onClick={() => { track(i.id); toast.success("Tracked by NANTI"); }}>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      track(i.id);
+                      toast.success("Tracked by NANTI");
+                    }}
+                  >
                     Track
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => { ignore(i.id); toast("Ignored"); }}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      ignore(i.id);
+                      toast("Ignored");
+                    }}
+                  >
                     Ignore
                   </Button>
                 </div>

@@ -245,8 +245,40 @@ function InvoicesPage() {
             </Button>
             <Button
               variant="outline"
-              onClick={() => {
-                toast.success("Invoice berhasil diekspor");
+              onClick={async () => {
+                try {
+                  const response = await fetch("/api/invoices/pdf", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      invoiceNumber: `INV-${Date.now().toString(36).toUpperCase()}`,
+                      clientName: form.clientName || "Client",
+                      date: new Date().toLocaleDateString("id-ID"),
+                      dueDate: form.dueDate || "-",
+                      items: form.items.filter((i) => i.description),
+                      subtotal,
+                      tax,
+                      total,
+                      currency: "IDR",
+                      notes: form.notes,
+                      template: form.template,
+                      companyName: "NANTI",
+                    }),
+                  });
+
+                  if (!response.ok) throw new Error("Gagal generate PDF");
+
+                  const html = await response.text();
+                  const printWindow = window.open("", "_blank");
+                  if (printWindow) {
+                    printWindow.document.write(html);
+                    printWindow.document.close();
+                    setTimeout(() => printWindow.print(), 500);
+                  }
+                  toast.success("Invoice berhasil dibuat");
+                } catch {
+                  toast.error("Gagal membuat invoice");
+                }
               }}
             >
               <Download className="mr-1 size-4" /> Download PDF

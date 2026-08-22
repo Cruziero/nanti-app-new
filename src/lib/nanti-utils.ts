@@ -122,13 +122,16 @@ export function formatDayHeadline(locale = "id-ID") {
 
 function jakartaHour(now: Date = new Date()) {
   return Number(
-    new Intl.DateTimeFormat("en-GB", { timeZone: TIMEZONE, hour: "2-digit", hour12: false }).format(now),
+    new Intl.DateTimeFormat("en-GB", { timeZone: TIMEZONE, hour: "2-digit", hour12: false }).format(
+      now,
+    ),
   );
 }
 
 export function greeting(name: string) {
   const h = jakartaHour();
-  const part = h < 11 ? "Selamat pagi" : h < 15 ? "Selamat siang" : h < 18 ? "Selamat sore" : "Selamat malam";
+  const part =
+    h < 11 ? "Selamat pagi" : h < 15 ? "Selamat siang" : h < 18 ? "Selamat sore" : "Selamat malam";
   return `${part}, ${name}`;
 }
 
