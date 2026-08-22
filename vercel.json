@@ -1,5 +1,15 @@
 {
   "installCommand": "npm install",
   "buildCommand": "npm run build",
-  "outputDirectory": ".vercel/output"
+  "outputDirectory": ".vercel/output",
+  "crons": [
+    {
+      "path": "/api/cron/check-reminders",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/sync-calendar",
+      "schedule": "0 * * * *"
+    }
+  ]
 }
