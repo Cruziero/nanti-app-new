@@ -1,8 +1,22 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Plus, Sparkles, Sun, Inbox, Hourglass, FolderKanban, Users, Settings as Cog, LogOut } from "lucide-react";
+import {
+  Plus,
+  Sparkles,
+  Sun,
+  Inbox,
+  Hourglass,
+  FolderKanban,
+  Users,
+  Settings as Cog,
+  LogOut,
+  Bell,
+  FileText,
+  Calendar,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Logo } from "./logo";
+import { NotificationCenter } from "./notification-center";
 import { useNanti } from "@/lib/nanti-store";
 import { isOverdue, openItems } from "@/lib/nanti-utils";
 import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
@@ -20,6 +34,7 @@ const groups = [
     items: [
       { to: "/app/inbox", label: "Inbox", icon: Inbox },
       { to: "/app/waiting", label: "Menunggu", icon: Hourglass },
+      { to: "/app/reminders", label: "Pengingat", icon: Bell },
     ],
   },
   {
@@ -27,6 +42,7 @@ const groups = [
     items: [
       { to: "/app/projects", label: "Proyek", icon: FolderKanban },
       { to: "/app/people", label: "Orang", icon: Users },
+      { to: "/app/invoices", label: "Invoice", icon: FileText },
     ],
   },
 ] as const;
@@ -35,7 +51,7 @@ const mobileNav = [
   { to: "/app", label: "AI", icon: Sparkles, exact: true },
   { to: "/app/today", label: "Hari ini", icon: Sun },
   { to: "/app/inbox", label: "Inbox", icon: Inbox },
-  { to: "/app/waiting", label: "Menunggu", icon: Hourglass },
+  { to: "/app/reminders", label: "Pengingat", icon: Bell },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -48,6 +64,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         "/app/inbox": items.filter((i) => i.status === "inbox").length,
         "/app/waiting": openItems(items).filter((i) => i.kind === "waiting").length,
         "/app/today": items.filter(isOverdue).length,
+        "/app/reminders": openItems(items).filter((i) => i.reminderEnabled).length,
       }
     : {};
 
@@ -138,12 +155,15 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/85 px-4 py-3 backdrop-blur lg:hidden">
         <Logo />
-        <Link
-          to="/app/import"
-          className="rounded-lg bg-primary px-3 py-1.5 text-[13px] font-semibold text-primary-foreground"
-        >
-          Impor
-        </Link>
+        <div className="flex items-center gap-2">
+          <NotificationCenter notifications={[]} onMarkRead={() => {}} />
+          <Link
+            to="/app/import"
+            className="rounded-lg bg-primary px-3 py-1.5 text-[13px] font-semibold text-primary-foreground"
+          >
+            Impor
+          </Link>
+        </div>
       </header>
 
       <main className="pb-24 lg:pb-16 lg:pl-[248px]">
@@ -180,7 +200,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
-export function PageHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: ReactNode }) {
+export function PageHeader({
+  title,
+  subtitle,
+  action,
+}: {
+  title: string;
+  subtitle?: string;
+  action?: ReactNode;
+}) {
   return (
     <div className="mb-8 flex items-start justify-between gap-4">
       <div>
@@ -192,12 +220,24 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
   );
 }
 
-export function Section({ title, count, children }: { title: string; count?: number; children: ReactNode }) {
+export function Section({
+  title,
+  count,
+  children,
+}: {
+  title: string;
+  count?: number;
+  children: ReactNode;
+}) {
   return (
     <section className="mb-9">
       <div className="mb-2 flex items-center gap-2 px-3">
-        <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{title}</h2>
-        {count !== undefined && <span className="text-[11px] text-muted-foreground/70">{count}</span>}
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          {title}
+        </h2>
+        {count !== undefined && (
+          <span className="text-[11px] text-muted-foreground/70">{count}</span>
+        )}
       </div>
       <div className="space-y-0.5">{children}</div>
     </section>

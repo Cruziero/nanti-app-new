@@ -1,21 +1,37 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowUp, Loader as Loader2 } from "lucide-react";
+import {
+  ArrowUp,
+  Loader as Loader2,
+  MessageSquare,
+  Calendar,
+  Clock,
+  ArrowRight,
+} from "lucide-react";
 import { PageHeader } from "@/components/nanti/app-shell";
 import { Logo } from "@/components/nanti/logo";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { useNanti } from "@/lib/nanti-store";
-import { askAssistant } from "@/lib/nanti-ai.functions";
+import { askAssistant, generateFollowUpMessage } from "@/lib/nanti-ai.functions";
 import { dueLabel, kindLabel, openItems, waitingDays } from "@/lib/nanti-utils";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/")({
   head: () => ({
     meta: [
       { title: "Ask NANTI · Your work memory" },
-      { name: "description", content: "Ask anything about your work: what you're forgetting, who you're waiting for, what's overdue." },
+      {
+        name: "description",
+        content:
+          "Ask anything about your work: what you're forgetting, who you're waiting for, what's overdue.",
+      },
       { property: "og:title", content: "Ask NANTI · Your work memory" },
-      { property: "og:description", content: "Chief of staff AI that remembers all your work conversations." },
+      {
+        property: "og:description",
+        content: "Chief of staff AI that remembers all your work conversations.",
+      },
     ],
   }),
   component: AiPage,
@@ -54,6 +70,9 @@ function AiPage() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [followUpSuggestions, setFollowUpSuggestions] = useState<
+    Array<{ itemId: string; message: string; personName: string }>
+  >([]);
   const ref = useRef<HTMLTextAreaElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -75,6 +94,36 @@ function AiPage() {
       })
       .join("\n");
 
+  const generateFollowUps = async () => {
+    const waitingItems = openItems(items).filter(
+      (i) => i.kind === "waiting" && waitingDays(i) >= 2,
+    );
+    const suggestions = await Promise.all(
+      waitingItems.slice(0, 3).map(async (item) => {
+        try {
+          const person = personOf(item.personId);
+          const days = waitingDays(item);
+          const res = await generateFollowUpMessage({
+            data: {
+              itemTitle: item.title,
+              personName: person?.name || "teman Anda",
+              waitDays: days,
+              tone: "friendly",
+            },
+          });
+          return {
+            itemId: item.id,
+            message: res.message,
+            personName: person?.name || "Unknown",
+          };
+        } catch {
+          return null;
+        }
+      }),
+    );
+    setFollowUpSuggestions(suggestions.filter(Boolean) as typeof followUpSuggestions);
+  };
+
   const send = async (question: string) => {
     if (!question.trim() || loading) return;
     setMessages((m) => [...m, { role: "user", text: question }]);
@@ -83,8 +132,30 @@ function AiPage() {
     try {
       const res = await askAssistant({ data: { question, context: buildContext() } });
       setMessages((m) => [...m, { role: "assistant", text: res.answer }]);
+
+      if (
+        question.toLowerCase().includes("follow up") ||
+        question.toLowerCase().includes("followup")
+      ) {
+        void generateFollowUps();
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "NANTI cannot answer right now");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sendFollowUp = async (message: string) => {
+    setMessages((m) => [...m, { role: "user", text: message }]);
+    setLoading(true);
+    try {
+      const res = await askAssistant({
+        data: { question: `Help me send this follow-up: ${message}`, context: buildContext() },
+      });
+      setMessages((m) => [...m, { role: "assistant", text: res.answer }]);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Gagal mengirim follow-up");
     } finally {
       setLoading(false);
     }
@@ -99,7 +170,9 @@ function AiPage() {
           <div className="rise">
             <div className="card-soft p-6">
               <Logo showWord={false} />
-              <p className="mt-3 text-[15px] font-medium">I remember all your work conversations.</p>
+              <p className="mt-3 text-[15px] font-medium">
+                I remember all your work conversations.
+              </p>
               <p className="mt-1 text-[13.5px] text-muted-foreground">
                 Ask me anything — I'll answer from your commitments, deadlines and waiting items.
               </p>
@@ -137,6 +210,32 @@ function AiPage() {
             <Loader2 className="size-3.5 animate-spin" /> NANTI is thinking...
           </p>
         )}
+
+        {followUpSuggestions.length > 0 && !loading && (
+          <div className="rise rounded-xl border border-border bg-surface p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <MessageSquare className="size-4 text-primary" />
+              <h3 className="text-[14px] font-semibold">Saran Follow-up</h3>
+            </div>
+            <div className="space-y-2">
+              {followUpSuggestions.map((s) => (
+                <div
+                  key={s.itemId}
+                  className="flex items-start gap-3 rounded-lg border border-border p-3 transition-colors hover:border-primary/40"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[12px] text-muted-foreground">Untuk {s.personName}</p>
+                    <p className="mt-1 text-[13px]">{s.message}</p>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => sendFollowUp(s.message)}>
+                    <ArrowRight className="size-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div ref={endRef} />
       </div>
 

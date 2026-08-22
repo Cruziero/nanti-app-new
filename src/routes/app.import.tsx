@@ -1,11 +1,23 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { ClipboardPaste, ImageIcon, Loader2, Sparkle, Sparkles, Wand2 } from "lucide-react";
+import {
+  ClipboardPaste,
+  ImageIcon,
+  Loader2,
+  Sparkle,
+  Sparkles,
+  Wand2,
+  AlertCircle,
+  CheckCircle,
+  Calendar,
+  User,
+} from "lucide-react";
 import { PageHeader } from "@/components/nanti/app-shell";
 import { KindBadge } from "@/components/nanti/kind-badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNanti } from "@/lib/nanti-store";
@@ -18,9 +30,16 @@ export const Route = createFileRoute("/app/import")({
   head: () => ({
     meta: [
       { title: "Impor percakapan — NANTI" },
-      { name: "description", content: "Teruskan percakapan WhatsApp ke NANTI dan biarkan AI mengingat janji, tenggat, dan hal yang Anda tunggu." },
+      {
+        name: "description",
+        content:
+          "Teruskan percakapan WhatsApp ke NANTI dan biarkan AI mengingat janji, tenggat, dan hal yang Anda tunggu.",
+      },
       { property: "og:title", content: "Impor percakapan — NANTI" },
-      { property: "og:description", content: "Tempel chat atau unggah screenshot, NANTI menyimpan memorinya." },
+      {
+        property: "og:description",
+        content: "Tempel chat atau unggah screenshot, NANTI menyimpan memorinya.",
+      },
     ],
   }),
   component: ImportPage,
@@ -36,8 +55,18 @@ Budi: Btw meeting dipindah ke jam 3 sore.`;
 type Method = "paste" | "screenshot" | "demo";
 
 const methods: { id: Method; label: string; hint: string; icon: typeof ClipboardPaste }[] = [
-  { id: "paste", label: "Tempel percakapan", hint: "Salin chat dari WhatsApp", icon: ClipboardPaste },
-  { id: "screenshot", label: "Unggah screenshot", hint: "NANTI membaca gambarnya", icon: ImageIcon },
+  {
+    id: "paste",
+    label: "Tempel percakapan",
+    hint: "Salin chat dari WhatsApp",
+    icon: ClipboardPaste,
+  },
+  {
+    id: "screenshot",
+    label: "Unggah screenshot",
+    hint: "NANTI membaca gambarnya",
+    icon: ImageIcon,
+  },
   { id: "demo", label: "Coba contoh", hint: "Lihat cara kerjanya", icon: Wand2 },
 ];
 
@@ -69,6 +98,11 @@ function ImportPage() {
   const [detected, setDetected] = useState<string[]>([]);
   const [selected, setSelected] = useState<Record<number, boolean>>({});
   const [reviewMode, setReviewMode] = useState(false);
+  const [clarificationMode, setClarificationMode] = useState(false);
+  const [clarifyingIndex, setClarifyingIndex] = useState<number | null>(null);
+  const [clarificationAnswers, setClarificationAnswers] = useState<
+    Record<number, { person?: string; due?: string; project?: string }>
+  >({});
 
   const reset = () => {
     setDrafts(null);
@@ -77,6 +111,34 @@ function ImportPage() {
     setDetected([]);
     setSelected({});
     setReviewMode(false);
+    setClarificationMode(false);
+    setClarifyingIndex(null);
+    setClarificationAnswers({});
+  };
+
+  const startClarification = (index: number) => {
+    setClarifyingIndex(index);
+    setClarificationMode(true);
+  };
+
+  const saveClarification = (
+    index: number,
+    answers: { person?: string; due?: string; project?: string },
+  ) => {
+    setClarificationAnswers((prev) => ({ ...prev, [index]: answers }));
+    setClarificationMode(false);
+    setClarifyingIndex(null);
+  };
+
+  const getClarifiedDraft = (draft: Draft, index: number): Draft => {
+    const answers = clarificationAnswers[index];
+    if (!answers) return draft;
+    return {
+      ...draft,
+      person: answers.person || draft.person,
+      due: answers.due || draft.due,
+      project: answers.project || draft.project,
+    };
   };
 
   const apply = (
@@ -141,7 +203,12 @@ function ImportPage() {
 
   const track = (indexes: number[]) => {
     if (!drafts) return;
-    const chosen = indexes.map((i) => drafts[i]).filter(Boolean) as Draft[];
+    const chosen = indexes
+      .map((i) => {
+        const draft = drafts[i];
+        return getClarifiedDraft(draft, i);
+      })
+      .filter(Boolean) as Draft[];
     if (!chosen.length) {
       toast("Pilih minimal satu item.");
       return;
@@ -260,7 +327,10 @@ function ImportPage() {
           {!!detected.length && (
             <div className="mt-3 flex flex-wrap gap-1.5">
               {detected.map((p) => (
-                <span key={p} className="rounded-full bg-secondary px-2.5 py-1 text-[11.5px] font-medium">
+                <span
+                  key={p}
+                  className="rounded-full bg-secondary px-2.5 py-1 text-[11.5px] font-medium"
+                >
                   Proyek: {p}
                 </span>
               ))}
@@ -282,6 +352,18 @@ function ImportPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <KindBadge kind={d.kind} />
                     <span className="text-[14.5px] font-medium">{d.title}</span>
+                    {d.needsClarification && (
+                      <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-600">
+                        <AlertCircle className="size-3" />
+                        Perlu Info
+                      </span>
+                    )}
+                    {clarificationAnswers[i] && (
+                      <span className="flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-medium text-green-600">
+                        <CheckCircle className="size-3" />
+                        Lengkap
+                      </span>
+                    )}
                   </div>
                   <p className="mt-1 text-[12.5px] text-muted-foreground">
                     {d.person ? `Orang: ${d.person}${d.org ? ` — ${d.org}` : ""}` : "Tanpa orang"}
@@ -308,6 +390,11 @@ function ImportPage() {
                       <Button size="sm" onClick={() => track([i])}>
                         Lacak ini
                       </Button>
+                      {d.needsClarification && (
+                        <Button size="sm" variant="outline" onClick={() => startClarification(i)}>
+                          Lengkapi Info
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         variant="ghost"
@@ -357,6 +444,116 @@ function ImportPage() {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function ClarificationForm({
+  draft,
+  onSave,
+  onCancel,
+  people,
+}: {
+  draft: Draft;
+  onSave: (answers: { person?: string; due?: string; project?: string }) => void;
+  onCancel: () => void;
+  people: Array<{ id: string; name: string }>;
+}) {
+  const [person, setPerson] = useState(draft.person || "");
+  const [due, setDue] = useState("");
+  const [project, setProject] = useState(draft.project || "");
+
+  const missingFields: string[] = [];
+  if (!draft.person) missingFields.push("Siapa orangnya?");
+  if (draft.dueOffsetDays == null) missingFields.push("Kapan tenggatnya?");
+  if (!draft.project) missingFields.push("Proyek apa?");
+
+  return (
+    <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-5">
+      <div className="mb-4 flex items-center gap-2">
+        <AlertCircle className="size-5 text-amber-600" />
+        <h3 className="text-[14px] font-semibold text-amber-900">Lengkapi Informasi</h3>
+      </div>
+      <p className="mb-4 text-[13px] text-amber-700">
+        NANTI perlu informasi tambahan untuk item ini:
+      </p>
+
+      <div className="space-y-3">
+        {!draft.person && (
+          <div>
+            <label className="flex items-center gap-1.5 text-[12px] font-medium text-amber-800">
+              <User className="size-3.5" />
+              Siapa orangnya?
+            </label>
+            <Input
+              className="mt-1.5 border-amber-200 bg-white"
+              placeholder="Nama orang"
+              value={person}
+              onChange={(e) => setPerson(e.target.value)}
+            />
+            {people.length > 0 && (
+              <div className="mt-1.5 flex flex-wrap gap-1">
+                {people.slice(0, 5).map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setPerson(p.name)}
+                    className="rounded-full border border-amber-200 bg-white px-2 py-0.5 text-[11px] text-amber-700 hover:bg-amber-100"
+                  >
+                    {p.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {draft.dueOffsetDays == null && (
+          <div>
+            <label className="flex items-center gap-1.5 text-[12px] font-medium text-amber-800">
+              <Calendar className="size-3.5" />
+              Kapan tenggatnya?
+            </label>
+            <Input
+              type="date"
+              className="mt-1.5 border-amber-200 bg-white"
+              value={due}
+              onChange={(e) => setDue(e.target.value)}
+            />
+          </div>
+        )}
+
+        {!draft.project && (
+          <div>
+            <label className="flex items-center gap-1.5 text-[12px] font-medium text-amber-800">
+              Proyek apa?
+            </label>
+            <Input
+              className="mt-1.5 border-amber-200 bg-white"
+              placeholder="Nama proyek (opsional)"
+              value={project}
+              onChange={(e) => setProject(e.target.value)}
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4 flex gap-2">
+        <Button
+          size="sm"
+          onClick={() =>
+            onSave({
+              person: person || undefined,
+              due: due || undefined,
+              project: project || undefined,
+            })
+          }
+        >
+          Simpan
+        </Button>
+        <Button size="sm" variant="ghost" onClick={onCancel}>
+          Batal
+        </Button>
+      </div>
     </div>
   );
 }

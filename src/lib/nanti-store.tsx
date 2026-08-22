@@ -1,5 +1,22 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { Item, Person, Project } from "./nanti-types";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import type {
+  Item,
+  Person,
+  Project,
+  ReminderChannel,
+  ReminderIntensity,
+  ConversationTone,
+  AppLanguage,
+  FocusArea,
+} from "./nanti-types";
 import { demoItems, demoPeople, demoProjects, dayOffset } from "./nanti-demo";
 import { addDays, normalizeDay, todayISO } from "./nanti-utils";
 import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
@@ -30,6 +47,21 @@ export interface Settings {
   onboarded: boolean;
   role?: string;
   volume?: string;
+  // New preference fields
+  language: AppLanguage;
+  tone: ConversationTone;
+  focusArea: FocusArea;
+  preferredName: string;
+  emojiPreference: boolean;
+  verbosity: "concise" | "normal" | "detailed";
+  quietHoursEnabled: boolean;
+  quietHoursStart: string;
+  quietHoursEnd: string;
+  reminderChannels: ReminderChannel[];
+  reminderIntensity: ReminderIntensity;
+  // Integration status
+  whatsappConnected: boolean;
+  calendarConnected: boolean;
 }
 
 interface State {
@@ -53,6 +85,19 @@ const defaultSettings: Settings = {
     "Sapuan akhir hari": true,
   },
   onboarded: false,
+  language: "indonesian",
+  tone: "professional",
+  focusArea: "everything",
+  preferredName: "Rizky",
+  emojiPreference: true,
+  verbosity: "normal",
+  quietHoursEnabled: true,
+  quietHoursStart: "22:00",
+  quietHoursEnd: "07:00",
+  reminderChannels: ["in_app", "push"],
+  reminderIntensity: "normal",
+  whatsappConnected: false,
+  calendarConnected: false,
 };
 
 const emptyState: State = { items: [], people: [], projects: [], settings: defaultSettings };
@@ -74,9 +119,7 @@ function rebase(state: State): State {
   const today = todayISO();
   const from = normalizeDay(state.generatedOn);
   const shift = from
-    ? Math.round(
-        (Date.parse(`${today}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86400000,
-      )
+    ? Math.round((Date.parse(`${today}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86400000)
     : 0;
 
   const move = (value: string | undefined, demo: boolean) => {
@@ -123,14 +166,22 @@ function taskToItem(task: Record<string, unknown>): Item {
     status: task.status === "pending" ? "open" : task.status === "completed" ? "done" : "ignored",
     priority: task.priority as Item["priority"],
     due: (task.due_date as string)?.slice(0, 10),
+    time: (task.time as string) || undefined,
     personId: (task.person_id as string) || undefined,
     projectId: (task.project_id as string) || undefined,
     source: (task.source as string) || "",
-    quote: "",
-    aiNote: "",
-    confidence: 0.8,
+    sourceType: (task.source_type as Item["sourceType"]) || undefined,
+    quote: (task.quote as string) || "",
+    aiNote: (task.ai_note as string) || "",
+    confidence: typeof task.confidence === "number" ? task.confidence : 0.8,
     createdBy: "ai",
     createdAt: task.created_at as string,
+    reminderEnabled: (task.reminder_enabled as boolean) || false,
+    reminderTime: (task.reminder_time as string) || undefined,
+    reminderChannels: (task.reminder_channels as ReminderChannel[]) || [],
+    reminderIntensity: (task.reminder_intensity as ReminderIntensity) || undefined,
+    lastRemindedAt: (task.last_reminded_at as string) || undefined,
+    reminderCount: (task.reminder_count as number) || 0,
   };
 }
 
@@ -209,6 +260,10 @@ interface Ctx extends State {
   reset: () => void;
   personOf: (id?: string) => Person | undefined;
   projectOf: (id?: string) => Project | undefined;
+  // New methods
+  toggleReminder: (id: string) => void;
+  setReminderIntensity: (id: string, intensity: ReminderIntensity) => void;
+  setReminderChannels: (id: string, channels: ReminderChannel[]) => void;
 }
 
 const StoreContext = createContext<Ctx | null>(null);
@@ -249,11 +304,7 @@ export function NantiProvider({ children }: { children: ReactNode }) {
             setState({
               projects: p2.map(projectToProject),
               people: pe2.map(personToPerson),
-              items: [
-                ...t2.map(taskToItem),
-                ...w2.map(waitingToItem),
-                ...i2.map(inboxToItem),
-              ],
+              items: [...t2.map(taskToItem), ...w2.map(waitingToItem), ...i2.map(inboxToItem)],
               settings: { ...defaultSettings, onboarded: true },
             });
           } else {
@@ -308,16 +359,19 @@ export function NantiProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const persist = useCallback((next: State) => {
-    setState(next);
-    if (!useSupabase) {
-      try {
-        window.localStorage.setItem(KEY, JSON.stringify(next));
-      } catch {
-        /* ignore */
+  const persist = useCallback(
+    (next: State) => {
+      setState(next);
+      if (!useSupabase) {
+        try {
+          window.localStorage.setItem(KEY, JSON.stringify(next));
+        } catch {
+          /* ignore */
+        }
       }
-    }
-  }, [useSupabase]);
+    },
+    [useSupabase],
+  );
 
   const mutate = useCallback(
     (fn: (s: State) => State) =>
@@ -350,7 +404,12 @@ export function NantiProvider({ children }: { children: ReactNode }) {
             if (patch.title) dbPatch.title = patch.title;
             if (patch.description) dbPatch.description = patch.description;
             if (patch.status) {
-              dbPatch.status = patch.status === "done" ? "completed" : patch.status === "ignored" ? "dismissed" : "pending";
+              dbPatch.status =
+                patch.status === "done"
+                  ? "completed"
+                  : patch.status === "ignored"
+                    ? "dismissed"
+                    : "pending";
             }
             if (patch.priority) dbPatch.priority = patch.priority;
             if (patch.due) dbPatch.due_date = patch.due;
@@ -359,7 +418,10 @@ export function NantiProvider({ children }: { children: ReactNode }) {
             updateTaskFn({ data: { id, ...dbPatch } }).catch(console.error);
           }
         }
-        mutate((s) => ({ ...s, items: s.items.map((i) => (i.id === id ? { ...i, ...patch } : i)) }));
+        mutate((s) => ({
+          ...s,
+          items: s.items.map((i) => (i.id === id ? { ...i, ...patch } : i)),
+        }));
       },
       addItems: (newItems) => {
         if (useSupabase) {
@@ -403,14 +465,18 @@ export function NantiProvider({ children }: { children: ReactNode }) {
         }
         mutate((s) => ({
           ...s,
-          items: s.items.map((i) => (i.id === id ? { ...i, status: i.kind === "waiting" ? "received" : "done" } : i)),
+          items: s.items.map((i) =>
+            i.id === id ? { ...i, status: i.kind === "waiting" ? "received" : "done" } : i,
+          ),
         }));
       },
       snooze: (id, days) => {
         if (useSupabase) {
           const item = state.items.find((i) => i.id === id);
           if (item?.kind === "waiting") {
-            updateWaitingItemFn({ data: { id, started_at: new Date().toISOString() } }).catch(console.error);
+            updateWaitingItemFn({ data: { id, started_at: new Date().toISOString() } }).catch(
+              console.error,
+            );
           } else {
             const newDue = addDays(item?.due ?? todayISO(), days);
             updateTaskFn({ data: { id, due_date: newDue } }).catch(console.error);
@@ -430,13 +496,19 @@ export function NantiProvider({ children }: { children: ReactNode }) {
         if (useSupabase) {
           updateInboxItemFn({ data: { id, status: "tracked" } }).catch(console.error);
         }
-        mutate((s) => ({ ...s, items: s.items.map((i) => (i.id === id ? { ...i, status: "open" } : i)) }));
+        mutate((s) => ({
+          ...s,
+          items: s.items.map((i) => (i.id === id ? { ...i, status: "open" } : i)),
+        }));
       },
       ignore: (id) => {
         if (useSupabase) {
           updateInboxItemFn({ data: { id, status: "ignored" } }).catch(console.error);
         }
-        mutate((s) => ({ ...s, items: s.items.map((i) => (i.id === id ? { ...i, status: "ignored" } : i)) }));
+        mutate((s) => ({
+          ...s,
+          items: s.items.map((i) => (i.id === id ? { ...i, status: "ignored" } : i)),
+        }));
       },
       remove: (id) => {
         if (useSupabase) {
@@ -453,7 +525,13 @@ export function NantiProvider({ children }: { children: ReactNode }) {
       reset: () => {
         if (useSupabase) {
           seedDemoData().then(() => {
-            Promise.all([fetchProjects(), fetchPeople(), fetchTasks(), fetchWaitingItems(), fetchInboxItems()])
+            Promise.all([
+              fetchProjects(),
+              fetchPeople(),
+              fetchTasks(),
+              fetchWaitingItems(),
+              fetchInboxItems(),
+            ])
               .then(([p, pe, t, w, i]) => {
                 setState({
                   projects: p.map(projectToProject),
@@ -470,6 +548,26 @@ export function NantiProvider({ children }: { children: ReactNode }) {
       },
       personOf: (id) => state.people.find((p) => p.id === id),
       projectOf: (id) => state.projects.find((p) => p.id === id),
+      toggleReminder: (id) => {
+        mutate((s) => ({
+          ...s,
+          items: s.items.map((i) =>
+            i.id === id ? { ...i, reminderEnabled: !i.reminderEnabled } : i,
+          ),
+        }));
+      },
+      setReminderIntensity: (id, intensity) => {
+        mutate((s) => ({
+          ...s,
+          items: s.items.map((i) => (i.id === id ? { ...i, reminderIntensity: intensity } : i)),
+        }));
+      },
+      setReminderChannels: (id, channels) => {
+        mutate((s) => ({
+          ...s,
+          items: s.items.map((i) => (i.id === id ? { ...i, reminderChannels: channels } : i)),
+        }));
+      },
     }),
     [state, hydrated, mutate, persist, useSupabase],
   );

@@ -2,6 +2,7 @@ import type { ExtractedItem } from "./nanti-ai.server";
 import type { Item, Person, Project, SourceType } from "./nanti-types";
 import { dayOffset } from "./nanti-demo";
 import { newId, todayISO } from "./nanti-utils";
+import { parseSmartDate } from "./nanti-dates";
 
 export type Draft = ExtractedItem;
 
@@ -25,21 +26,41 @@ export function draftToItem(
   draft: Draft,
   ctx: { people: Person[]; projects: Project[]; sourceType: SourceType; sourceName?: string },
 ): Item {
-  const person = matchPerson(ctx.people, draft.person);
+  const person = matchPerson(ctx.people, draft.person || draft.who);
   const project = matchProject(ctx.projects, draft.project);
-  const due =
-    draft.kind === "waiting" || draft.dueOffsetDays == null ? undefined : dayOffset(draft.dueOffsetDays);
+
+  // Determine due date from structured fields
+  let due: string | undefined;
+  let time: string | undefined;
+
+  if (draft.kind === "waiting") {
+    due = undefined;
+  } else if (draft.whenParsed) {
+    due = draft.whenParsed;
+  } else if (draft.when) {
+    const parsed = parseSmartDate(draft.when);
+    due = parsed.date ?? undefined;
+    time = parsed.time ?? undefined;
+  } else if (draft.dueOffsetDays != null) {
+    due = dayOffset(draft.dueOffsetDays);
+  }
+
+  if (draft.dueTime) {
+    time = draft.dueTime;
+  }
 
   const item: Item = {
     id: newId("ai"),
-    title: draft.title,
+    title: draft.title || draft.what || "",
+    description: draft.action || undefined,
     kind: draft.kind,
-    status: "open",
+    status: draft.needsClarification ? "inbox" : "open",
     priority: draft.priority,
     ...(due ? { due } : {}),
+    ...(time ? { time } : {}),
     ...(draft.kind === "waiting" ? { since: todayISO() } : {}),
     ...(person ? { personId: person.id } : {}),
-    ...(draft.person ? { personName: draft.person } : {}),
+    ...(draft.person || draft.who ? { personName: draft.person || draft.who || undefined } : {}),
     ...(project ? { projectId: project.id } : {}),
     ...(draft.project ? { projectName: draft.project } : {}),
     source: draft.source || ctx.sourceName || "Impor percakapan",
@@ -49,6 +70,9 @@ export function draftToItem(
     confidence: draft.confidence,
     createdBy: "ai",
     createdAt: new Date().toISOString(),
+    reminderEnabled: draft.reminderRequired,
+    reminderChannels: draft.reminderRequired ? ["in_app", "push"] : [],
+    reminderIntensity: "normal",
   };
   return item;
 }
