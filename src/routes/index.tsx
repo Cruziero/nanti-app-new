@@ -51,7 +51,7 @@ function Hero() {
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>
             <p className="eyebrow text-[var(--accent-emerald)]">AI Work Memory for WhatsApp</p>
-            <h1 className="display-hero mt-6 text-foreground">
+            <h1 className="display-lg mt-6 text-foreground" style={{ fontSize: "clamp(1.125rem, 2.6vw, 2rem)", fontWeight: 800 }}>
               Your WhatsApp remembers everything you typed.
               <br />
               <span className="text-[var(--accent-emerald)]">NANTI</span> remembers what you
