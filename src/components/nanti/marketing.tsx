@@ -3,6 +3,58 @@ import { useState, type ReactNode } from "react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "./logo";
+import { SiteFooter } from "./footer";
+
+const accentStyles = {
+  emerald: "bg-[var(--accent-emerald-bg)] text-[var(--accent-emerald)]",
+  teal: "bg-[var(--accent-teal-bg)] text-[var(--accent-teal)]",
+  lime: "bg-[var(--accent-lime-bg)] text-[var(--accent-lime)]",
+  mint: "bg-[var(--accent-mint-bg)] text-[var(--accent-mint)]",
+  forest: "bg-[var(--accent-forest-bg)] text-[var(--accent-forest)]",
+} as const;
+
+export type AccentColor = keyof typeof accentStyles;
+
+export function AccentChip({
+  color,
+  children,
+  className,
+}: {
+  color: AccentColor;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex size-11 shrink-0 items-center justify-center rounded-xl",
+        accentStyles[color],
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function FloatingCard({
+  children,
+  rotate,
+  className,
+}: {
+  children: ReactNode;
+  rotate?: number;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn("rounded-3xl border border-border bg-background p-7 shadow-lift", className)}
+      style={rotate ? { transform: `rotate(${rotate}deg)` } : undefined}
+    >
+      {children}
+    </div>
+  );
+}
 
 const navLinks = [
   { to: "/how-it-works", label: "How it works" },
@@ -186,7 +238,7 @@ export function MarketingLayout({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen flex-col bg-background">
       <MarketingNav />
       <main className="flex-1">{children}</main>
-      <MarketingFooter />
+      <SiteFooter />
     </div>
   );
 }

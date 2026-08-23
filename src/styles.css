@@ -80,6 +80,17 @@
   --sidebar-foreground: #1a1a1a;
   --sidebar-accent: #f0f0f0;
   --sidebar-border: #ebebeb;
+
+  --accent-emerald: #25D366;
+  --accent-emerald-bg: #f0fdf4;
+  --accent-teal: #128C7E;
+  --accent-teal-bg: #e6f7f5;
+  --accent-lime: #84cc16;
+  --accent-lime-bg: #f7fee7;
+  --accent-mint: #6ee7b7;
+  --accent-mint-bg: #ecfdf5;
+  --accent-forest: #166534;
+  --accent-forest-bg: #f0fdf4;
 }
 
 .dark {
@@ -114,6 +125,17 @@
   --sidebar-foreground: #ededed;
   --sidebar-accent: #1a1a1a;
   --sidebar-border: rgba(255, 255, 255, 0.06);
+
+  --accent-emerald: #25D366;
+  --accent-emerald-bg: #0f2a1a;
+  --accent-teal: #2dd4a8;
+  --accent-teal-bg: #0d2926;
+  --accent-lime: #a3e635;
+  --accent-lime-bg: #1a2e08;
+  --accent-mint: #34d399;
+  --accent-mint-bg: #0d2920;
+  --accent-forest: #4ade80;
+  --accent-forest-bg: #0f2a1a;
 }
 
 @layer base {
@@ -142,11 +164,18 @@
   border-radius: var(--radius-lg);
 }
 
+@utility display-hero {
+  font-size: clamp(2.25rem, 5.2vw, 4rem);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+}
+
 @utility display-xl {
   font-size: clamp(2.75rem, 6.2vw, 5rem);
   line-height: 1.02;
   letter-spacing: -0.04em;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 @utility display-lg {
