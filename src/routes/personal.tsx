@@ -20,11 +20,12 @@ function PersonalPage() {
           <Heart className="size-7 text-accent-foreground" />
         </div>
         <h1 className="display-lg mt-7 text-foreground">
-          From work to family, remember what matters.
+          Work isn't the only place you make promises.
         </h1>
         <p className="mt-5 max-w-xl text-[18px] leading-relaxed text-muted-foreground">
-          NANTI isn't just for work. Birthday reminders, family commitments, household follow-ups —
-          if it's in a conversation, NANTI remembers it.
+          NANTI isn't just for work. The birthday you almost forgot, the thing you promised your
+          kid, the appointment your mom mentioned once — if it's in a conversation, NANTI remembers
+          it.
         </p>
 
         <div className="mt-14 grid gap-6 sm:grid-cols-2">

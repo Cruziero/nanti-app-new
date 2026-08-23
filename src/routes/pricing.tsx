@@ -17,7 +17,7 @@ const plans = [
     name: "Free",
     price: "Rp 0",
     period: "forever",
-    desc: "For trying out NANTI with a few conversations.",
+    desc: "For trying NANTI with the conversations that matter most.",
     features: ["Up to 50 tracked items", "AI conversation import", "Daily briefing", "1 workspace"],
     cta: "Get started",
     to: "/welcome" as const,

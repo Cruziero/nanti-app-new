@@ -10,7 +10,7 @@ export const Route = createFileRoute("/how-it-works")({
       {
         name: "description",
         content:
-          "Paste or forward a WhatsApp conversation. NANTI AI finds commitments and tracks them for you.",
+          "Forward the message, or paste the conversation. NANTI reads it, and remembers what needs remembering.",
       },
     ],
   }),
@@ -24,8 +24,8 @@ function HowItWorksPage() {
         <p className="eyebrow text-primary">How it works</p>
         <h1 className="display-lg mt-5 text-foreground">You don't create tasks. You just talk.</h1>
         <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-muted-foreground">
-          Forward or paste your WhatsApp conversations. AI extracts commitments, deadlines, and
-          follow-ups — no manual entry needed.
+          Forward the message, or paste the conversation. NANTI reads it, and remembers what needs
+          remembering.
         </p>
 
         <div className="mt-16 space-y-8">
@@ -34,19 +34,19 @@ function HowItWorksPage() {
               num: "01",
               icon: MessageSquareText,
               title: "Paste a conversation",
-              desc: "Copy any WhatsApp chat — a group, a DM, a thread — and paste it into NANTI. You can also upload a .txt file or screenshot.",
+              desc: "Copy any WhatsApp thread — a group chat, a DM, a long back-and-forth — and paste it in. Screenshot works too, or a .txt export.",
             },
             {
               num: "02",
               icon: Brain,
               title: "NANTI reads and understands",
-              desc: "Our AI identifies commitments, tasks, deadlines, follow-ups and items you're waiting for. It knows the difference between a real promise and small talk.",
+              desc: "NANTI reads it the way a sharp assistant would — spotting real commitments and skipping the small talk, the emojis, the 'hahaha oke.'",
             },
             {
               num: "03",
               icon: CheckCircle2,
               title: "Review and track",
-              desc: "NANTI shows you what it found. You choose what to track. Everything lands in your workspace automatically.",
+              desc: "NANTI shows you exactly what it found and why. You decide what's worth tracking — the rest, it leaves alone.",
             },
           ].map((step, i) => (
             <div
@@ -73,7 +73,7 @@ function HowItWorksPage() {
         <div className="mt-16 rounded-2xl border border-primary/25 bg-accent/50 p-8 text-center">
           <h2 className="text-[24px] font-semibold tracking-tight">Ready to try it?</h2>
           <p className="mt-2 text-[15px] text-muted-foreground">
-            Paste your first conversation and see what NANTI finds.
+            Paste your first conversation. See what NANTI catches that you almost missed.
           </p>
           <Link
             to="/welcome"

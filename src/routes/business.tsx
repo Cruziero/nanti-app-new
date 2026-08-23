@@ -24,8 +24,8 @@ function BusinessPage() {
         </div>
         <h1 className="display-lg mt-7 text-foreground">Your business runs through WhatsApp.</h1>
         <p className="mt-5 max-w-xl text-[18px] leading-relaxed text-muted-foreground">
-          NANTI keeps the commitments moving. Never lose track of a promise, a deadline, or a
-          follow-up again.
+          NANTI keeps every promise moving — the quotation you owe a client, the sample a supplier
+          promised, the approval you're still waiting on.
         </p>
 
         <div className="mt-14 grid gap-6 sm:grid-cols-2">
@@ -33,12 +33,12 @@ function BusinessPage() {
             {
               icon: Briefcase,
               title: "Sales & client management",
-              desc: "Track every promise made to clients. Know what's overdue, what's waiting, and what needs your attention today.",
+              desc: "Every promise made to a client, tracked automatically. Know what's overdue, what's waiting, and what needs you today.",
             },
             {
               icon: TrendingUp,
               title: "Operations & projects",
-              desc: "Keep production schedules, supplier follow-ups, and team commitments visible — all from your conversations.",
+              desc: "Production schedules, supplier follow-ups, team commitments — all visible in one place, pulled straight from the conversations where they actually happened.",
             },
           ].map((item, i) => (
             <div

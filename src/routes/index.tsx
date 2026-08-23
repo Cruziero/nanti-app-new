@@ -19,13 +19,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Never lose a commitment in WhatsApp again. Forward or paste your conversations into NANTI, and AI turns them into tracked commitments, reminders and follow-ups.",
+          "Forward or paste a WhatsApp conversation and NANTI turns it into tracked commitments, reminders, and follow-ups. Nothing gets buried in the scroll.",
       },
       { property: "og:title", content: "NANTI · Your AI memory for WhatsApp" },
       {
         property: "og:description",
         content:
-          "Never lose a commitment in WhatsApp again. Forward or paste your conversations into NANTI, and AI turns them into tracked commitments, reminders and follow-ups.",
+          "Forward or paste a WhatsApp conversation and NANTI turns it into tracked commitments, reminders, and follow-ups. Nothing gets buried in the scroll.",
       },
     ],
   }),
@@ -54,13 +54,13 @@ function Hero() {
         <div className="mx-auto max-w-3xl text-center">
           <p className="eyebrow text-primary">AI Work Memory for WhatsApp</p>
           <h1 className="display-xl mt-6 text-foreground">
-            Your WhatsApp remembers everything.
+            Your WhatsApp remembers everything you typed.
             <br />
-            <span className="text-primary">NANTI</span> remembers what matters.
+            <span className="text-primary">NANTI</span> remembers what you promised.
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-[17px] leading-relaxed text-muted-foreground">
-            Turn conversations into tasks, commitments, reminders and follow-ups — without having to
-            remember everything yourself.
+            Forward or paste a conversation, and NANTI turns it into tasks, deadlines, and
+            follow-ups — so nothing gets buried in the scroll.
           </p>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
@@ -195,8 +195,8 @@ function HowItWorks() {
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="display-lg text-foreground">You don't create tasks. You just talk.</h2>
           <p className="mt-4 text-[16px] leading-relaxed text-muted-foreground">
-            Forward or paste your WhatsApp conversations into NANTI. AI extracts commitments,
-            deadlines, and follow-ups — no manual entry needed.
+            Forward the message, or paste the conversation. NANTI reads it, and remembers what needs
+            remembering.
           </p>
         </div>
 
@@ -209,7 +209,7 @@ function HowItWorks() {
             <p className="mt-5 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
               Step 01
             </p>
-            <h3 className="mt-2 text-[17px] font-semibold">WhatsApp conversation</h3>
+            <h3 className="mt-2 text-[17px] font-semibold">The message</h3>
             <div className="mt-4 rounded-xl bg-surface p-4">
               <p className="text-[14px] italic leading-relaxed text-muted-foreground">
                 "Besok saya kirim revisinya ya Pak."
@@ -248,10 +248,9 @@ function HowItWorks() {
             <p className="mt-5 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
               Step 03
             </p>
-            <h3 className="mt-2 text-[17px] font-semibold">Track</h3>
+            <h3 className="mt-2 text-[17px] font-semibold">Remembered</h3>
             <p className="mt-3 text-[14px] leading-relaxed text-muted-foreground">
-              The commitment appears automatically in your workspace. NANTI follows up so you don't
-              have to.
+              The commitment appears in your workspace. NANTI follows up so you don't have to.
             </p>
           </div>
         </div>
@@ -266,25 +265,25 @@ function Capabilities() {
       num: "01",
       icon: Brain,
       title: "Remember",
-      desc: "Never lose a promise again. NANTI understands commitments inside conversations.",
+      desc: "Never lose a promise again. NANTI catches commitments hiding inside ordinary conversation.",
     },
     {
       num: "02",
       icon: Zap,
       title: "Prioritize",
-      desc: "Know what matters today. NANTI turns scattered conversations into a clear daily briefing.",
+      desc: "Know what matters today, not just what's loudest. NANTI turns scattered conversations into one clear daily briefing.",
     },
     {
       num: "03",
       icon: Hourglass,
       title: "Follow Up",
-      desc: "Know who you're waiting for. Track approvals, replies, payments, documents and decisions.",
+      desc: "Know exactly who owes you what. Approvals, replies, payments, documents, decisions — all tracked, none forgotten.",
     },
     {
       num: "04",
       icon: ArrowRight,
       title: "Act",
-      desc: "Close the loop. NANTI can eventually help draft and execute follow-ups.",
+      desc: "Close the loop. NANTI can draft the follow-up message for you to send — so replying takes seconds, not willpower.",
     },
   ];
   return (
@@ -323,8 +322,8 @@ function AiMemorySection() {
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="display-lg text-foreground">What am I forgetting?</h2>
           <p className="mt-4 text-[16px] leading-relaxed text-muted-foreground">
-            Ask NANTI anything about your work. It remembers every commitment, deadline and
-            follow-up from your conversations.
+            Ask NANTI anything about your work. It remembers every commitment, deadline, and
+            follow-up — from every conversation you've forwarded it.
           </p>
         </div>
 
@@ -400,7 +399,7 @@ function UseCases() {
             },
             {
               title: "For Professionals",
-              desc: "Keep track of everything without keeping everything in your head.",
+              desc: "Everything tracked. Nothing living rent-free in your head.",
               link: "/business",
             },
             {
@@ -442,8 +441,8 @@ function PrivacyTrust() {
           Your conversations are yours.
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-[16px] leading-relaxed text-muted-foreground">
-          NANTI processes your conversations to find commitments, but your data is never sold, never
-          shared with third parties, and always yours to delete.
+          NANTI only sees what you forward or paste — never your whole WhatsApp. Nothing is sold,
+          nothing is shared, and everything is yours to delete.
         </p>
       </div>
     </section>
@@ -456,7 +455,7 @@ function FinalCta() {
       <div className="mx-auto max-w-3xl px-5 text-center sm:px-8">
         <h2 className="display-lg text-foreground">Stop remembering everything.</h2>
         <p className="mx-auto mt-5 max-w-lg text-[17px] leading-relaxed text-muted-foreground">
-          Let NANTI remember the conversations that matter.
+          Forward the message. Let NANTI remember the rest.
         </p>
         <Link
           to="/welcome"
