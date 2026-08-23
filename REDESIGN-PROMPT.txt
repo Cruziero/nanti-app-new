@@ -1,0 +1,1463 @@
+﻿NANTI UI/UX REDESIGN — CRAFT-INSPIRED WORKSPACE
+
+
+IMPORTANT:
+
+
+I do NOT like the current NANTI UI.
+
+
+The current interface feels too much like a generic AI SaaS dashboard with many cards, statistics and green accents.
+
+
+I want to redesign the entire authenticated NANTI application.
+
+
+Use the design philosophy and information architecture quality of Craft as inspiration:
+
+
+https://www.craft.do/
+
+
+IMPORTANT:
+Do NOT clone Craft.
+Do NOT copy their branding.
+Do NOT copy their exact layouts.
+Do NOT copy their visual assets.
+
+
+Instead, borrow these principles:
+
+
+- content-first interface
+- quiet premium design
+- excellent whitespace
+- strong sidebar navigation
+- workspace feeling
+- minimal visual noise
+- subtle borders
+- typography-driven hierarchy
+- elegant navigation
+- contextual panels
+- document-like content
+- information hierarchy instead of dashboard cards
+- app should feel like a place users live in every day
+
+
+NANTI must remain completely original.
+
+
+==================================================
+CORE DESIGN DIRECTION
+==================================================
+
+
+NANTI should feel like:
+
+
+Craft
++
+AI Chief of Staff
++
+WhatsApp Memory
++
+Personal Reminder System
+
+
+Not:
+
+
+Monday
+Notion dashboard
+generic AI chatbot
+generic CRM
+generic task manager
+
+
+The application should feel calm, intelligent and premium.
+
+
+==================================================
+1. REMOVE THE GENERIC DASHBOARD FEEL
+==================================================
+
+
+Reduce the number of:
+
+
+- statistic cards
+- large colorful cards
+- oversized rounded containers
+- green blocks
+- dashboard widgets
+- unnecessary borders
+- excessive shadows
+
+
+Do NOT make every piece of information a card.
+
+
+Use:
+
+
+text
+sections
+rows
+inline metadata
+subtle separators
+document-like layouts
+contextual actions
+
+
+The UI should breathe.
+
+
+==================================================
+2. NEW APPLICATION SHELL
+==================================================
+
+
+Create one reusable application shell.
+
+
+Desktop:
+
+
+LEFT SIDEBAR
+MAIN CONTENT
+OPTIONAL RIGHT CONTEXT PANEL
+
+
+Mobile:
+
+
+TOP BAR
+CONTENT
+BOTTOM NAVIGATION
+
+
+==================================================
+3. SIDEBAR
+==================================================
+
+
+Create a beautiful persistent sidebar.
+
+
+Header:
+
+
+NANTI
+
+
+Navigation:
+
+
+TODAY
+
+
+INBOX
+ASK NANTI
+
+
+WORK
+
+
+People
+Projects
+Follow-ups
+Waiting
+
+
+TOOLS
+
+
+Calendar
+Invoices
+
+
+MEMORY
+
+
+Recent
+Saved
+
+
+Bottom:
+
+
+Settings
+User profile
+
+
+Use small subtle icons.
+
+
+Do not use huge icons.
+
+
+Do not use colorful icons everywhere.
+
+
+Sidebar should feel similar in calmness and spatial quality to Craft, while remaining original to NANTI.
+
+
+==================================================
+4. TODAY SHOULD BE THE HOME
+==================================================
+
+
+/app/today
+
+
+This should be the main workspace.
+
+
+Do NOT create a dashboard full of cards.
+
+
+Instead:
+
+
+Today
+
+
+Sunday, 23 August
+
+
+Good evening, Rizky.
+
+
+Then:
+
+
+3 things need your attention
+
+
+────────────────────────
+
+
+Send invoice to Pak Tom
+
+
+Due today · 15:00
+
+
+You promised to send this in your WhatsApp conversation.
+
+
+[Done] [Remind later]
+
+
+────────────────────────
+
+
+Follow up Budi
+
+
+Waiting 3 days
+
+
+Quotation approval
+
+
+[Follow up] [Snooze]
+
+
+────────────────────────
+
+
+Check inventory
+
+
+Potentially forgotten
+
+
+You mentioned this 3 days ago.
+
+
+[Review]
+
+
+==================================================
+5. TODAY INFORMATION HIERARCHY
+==================================================
+
+
+Use sections:
+
+
+NEEDS ATTENTION
+
+
+TODAY
+
+
+UPCOMING
+
+
+WAITING
+
+
+POTENTIALLY FORGOTTEN
+
+
+Do not show everything at once.
+
+
+The purpose is:
+
+
+"What matters to me right now?"
+
+
+==================================================
+6. ASK NANTI
+==================================================
+
+
+/app
+
+
+This should become the AI memory interface.
+
+
+Do not make it look like a standard chatbot.
+
+
+Create a beautiful centered workspace.
+
+
+Top:
+
+
+Ask NANTI
+
+
+Your memory, on demand.
+
+
+Large input:
+
+
+"Ask NANTI anything..."
+
+
+Suggestions:
+
+
+What am I forgetting?
+Who am I waiting for?
+What did I promise this week?
+Who should I follow up with?
+What's due today?
+
+
+When the user asks:
+
+
+"Who should I follow up with?"
+
+
+NANTI should respond using elegant document-like content.
+
+
+Example:
+
+
+People you may want to follow up with
+
+
+Budi Santoso
+
+
+Waiting for quotation approval
+3 days
+
+
+Pak Tom
+
+
+Invoice overdue
+1 day
+
+
+Supplier China
+
+
+Waiting for shipping confirmation
+4 days
+
+
+Then:
+
+
+I'd prioritize Pak Tom first because the invoice is already overdue.
+
+
+Actions should be inline.
+
+
+==================================================
+7. INBOX
+==================================================
+
+
+/app/import and Inbox should be redesigned around:
+
+
+"NANTI found something."
+
+
+Not generic notifications.
+
+
+Example:
+
+
+Possible commitment
+
+
+"Besok saya kirim revisinya ya Pak."
+
+
+NANTI thinks:
+
+
+Send revised quotation
+
+
+Budi
+Tomorrow
+
+
+[Remember] [Ignore]
+
+
+Another:
+
+
+Waiting detected
+
+
+"Saya masih tunggu approval dari Andi."
+
+
+NANTI thinks:
+
+
+You are waiting for Andi's approval.
+
+
+[Track] [Ignore]
+
+
+Another:
+
+
+Missing information
+
+
+"Nanti saya kirim invoice ke Pak Tom."
+
+
+I know:
+
+
+WHO:
+Pak Tom
+
+
+WHAT:
+Invoice
+
+
+I still need:
+
+
+WHEN
+
+
+"When should I remind you?"
+
+
+[Today] [Tomorrow] [Choose date]
+
+
+==================================================
+8. IMPORT EXPERIENCE
+==================================================
+
+
+/app/import
+
+
+Make this feel like the primary NANTI action.
+
+
+Headline:
+
+
+Bring it to NANTI.
+
+
+Subtitle:
+
+
+Forward a conversation, paste a message, or upload a screenshot.
+
+
+Use three elegant entry methods:
+
+
+Paste
+Screenshot
+WhatsApp
+
+
+Do not make them giant colorful cards.
+
+
+Use simple rows / buttons.
+
+
+==================================================
+9. AI EXTRACTION VIEW
+==================================================
+
+
+When NANTI reads a conversation:
+
+
+Show:
+
+
+I found something worth remembering.
+
+
+Then:
+
+
+Send invoice
+
+
+Pak Tom
+
+
+28 August
+
+
+Under it:
+
+
+WHO
+Pak Tom
+
+
+WHAT
+Invoice
+
+
+WHEN
+28 August
+
+
+ACTION
+Send
+
+
+Then:
+
+
+Why NANTI thinks this:
+
+
+"You said you would send an invoice to Pak Tom on 28 August."
+
+
+Confidence:
+
+
+98%
+
+
+Actions:
+
+
+Remember
+Edit
+Ignore
+
+
+==================================================
+10. REMINDERS
+==================================================
+
+
+/app/reminders
+
+
+Do NOT make this another dashboard.
+
+
+Make it a clean list.
+
+
+Header:
+
+
+Reminders
+
+
+Tabs:
+
+
+Active
+Completed
+
+
+Sections:
+
+
+Overdue
+Today
+Upcoming
+
+
+Each item:
+
+
+Send invoice to Pak Tom
+Today · 15:00
+
+
+WhatsApp
+Push
+
+
+[Done]
+
+
+Use subtle status indicators.
+
+
+==================================================
+11. PEOPLE
+==================================================
+
+
+/app/people
+
+
+Make People feel like relationship memory.
+
+
+Header:
+
+
+People
+
+
+"People NANTI is helping you keep up with."
+
+
+List:
+
+
+Budi Santoso
+PT ABC
+
+
+2 open commitments
+1 waiting
+
+
+Pak Tom
+Client
+
+
+1 invoice
+1 follow-up
+
+
+Click person.
+
+
+Person detail should look like a relationship timeline.
+
+
+==================================================
+12. PROJECTS
+==================================================
+
+
+Projects should feel like spaces.
+
+
+Example:
+
+
+ABC Export
+
+
+8 commitments
+2 waiting
+1 overdue
+
+
+Marketing
+
+
+5 commitments
+1 waiting
+
+
+Use clean rows / large titles rather than card grids.
+
+
+==================================================
+13. FOLLOW-UPS
+==================================================
+
+
+Create a clean workspace:
+
+
+Follow-ups
+
+
+Needs attention
+
+
+Budi
+Quotation
+Waiting 3 days
+
+
+Pak Tom
+Invoice
+Overdue 1 day
+
+
+Each item should have:
+
+
+Context
+Last interaction
+Suggested message
+
+
+Button:
+
+
+Draft follow-up
+
+
+==================================================
+14. WAITING
+==================================================
+
+
+Create:
+
+
+Waiting
+
+
+"People and things you're waiting on."
+
+
+Example:
+
+
+Budi
+
+
+Quotation approval
+
+
+Waiting 3 days
+
+
+Supplier China
+
+
+Shipping confirmation
+
+
+Waiting 4 days
+
+
+Make waiting visually calm.
+
+
+==================================================
+15. INVOICES
+==================================================
+
+
+Keep the invoice feature but redesign it.
+
+
+Do NOT make it look like a generic accounting SaaS.
+
+
+Use:
+
+
+Invoices
+
+
+Create invoice
+
+
+Then a clean list:
+
+
+INV-2026-001
+Pak Tom
+Rp12,500,000
+Due 28 Aug
+
+
+Status:
+
+
+Draft
+Sent
+Due
+Overdue
+Paid
+
+
+When creating:
+
+
+LEFT:
+invoice details
+
+
+RIGHT:
+beautiful live invoice preview
+
+
+Use three templates:
+
+
+Minimal
+Modern
+Premium
+
+
+==================================================
+16. SETTINGS
+==================================================
+
+
+Settings should be clean and document-like.
+
+
+Sections:
+
+
+Profile
+
+
+How should NANTI call you?
+
+
+Pak Rizky
+
+
+AI Personality
+
+
+Professional
+
+
+Reminder Style
+
+
+WhatsApp
+Push
+Calendar
+
+
+Quiet Hours
+
+
+22:00–07:00
+
+
+Integrations
+
+
+WhatsApp
+Google Calendar
+
+
+Privacy
+
+
+Data
+Delete memories
+Export data
+
+
+==================================================
+17. COLOR SYSTEM
+==================================================
+
+
+IMPORTANT:
+
+
+Stop using green everywhere.
+
+
+NANTI green:
+
+
+#25D366
+
+
+should be used mainly for:
+
+
+primary actions
+AI highlights
+active states
+success
+important NANTI moments
+
+
+Most of the UI should be:
+
+
+white
+off-white
+black
+dark gray
+light gray
+
+
+Use status colors sparingly.
+
+
+==================================================
+18. TYPOGRAPHY
+==================================================
+
+
+Typography is the primary design tool.
+
+
+Use:
+
+
+large titles
+medium section titles
+small metadata
+comfortable body text
+
+
+Do not make everything bold.
+
+
+Do not put every sentence inside a card.
+
+
+==================================================
+19. CORNERS
+==================================================
+
+
+Reduce excessive rounded cards.
+
+
+Use subtle 8–12px radius where needed.
+
+
+Some elements should have NO container at all.
+
+
+Use whitespace and separators instead.
+
+
+==================================================
+20. SHADOWS
+==================================================
+
+
+Almost no shadows.
+
+
+Use:
+
+
+1px borders
+very subtle elevation
+
+
+The interface should feel light.
+
+
+==================================================
+21. RIGHT CONTEXT PANEL
+==================================================
+
+
+On desktop, some screens can have a right-side contextual panel.
+
+
+Example:
+
+
+User selects:
+
+
+Send invoice to Pak Tom
+
+
+Right panel:
+
+
+MEMORY
+
+
+Pak Tom
+
+
+Client
+
+
+Related:
+
+
+Invoice INV-2026-001
+
+
+Original conversation
+
+
+Reminder:
+
+
+28 Aug · WhatsApp
+
+
+Follow-up:
+
+
+Not needed
+
+
+This makes NANTI feel intelligent.
+
+
+==================================================
+22. SEARCH
+==================================================
+
+
+Create global search.
+
+
+Search:
+
+
+Pak Tom
+
+
+Results:
+
+
+People
+Commitments
+Invoices
+Conversations
+Projects
+
+
+The search experience should feel like searching your memory.
+
+
+==================================================
+23. QUICK COMMAND
+==================================================
+
+
+Add a global quick command.
+
+
+Keyboard shortcut:
+
+
+Cmd/Ctrl + K
+
+
+Examples:
+
+
+Remind me to...
+Find...
+Ask NANTI...
+Create invoice...
+Go to Today...
+
+
+This should become a powerful part of the desktop experience.
+
+
+==================================================
+24. BRING TO NANTI
+==================================================
+
+
+Create a persistent but subtle action.
+
+
+Desktop:
+
+
+top-right:
+
+
++ Bring to NANTI
+
+
+Mobile:
+
+
+floating +
+
+
+When clicked:
+
+
+Paste conversation
+Upload screenshot
+New memory
+
+
+==================================================
+25. ONBOARDING
+==================================================
+
+
+Make onboarding visually consistent with the new application.
+
+
+Do NOT use seven generic form screens.
+
+
+Use large typography and progressive questions.
+
+
+Step:
+
+
+Hi, welcome to NANTI.
+
+
+What should I call you?
+
+
+Then:
+
+
+How should I talk to you?
+
+
+Then:
+
+
+What should I remember?
+
+
+Then:
+
+
+Where should I remind you?
+
+
+Then:
+
+
+Connect calendar?
+
+
+Then:
+
+
+Try NANTI.
+
+
+The final step should demonstrate the magic:
+
+
+"nanti saya kirim invoice tgl 28 agustus ya pak Tom"
+
+
+NANTI extracts:
+
+
+WHO
+Pak Tom
+
+
+WHAT
+Invoice
+
+
+WHEN
+28 August
+
+
+ACTION
+Send
+
+
+Then:
+
+
+"I'll remember that."
+
+
+==================================================
+26. MOBILE
+==================================================
+
+
+Mobile should not simply be the desktop layout squeezed down.
+
+
+Use:
+
+
+Today
+Ask NANTI
++
+Reminders
+More
+
+
+The + button:
+
+
+Bring to NANTI
+Screenshot
+Paste
+New reminder
+Create invoice
+
+
+==================================================
+27. RESPONSIVE
+==================================================
+
+
+Desktop:
+1200+
+
+
+Tablet:
+768–1199
+
+
+Mobile:
+<768
+
+
+Test every screen at:
+
+
+1440px
+1280px
+1024px
+768px
+390px
+
+
+==================================================
+28. ANIMATIONS
+==================================================
+
+
+Use subtle animations.
+
+
+AI:
+
+
+typing / analyzing
+
+
+Memory:
+
+
+saved
+
+
+Reminder:
+
+
+completed
+
+
+Page:
+
+
+soft transitions
+
+
+Do not use excessive animation.
+
+
+==================================================
+29. DO NOT BREAK FUNCTIONALITY
+==================================================
+
+
+IMPORTANT:
+
+
+The existing backend and integrations are valuable.
+
+
+Do not remove:
+
+
+Supabase
+AI
+authentication
+reminders
+invoice calculations
+Google Calendar
+push notification architecture
+WhatsApp architecture
+
+
+Do not replace real data with mock data.
+
+
+Do not fake integrations.
+
+
+The redesign must connect to the existing functionality.
+
+
+==================================================
+30. ROUTES
+==================================================
+
+
+Make all existing routes feel like one application:
+
+
+/welcome
+
+
+/app
+
+
+/app/today
+
+
+/app/reminders
+
+
+/app/invoices
+
+
+/app/import
+
+
+/app/settings
+
+
+/app/people
+
+
+/app/projects
+
+
+/app/calendar
+
+
+No route should feel visually disconnected.
+
+
+==================================================
+31. FINAL DESIGN TEST
+==================================================
+
+
+Open the application and ask:
+
+
+Does this feel like a premium workspace?
+
+
+Does it feel calm?
+
+
+Does it feel intelligent?
+
+
+Does it feel different from Notion / Monday / Asana?
+
+
+Can the user immediately see what matters?
+
+
+Can the user easily give something to NANTI?
+
+
+Can the user understand why NANTI remembered something?
+
+
+Does the interface feel good enough to use every day?
+
+
+If the answer is no:
+
+
+simplify.
+
+
+Remove visual noise rather than adding more UI.
+
+
+==================================================
+FINAL PRINCIPLE
+==================================================
+
+
+NANTI should feel like:
+
+
+"my second brain for conversations."
+
+
+Not:
+
+
+"another task management dashboard."
+
+
+Design the product around:
+
+
+MEMORY
+→
+CONTEXT
+→
+COMMITMENT
+→
+REMINDER
+→
+ACTION
+
+
+Make that experience beautiful.

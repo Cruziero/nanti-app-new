@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { TriangleAlert as AlertTriangle } from "lucide-react";
-import { EmptyState, PageHeader } from "@/components/nanti/app-shell";
-import { Button } from "@/components/ui/button";
+import { TriangleAlert as AlertTriangle, Hourglass } from "lucide-react";
+import { EmptyState, PageHeader, Section } from "@/components/nanti/app-shell";
 import { useNanti } from "@/lib/nanti-store";
 import { formatDate, openItems, waitingDays } from "@/lib/nanti-utils";
 import { useItemDetail } from "@/components/nanti/item-detail";
@@ -10,13 +9,8 @@ import { useItemDetail } from "@/components/nanti/item-detail";
 export const Route = createFileRoute("/app/waiting")({
   head: () => ({
     meta: [
-      { title: "Waiting · NANTI" },
-      {
-        name: "description",
-        content: "People and things you're waiting on, with how long you've been waiting.",
-      },
-      { property: "og:title", content: "Waiting · NANTI" },
-      { property: "og:description", content: "Don't let someone else's promise slip away." },
+      { title: "Waiting - NANTI" },
+      { name: "description", content: "People and things you're waiting on." },
     ],
   }),
   component: WaitingPage,
@@ -33,90 +27,59 @@ function WaitingPage() {
     <div>
       <PageHeader title="Waiting" subtitle="Who are you waiting for?" />
 
-      <p className="mb-6 text-[14px] font-medium">{list.length} items waiting</p>
-
       {list.length === 0 ? (
         <EmptyState title="No one is keeping you waiting." hint="Everyone has replied to you." />
       ) : (
-        <div className="space-y-3">
-          {list.map((i, n) => {
-            const person = personOf(i.personId);
-            const days = waitingDays(i);
+        <Section count={list.length}>
+          {list.map((item) => {
+            const person = personOf(item.personId);
+            const days = waitingDays(item);
             const stale = days >= 4;
             return (
-              <div
-                key={i.id}
-                style={{ animationDelay: `${n * 40}ms` }}
-                className={
-                  "rise card-soft p-5 " + (stale ? "border-warning/50 bg-warning/[0.06]" : "")
-                }
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <button className="min-w-0 text-left" onClick={() => openDetail(i.id)}>
-                    <h3 className="text-[15.5px] font-semibold">
-                      {person ? `${person.name} — ${person.org}` : i.source}
-                    </h3>
-                    <p className="mt-1 text-[13.5px] text-muted-foreground">
-                      Waiting for: {i.title}
-                    </p>
-                    <p className="mt-0.5 text-[12.5px] text-muted-foreground">
-                      Since {formatDate(i.since)}
+              <div key={item.id} className="flex items-start gap-3 px-1 py-3">
+                <Hourglass className="mt-0.5 size-3.5 shrink-0 text-muted-foreground/60" />
+                <div className="min-w-0 flex-1">
+                  <button className="text-left" onClick={() => openDetail(item.id)}>
+                    <p className="text-[14px] font-medium">
+                      {person ? `${person.name} - ${person.org}` : item.source}
                     </p>
                   </button>
-                  <div className="shrink-0 text-right">
-                    <p
-                      className={
-                        "text-[22px] font-bold leading-none " +
-                        (stale ? "text-warning-foreground" : "")
-                      }
-                    >
-                      {days}
-                    </p>
-                    <p className="mt-1.5 text-[11.5px] text-muted-foreground">days</p>
-                  </div>
+                  <p className="mt-0.5 text-[12.5px] text-muted-foreground">
+                    Waiting for: {item.title}
+                  </p>
+                  <p className="mt-0.5 text-[11.5px] text-muted-foreground/60">
+                    Since {formatDate(item.since)} - {days} days
+                  </p>
                 </div>
-                {stale && (
-                  <div className="mt-3 flex items-center gap-2">
-                    <AlertTriangle className="size-4 text-warning-foreground" />
-                    <p className="text-[12.5px] font-medium text-warning-foreground">
-                      This has been waiting unusually long. You should follow up directly.
-                    </p>
-                  </div>
-                )}
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() =>
-                      toast.success(`Follow-up reminder created for ${person?.name ?? i.source}`)
-                    }
-                  >
-                    Follow up
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
+                <div className="flex items-center gap-1.5">
+                  {stale && (
+                    <span className="flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-600">
+                      <AlertTriangle className="size-3" /> Stale
+                    </span>
+                  )}
+                  <button
                     onClick={() => {
-                      complete(i.id);
+                      complete(item.id);
                       toast.success("Marked received");
                     }}
+                    className="rounded-md border border-border px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground transition-colors hover:bg-secondary"
                   >
-                    Mark received
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                    Done
+                  </button>
+                  <button
                     onClick={() => {
-                      snooze(i.id, 2);
+                      snooze(item.id, 2);
                       toast("Snoozed 2 days");
                     }}
+                    className="rounded-md px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground"
                   >
                     Snooze
-                  </Button>
+                  </button>
                 </div>
               </div>
             );
           })}
-        </div>
+        </Section>
       )}
     </div>
   );

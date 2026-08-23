@@ -8,21 +8,15 @@ import { Button } from "@/components/ui/button";
 import { useNanti } from "@/lib/nanti-store";
 import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
 import { usePushSubscription } from "@/hooks/use-push-subscription";
-import type {
-  ConversationTone,
-  AppLanguage,
-  ReminderChannel,
-  ReminderIntensity,
-} from "@/lib/nanti-types";
+import type { ConversationTone, ReminderChannel } from "@/lib/nanti-types";
 import { cn } from "@/lib/utils";
 import { Check, Bell, BellOff, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/app/settings")({
   head: () => ({
     meta: [
-      { title: "Settings · NANTI" },
-      { name: "description", content: "Tune NANTI reminder rhythm to your workday." },
-      { property: "og:title", content: "Settings · NANTI" },
+      { title: "Settings - NANTI" },
+      { name: "description", content: "Configure NANTI to your workday." },
     ],
   }),
   component: SettingsPage,
@@ -38,23 +32,11 @@ const toneOptions: { id: ConversationTone; label: string }[] = [
   { id: "direct", label: "Direct" },
 ];
 
-const languageOptions: { id: AppLanguage; label: string }[] = [
-  { id: "indonesian", label: "Bahasa Indonesia" },
-  { id: "english", label: "English" },
-  { id: "mix", label: "Indonesia + English" },
-];
-
-const channelOpts: { id: ReminderChannel; label: string; desc: string }[] = [
-  { id: "whatsapp", label: "WhatsApp", desc: "Pesan langsung" },
-  { id: "push", label: "Push notification", desc: "Notifikasi ponsel" },
-  { id: "calendar", label: "Google Calendar", desc: "Event kalender" },
-  { id: "in_app", label: "Di dalam app", desc: "Notifikasi NANTI" },
-];
-
-const intensityOpts: { id: ReminderIntensity; label: string; desc: string }[] = [
-  { id: "gentle", label: "Lembut", desc: "Sekali saat jatuh tempo" },
-  { id: "normal", label: "Normal", desc: "Sebelum + saat jatuh tempo" },
-  { id: "persistent", label: "Terus-menerus", desc: "Sebelum + saat + lewat jatuh tempo" },
+const channelOpts: { id: ReminderChannel; label: string }[] = [
+  { id: "whatsapp", label: "WhatsApp" },
+  { id: "push", label: "Push Notifications" },
+  { id: "calendar", label: "Google Calendar" },
+  { id: "in_app", label: "In-app" },
 ];
 
 function SettingsPage() {
@@ -71,55 +53,44 @@ function SettingsPage() {
 
   const handleSignOut = async () => {
     await signOut();
-    toast.success("Berhasil keluar.");
+    toast.success("Signed out.");
     navigate({ to: "/auth/login" });
   };
 
   return (
-    <div>
-      <PageHeader title="Settings" subtitle="Tune NANTI to your workday" />
+    <div className="max-w-xl">
+      <PageHeader title="Settings" subtitle="Configure NANTI to your workday" />
 
-      <div className="card-soft mb-4 p-5">
-        <h2 className="mb-4 text-[14px] font-semibold">Profil</h2>
-        <Label className="text-[13px]">Nama panggilan</Label>
-        <Input
-          className="mt-1.5 bg-surface"
-          value={settings.preferredName || settings.name}
-          onChange={(e) => setSettings({ preferredName: e.target.value, name: e.target.value })}
-        />
-      </div>
-
-      <div className="card-soft mb-4 p-5">
-        <h2 className="mb-4 text-[14px] font-semibold">Bahasa & Gaya</h2>
-        <Label className="text-[13px]">Bahasa</Label>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {languageOptions.map((l) => (
-            <button
-              key={l.id}
-              onClick={() => setSettings({ language: l.id })}
-              className={cn(
-                "rounded-lg border px-3 py-1.5 text-[13px] font-medium transition-colors",
-                settings.language === l.id
-                  ? "border-primary bg-accent/50 text-primary"
-                  : "border-border bg-surface text-muted-foreground hover:border-primary/40",
-              )}
-            >
-              {settings.language === l.id && <Check className="mr-1 inline size-3" />}
-              {l.label}
-            </button>
-          ))}
+      <section className="mb-10">
+        <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+          Profile
+        </h2>
+        <div className="space-y-4">
+          <div>
+            <Label className="text-[13px]">What should NANTI call you?</Label>
+            <Input
+              className="mt-1.5"
+              value={settings.preferredName || settings.name}
+              onChange={(e) => setSettings({ preferredName: e.target.value, name: e.target.value })}
+            />
+          </div>
         </div>
-        <Label className="mt-4 text-[13px]">Gaya bicara NANTI</Label>
-        <div className="mt-2 flex flex-wrap gap-2">
+      </section>
+
+      <section className="mb-10">
+        <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+          AI Personality
+        </h2>
+        <div className="flex flex-wrap gap-1.5">
           {toneOptions.map((t) => (
             <button
               key={t.id}
               onClick={() => setSettings({ tone: t.id })}
               className={cn(
-                "rounded-lg border px-3 py-1.5 text-[13px] font-medium transition-colors",
+                "rounded-md border px-3 py-1.5 text-[12.5px] font-medium transition-colors",
                 settings.tone === t.id
-                  ? "border-primary bg-accent/50 text-primary"
-                  : "border-border bg-surface text-muted-foreground hover:border-primary/40",
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-border text-muted-foreground hover:border-foreground/30",
               )}
             >
               {settings.tone === t.id && <Check className="mr-1 inline size-3" />}
@@ -127,86 +98,41 @@ function SettingsPage() {
             </button>
           ))}
         </div>
-      </div>
+      </section>
 
-      <div className="card-soft mb-4 p-5">
-        <h2 className="mb-4 text-[14px] font-semibold">Waktu Pengingat</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <Label className="text-[13px]">Briefing harian</Label>
-            <Input
-              type="time"
-              className="mt-1.5 bg-surface"
-              value={settings.briefingTime}
-              onChange={(e) => setSettings({ briefingTime: e.target.value })}
-            />
-          </div>
-          <div>
-            <Label className="text-[13px]">Sapuan akhir hari</Label>
-            <Input
-              type="time"
-              className="mt-1.5 bg-surface"
-              value={settings.endOfDayTime}
-              onChange={(e) => setSettings({ endOfDayTime: e.target.value })}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="card-soft mb-4 p-5">
-        <h2 className="mb-4 text-[14px] font-semibold">Channel Pengingat</h2>
-        {channelOpts.map((ch) => (
-          <div
-            key={ch.id}
-            className="flex items-center justify-between border-b border-border/60 py-3 last:border-0"
-          >
-            <div>
-              <span className="text-[13.5px] font-medium">{ch.label}</span>
-              <span className="ml-2 text-[12px] text-muted-foreground">{ch.desc}</span>
+      <section className="mb-10">
+        <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+          Reminder Channels
+        </h2>
+        <div className="divide-y divide-border">
+          {channelOpts.map((ch) => (
+            <div key={ch.id} className="flex items-center justify-between py-3">
+              <span className="text-[13.5px]">{ch.label}</span>
+              <Switch
+                checked={settings.reminderChannels.includes(ch.id)}
+                onCheckedChange={() => {
+                  const current = settings.reminderChannels;
+                  const next = current.includes(ch.id)
+                    ? current.filter((c) => c !== ch.id)
+                    : [...current, ch.id];
+                  setSettings({ reminderChannels: next });
+                }}
+              />
             </div>
-            <Switch
-              checked={settings.reminderChannels.includes(ch.id)}
-              onCheckedChange={() => {
-                const current = settings.reminderChannels;
-                const next = current.includes(ch.id)
-                  ? current.filter((c) => c !== ch.id)
-                  : [...current, ch.id];
-                setSettings({ reminderChannels: next });
-              }}
-            />
-          </div>
-        ))}
-      </div>
-
-      <div className="card-soft mb-4 p-5">
-        <h2 className="mb-4 text-[14px] font-semibold">Intensitas Pengingat</h2>
-        <div className="space-y-2">
-          {intensityOpts.map((opt) => (
-            <button
-              key={opt.id}
-              onClick={() => setSettings({ reminderIntensity: opt.id })}
-              className={cn(
-                "flex w-full items-center justify-between rounded-xl border p-3 text-left transition-colors",
-                settings.reminderIntensity === opt.id
-                  ? "border-primary bg-accent/50"
-                  : "border-border bg-surface hover:border-primary/40",
-              )}
-            >
-              <div>
-                <p className="text-[13.5px] font-medium">{opt.label}</p>
-                <p className="text-[12px] text-muted-foreground">{opt.desc}</p>
-              </div>
-              {settings.reminderIntensity === opt.id && <Check className="size-4 text-primary" />}
-            </button>
           ))}
         </div>
-      </div>
+      </section>
 
-      <div className="card-soft mb-4 p-5">
+      <section className="mb-10">
+        <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+          Quiet Hours
+        </h2>
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-[14px] font-semibold">Jam Tenang</h2>
-            <p className="text-[12px] text-muted-foreground">Jangan kirim pengingat non-mendesak</p>
+            <p className="text-[13.5px]">Do not disturb</p>
+            <p className="text-[12px] text-muted-foreground">
+              No non-urgent reminders during quiet hours
+            </p>
           </div>
           <Switch
             checked={settings.quietHoursEnabled}
@@ -216,30 +142,77 @@ function SettingsPage() {
         {settings.quietHoursEnabled && (
           <div className="mt-4 grid grid-cols-2 gap-4">
             <div>
-              <Label className="text-[13px]">Mulai</Label>
+              <Label className="text-[12px]">Start</Label>
               <Input
                 type="time"
-                className="mt-1.5 bg-surface"
+                className="mt-1"
                 value={settings.quietHoursStart}
                 onChange={(e) => setSettings({ quietHoursStart: e.target.value })}
               />
             </div>
             <div>
-              <Label className="text-[13px]">Selesai</Label>
+              <Label className="text-[12px]">End</Label>
               <Input
                 type="time"
-                className="mt-1.5 bg-surface"
+                className="mt-1"
                 value={settings.quietHoursEnd}
                 onChange={(e) => setSettings({ quietHoursEnd: e.target.value })}
               />
             </div>
           </div>
         )}
-      </div>
+      </section>
 
-      <div className="card-soft mb-4 p-5">
-        <h2 className="mb-4 text-[14px] font-semibold">Notifikasi</h2>
-        <div className="flex items-center justify-between border-b border-border/60 py-3">
+      <section className="mb-10">
+        <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+          Integrations
+        </h2>
+        <div className="divide-y divide-border">
+          <div className="flex items-center justify-between py-3">
+            <div>
+              <p className="text-[13.5px]">WhatsApp</p>
+              <p className="text-[12px] text-muted-foreground">WhatsApp Business API</p>
+            </div>
+            <span
+              className={cn(
+                "rounded-full px-2.5 py-0.5 text-[11px] font-medium",
+                settings.whatsappConnected
+                  ? "bg-primary/10 text-primary"
+                  : "bg-secondary text-muted-foreground",
+              )}
+            >
+              {settings.whatsappConnected ? "Connected" : "Not connected"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between py-3">
+            <div>
+              <p className="text-[13.5px]">Google Calendar</p>
+              <p className="text-[12px] text-muted-foreground">Sync your schedule</p>
+            </div>
+            {settings.calendarConnected ? (
+              <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary">
+                Connected
+              </span>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  window.location.href = `/api/auth/google?state=${settings.preferredName || "user"}`;
+                }}
+              >
+                Connect
+              </Button>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="mb-10">
+        <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+          Notifications
+        </h2>
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {isSubscribed ? (
               <Bell className="size-4 text-primary" />
@@ -247,19 +220,19 @@ function SettingsPage() {
               <BellOff className="size-4 text-muted-foreground" />
             )}
             <div>
-              <p className="text-[13.5px] font-medium">Push Notification</p>
+              <p className="text-[13.5px]">Push Notifications</p>
               <p className="text-[12px] text-muted-foreground">
                 {permission === "granted"
-                  ? "Aktif — Anda akan menerima notifikasi"
+                  ? "Active"
                   : permission === "denied"
-                    ? "Diblokir — Aktifkan di pengaturan browser"
-                    : "Belum diaktifkan"}
+                    ? "Blocked"
+                    : "Not enabled"}
               </p>
             </div>
           </div>
           {permission === "denied" ? (
-            <span className="rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-medium text-red-600">
-              Diblokir
+            <span className="rounded-full bg-destructive/10 px-2.5 py-0.5 text-[11px] font-medium text-destructive">
+              Blocked
             </span>
           ) : (
             <Button
@@ -271,88 +244,38 @@ function SettingsPage() {
               {pushLoading ? (
                 <Loader2 className="size-3 animate-spin" />
               ) : isSubscribed ? (
-                "Nonaktifkan"
+                "Disable"
               ) : (
-                "Aktifkan"
+                "Enable"
               )}
             </Button>
           )}
         </div>
-        {Object.entries(settings.notifications).map(([k, v]) => (
-          <div
-            key={k}
-            className="flex items-center justify-between border-b border-border/60 py-3 last:border-0"
+      </section>
+
+      <section className="mb-10">
+        <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+          Privacy & Data
+        </h2>
+        <div className="space-y-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              reset();
+              toast.success("Demo data restored");
+            }}
           >
-            <span className="text-[13.5px]">{k}</span>
-            <Switch
-              checked={v}
-              onCheckedChange={(c) =>
-                setSettings({ notifications: { ...settings.notifications, [k]: c } })
-              }
-            />
-          </div>
-        ))}
-      </div>
-
-      <div className="card-soft mb-4 p-5">
-        <h2 className="mb-4 text-[14px] font-semibold">Integrasi</h2>
-        <div className="flex items-center justify-between border-b border-border/60 py-3">
-          <div>
-            <p className="text-[13.5px] font-medium">WhatsApp</p>
-            <p className="text-[12px] text-muted-foreground">Koneksi ke WhatsApp Business</p>
-          </div>
-          <span className="rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
-            {settings.whatsappConnected ? "Tersambung" : "Belum aktif"}
-          </span>
+            Restore demo data
+          </Button>
         </div>
-        <div className="flex items-center justify-between py-3">
-          <div>
-            <p className="text-[13.5px] font-medium">Google Calendar</p>
-            <p className="text-[12px] text-muted-foreground">Sinkron jadwal kalender</p>
-          </div>
-          {settings.calendarConnected ? (
-            <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">
-              Tersambung
-            </span>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                window.location.href = `/api/auth/google?state=${settings.preferredName || "user"}`;
-              }}
-            >
-              Hubungkan
-            </Button>
-          )}
-        </div>
-      </div>
+      </section>
 
-      <div className="card-soft mb-4 p-5">
-        <h2 className="mb-1 text-[14px] font-semibold">Data</h2>
-        <p className="text-[13px] text-muted-foreground">
-          Kembalikan data demo untuk melihat cara kerja NANTI.
-        </p>
-        <Button
-          variant="outline"
-          size="sm"
-          className="mt-4"
-          onClick={() => {
-            reset();
-            toast.success("Demo data restored");
-          }}
-        >
-          Restore demo data
+      <section className="border-t border-border pt-6">
+        <Button variant="destructive" size="sm" onClick={handleSignOut}>
+          Sign out
         </Button>
-      </div>
-
-      <div className="card-soft p-5">
-        <h2 className="mb-1 text-[14px] font-semibold">Akun</h2>
-        <p className="text-[13px] text-muted-foreground">Keluar dari akun NANTI Anda.</p>
-        <Button variant="destructive" size="sm" className="mt-4" onClick={handleSignOut}>
-          Keluar
-        </Button>
-      </div>
+      </section>
     </div>
   );
 }

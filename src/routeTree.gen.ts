@@ -18,6 +18,7 @@ import { Route as PersonalRouteImport } from './routes/personal'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppFollowUpsRouteImport } from './routes/app.follow-ups'
 import { Route as AppImportRouteImport } from './routes/app.import'
 import { Route as AppInboxRouteImport } from './routes/app.inbox'
 import { Route as AppInvoicesRouteImport } from './routes/app.invoices'
@@ -85,6 +86,11 @@ const WelcomeRoute = WelcomeRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFollowUpsRoute = AppFollowUpsRouteImport.update({
+  id: '/follow-ups',
+  path: '/follow-ups',
   getParentRoute: () => AppRoute,
 } as any)
 const AppImportRoute = AppImportRouteImport.update({
@@ -212,6 +218,7 @@ export interface FileRoutesByFullPath {
   '/personal': typeof PersonalRoute
   '/pricing': typeof PricingRoute
   '/welcome': typeof WelcomeRoute
+  '/app/follow-ups': typeof AppFollowUpsRoute
   '/app/import': typeof AppImportRoute
   '/app/inbox': typeof AppInboxRoute
   '/app/invoices': typeof AppInvoicesRoute
@@ -245,6 +252,7 @@ export interface FileRoutesByTo {
   '/personal': typeof PersonalRoute
   '/pricing': typeof PricingRoute
   '/welcome': typeof WelcomeRoute
+  '/app/follow-ups': typeof AppFollowUpsRoute
   '/app/import': typeof AppImportRoute
   '/app/inbox': typeof AppInboxRoute
   '/app/invoices': typeof AppInvoicesRoute
@@ -280,6 +288,7 @@ export interface FileRoutesById {
   '/personal': typeof PersonalRoute
   '/pricing': typeof PricingRoute
   '/welcome': typeof WelcomeRoute
+  '/app/follow-ups': typeof AppFollowUpsRoute
   '/app/import': typeof AppImportRoute
   '/app/inbox': typeof AppInboxRoute
   '/app/invoices': typeof AppInvoicesRoute
@@ -316,6 +325,7 @@ export interface FileRouteTypes {
     | '/personal'
     | '/pricing'
     | '/welcome'
+    | '/app/follow-ups'
     | '/app/import'
     | '/app/inbox'
     | '/app/invoices'
@@ -349,6 +359,7 @@ export interface FileRouteTypes {
     | '/personal'
     | '/pricing'
     | '/welcome'
+    | '/app/follow-ups'
     | '/app/import'
     | '/app/inbox'
     | '/app/invoices'
@@ -383,6 +394,7 @@ export interface FileRouteTypes {
     | '/personal'
     | '/pricing'
     | '/welcome'
+    | '/app/follow-ups'
     | '/app/import'
     | '/app/inbox'
     | '/app/invoices'
@@ -492,6 +504,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/app/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/follow-ups': {
+      id: '/app/follow-ups'
+      path: '/follow-ups'
+      fullPath: '/app/follow-ups'
+      preLoaderRoute: typeof AppFollowUpsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/import': {
@@ -659,6 +678,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppFollowUpsRoute: typeof AppFollowUpsRoute
   AppImportRoute: typeof AppImportRoute
   AppInboxRoute: typeof AppInboxRoute
   AppInvoicesRoute: typeof AppInvoicesRoute
@@ -673,6 +693,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppFollowUpsRoute: AppFollowUpsRoute,
   AppImportRoute: AppImportRoute,
   AppInboxRoute: AppInboxRoute,
   AppInvoicesRoute: AppInvoicesRoute,

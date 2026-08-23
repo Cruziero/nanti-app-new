@@ -12,6 +12,9 @@ import {
   Bell,
   FileText,
   Calendar,
+  Clock,
+  Bookmark,
+  Search,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -21,37 +24,46 @@ import { useNanti } from "@/lib/nanti-store";
 import { isOverdue, openItems } from "@/lib/nanti-utils";
 import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
 
-const groups = [
+const navGroups = [
   {
-    label: "",
+    label: "Personal",
     items: [
-      { to: "/app", label: "Tanya NANTI", icon: Sparkles, exact: true },
-      { to: "/app/today", label: "Hari ini", icon: Sun },
+      { to: "/app/today", label: "Today", icon: Sun },
+      { to: "/app/inbox", label: "Inbox", icon: Inbox, countKey: "/app/inbox" },
+      { to: "/app", label: "Ask NANTI", icon: Sparkles, exact: true },
     ],
   },
   {
-    label: "Aksi",
+    label: "Work",
     items: [
-      { to: "/app/inbox", label: "Inbox", icon: Inbox },
-      { to: "/app/waiting", label: "Menunggu", icon: Hourglass },
-      { to: "/app/reminders", label: "Pengingat", icon: Bell },
+      { to: "/app/people", label: "People", icon: Users },
+      { to: "/app/projects", label: "Projects", icon: FolderKanban },
+      { to: "/app/follow-ups", label: "Follow-ups", icon: Clock },
+      { to: "/app/waiting", label: "Waiting", icon: Hourglass, countKey: "/app/waiting" },
     ],
   },
   {
-    label: "Konteks",
+    label: "Tools",
     items: [
-      { to: "/app/projects", label: "Proyek", icon: FolderKanban },
-      { to: "/app/people", label: "Orang", icon: Users },
-      { to: "/app/invoices", label: "Invoice", icon: FileText },
+      { to: "/app/calendar", label: "Calendar", icon: Calendar },
+      { to: "/app/invoices", label: "Invoices", icon: FileText },
+    ],
+  },
+  {
+    label: "Memory",
+    items: [
+      { to: "/app/recent", label: "Recent", icon: Clock },
+      { to: "/app/saved", label: "Saved", icon: Bookmark },
     ],
   },
 ] as const;
 
 const mobileNav = [
-  { to: "/app", label: "AI", icon: Sparkles, exact: true },
-  { to: "/app/today", label: "Hari ini", icon: Sun },
-  { to: "/app/inbox", label: "Inbox", icon: Inbox },
-  { to: "/app/reminders", label: "Pengingat", icon: Bell },
+  { to: "/app/today", label: "Today", icon: Sun },
+  { to: "/app", label: "Ask", icon: Sparkles, exact: true },
+  { to: "__plus__", label: "", icon: Plus },
+  { to: "/app/reminders", label: "Reminders", icon: Bell },
+  { to: "/app/more", label: "More", icon: Inbox },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -73,50 +85,37 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <aside className="fixed inset-y-0 left-0 hidden w-[248px] flex-col border-r border-sidebar-border bg-sidebar px-3 py-5 lg:flex">
-        <div className="px-2.5 pb-7">
+      {/* Desktop sidebar */}
+      <aside className="fixed inset-y-0 left-0 hidden w-[220px] flex-col border-r border-border bg-sidebar lg:flex">
+        <div className="flex items-center gap-2 px-5 py-5">
           <Logo />
         </div>
 
-        <Link
-          to="/app/import"
-          className="mb-6 flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2.5 text-[13.5px] font-semibold transition-colors hover:border-primary/40 hover:bg-accent"
-        >
-          <span className="flex size-5 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <Plus className="size-3.5" />
-          </span>
-          Impor percakapan
-        </Link>
-
-        <nav className="flex-1 space-y-6">
-          {groups.map((group, gi) => (
-            <div key={group.label || gi}>
-              {group.label && (
-                <p className="mb-1.5 px-2.5 text-[10.5px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">
-                  {group.label}
-                </p>
-              )}
+        <nav className="flex-1 overflow-y-auto px-3 pb-4">
+          {navGroups.map((group) => (
+            <div key={group.label} className="mb-5">
+              <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/60">
+                {group.label}
+              </p>
               <div className="space-y-0.5">
                 {group.items.map((n) => {
                   const active = isActive(n.to, "exact" in n ? n.exact : false);
-                  const count = counts[n.to];
+                  const count = "countKey" in n ? counts[n.countKey] : undefined;
                   return (
                     <Link
                       key={n.to}
                       to={n.to}
                       className={cn(
-                        "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] font-medium transition-colors",
+                        "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors",
                         active
-                          ? "bg-sidebar-accent text-accent-foreground"
+                          ? "bg-sidebar-accent text-foreground"
                           : "text-muted-foreground hover:bg-secondary hover:text-foreground",
                       )}
                     >
-                      <n.icon className="size-4" />
+                      <n.icon className="size-4 shrink-0" />
                       <span className="flex-1">{n.label}</span>
-                      {!!count && (
-                        <span className="rounded-full bg-surface-strong px-1.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
-                          {count}
-                        </span>
+                      {!!count && count > 0 && (
+                        <span className="text-[11px] text-muted-foreground/70">{count}</span>
                       )}
                     </Link>
                   );
@@ -126,60 +125,75 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
 
-        <Link
-          to="/app/settings"
-          className={cn(
-            "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] font-medium transition-colors",
-            path.startsWith("/app/settings")
-              ? "bg-sidebar-accent text-accent-foreground"
-              : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-          )}
-        >
-          <Cog className="size-4" /> Pengaturan
-        </Link>
-
-        {user && (
-          <div className="mt-4 border-t border-sidebar-border pt-4">
-            <div className="px-2.5">
-              <p className="truncate text-[12px] text-muted-foreground">{user.email}</p>
+        <div className="border-t border-border px-3 py-3">
+          <Link
+            to="/app/settings"
+            className={cn(
+              "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors",
+              path.startsWith("/app/settings")
+                ? "bg-sidebar-accent text-foreground"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+            )}
+          >
+            <Cog className="size-4" /> Settings
+          </Link>
+          {user && (
+            <div className="mt-2 flex items-center gap-2.5 px-2.5 py-1.5">
+              <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
+                {(user.email ?? "U")[0].toUpperCase()}
+              </div>
+              <span className="flex-1 truncate text-[12px] text-muted-foreground">
+                {user.email}
+              </span>
+              <button
+                onClick={() => signOut()}
+                className="text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+              >
+                <LogOut className="size-3.5" />
+              </button>
             </div>
-            <button
-              onClick={() => signOut()}
-              className="mt-2 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            >
-              <LogOut className="size-4" /> Keluar
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </aside>
 
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/85 px-4 py-3 backdrop-blur lg:hidden">
+      {/* Mobile header */}
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/90 px-4 py-2.5 backdrop-blur-sm lg:hidden">
         <Logo />
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
+          <button className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary">
+            <Search className="size-4" />
+          </button>
           <NotificationCenter notifications={[]} onMarkRead={() => {}} />
-          <Link
-            to="/app/import"
-            className="rounded-lg bg-primary px-3 py-1.5 text-[13px] font-semibold text-primary-foreground"
-          >
-            Impor
-          </Link>
         </div>
       </header>
 
-      <main className="pb-24 lg:pb-16 lg:pl-[248px]">
-        <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-8 sm:py-12">{children}</div>
+      {/* Main content */}
+      <main className="pb-24 lg:pb-8 lg:pl-[220px]">
+        <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-8">{children}</div>
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
+      {/* Mobile bottom nav */}
+      <nav className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm lg:hidden">
         {mobileNav.map((n) => {
+          if (n.to === "__plus__") {
+            return (
+              <Link
+                key="plus"
+                to="/app/import"
+                className="flex -mt-4 size-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm"
+              >
+                <Plus className="size-5" />
+              </Link>
+            );
+          }
           const active = isActive(n.to, "exact" in n ? n.exact : false);
           return (
             <Link
               key={n.to}
               to={n.to}
               className={cn(
-                "flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors",
-                active ? "text-primary" : "text-muted-foreground",
+                "flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors",
+                active ? "text-foreground" : "text-muted-foreground",
               )}
             >
               <n.icon className="size-[18px]" />
@@ -188,14 +202,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           );
         })}
       </nav>
-
-      <Link
-        aria-label="Impor percakapan"
-        to="/app/import"
-        className="fixed bottom-20 right-4 z-30 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lift transition-transform active:scale-95 lg:hidden"
-      >
-        <Plus className="size-5" />
-      </Link>
     </div>
   );
 }
@@ -212,8 +218,8 @@ export function PageHeader({
   return (
     <div className="mb-8 flex items-start justify-between gap-4">
       <div>
-        <h1 className="text-[27px] font-semibold tracking-tight sm:text-[32px]">{title}</h1>
-        {subtitle && <p className="mt-1.5 text-[14px] text-muted-foreground">{subtitle}</p>}
+        <h1 className="text-[24px] font-semibold tracking-tight sm:text-[28px]">{title}</h1>
+        {subtitle && <p className="mt-1 text-[13px] text-muted-foreground">{subtitle}</p>}
       </div>
       {action}
     </div>
@@ -230,23 +236,23 @@ export function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="mb-9">
-      <div className="mb-2 flex items-center gap-2 px-3">
-        <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+    <section className="mb-8">
+      <div className="mb-1.5 flex items-center gap-2 px-1">
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
           {title}
         </h2>
         {count !== undefined && (
-          <span className="text-[11px] text-muted-foreground/70">{count}</span>
+          <span className="text-[11px] text-muted-foreground/50">{count}</span>
         )}
       </div>
-      <div className="space-y-0.5">{children}</div>
+      <div className="divide-y divide-border">{children}</div>
     </section>
   );
 }
 
 export function EmptyState({ title, hint }: { title: string; hint?: string }) {
   return (
-    <div className="rounded-xl border border-dashed border-border px-6 py-10 text-center">
+    <div className="px-1 py-12 text-center">
       <p className="text-[14px] font-medium text-foreground">{title}</p>
       {hint && <p className="mt-1 text-[13px] text-muted-foreground">{hint}</p>}
     </div>

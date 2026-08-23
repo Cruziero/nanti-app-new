@@ -1,51 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import {
-  ArrowUp,
-  Loader as Loader2,
-  MessageSquare,
-  Calendar,
-  Clock,
-  ArrowRight,
-} from "lucide-react";
-import { PageHeader } from "@/components/nanti/app-shell";
+import { ArrowUp, Loader as Loader2, ArrowRight } from "lucide-react";
 import { Logo } from "@/components/nanti/logo";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { useNanti } from "@/lib/nanti-store";
-import { askAssistant, generateFollowUpMessageServer } from "@/lib/nanti-ai.functions";
+import { askAssistant } from "@/lib/nanti-ai.functions";
 import { dueLabel, kindLabel, openItems, waitingDays } from "@/lib/nanti-utils";
-import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/")({
   head: () => ({
-    meta: [
-      { title: "Ask NANTI · Your work memory" },
-      {
-        name: "description",
-        content:
-          "Ask anything about your work: what you're forgetting, who you're waiting for, what's overdue.",
-      },
-      { property: "og:title", content: "Ask NANTI · Your work memory" },
-      {
-        property: "og:description",
-        content: "Chief of staff AI that remembers all your work conversations.",
-      },
-    ],
+    meta: [{ title: "Ask NANTI" }, { name: "description", content: "Your memory, on demand." }],
   }),
   component: AiPage,
 });
 
 const suggestions = [
   "What am I forgetting?",
-  "What should I do today?",
   "Who am I waiting for?",
-  "Who is waiting for me?",
   "What did I promise this week?",
-  "What's overdue?",
-  "What's the most urgent thing?",
-  "Who should I follow up with today?",
+  "Who should I follow up with?",
+  "What's due today?",
 ];
 
 function renderRich(text: string) {
@@ -70,16 +45,12 @@ function AiPage() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [followUpSuggestions, setFollowUpSuggestions] = useState<
-    Array<{ itemId: string; message: string; personName: string }>
-  >([]);
   const ref = useRef<HTMLTextAreaElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     ref.current?.focus();
   }, [loading]);
-
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
@@ -88,39 +59,9 @@ function AiPage() {
     openItems(items)
       .map((i) => {
         const p = personOf(i.personId);
-        return `- [${kindLabel[i.kind]}] ${i.title} | person: ${p ? `${p.name} (${p.org})` : "-"} | project: ${
-          projectOf(i.projectId)?.name ?? "-"
-        } | ${i.kind === "waiting" ? `waiting ${waitingDays(i)} days` : dueLabel(i)} | source: ${i.source} | quote: "${i.quote}"`;
+        return `- [${kindLabel[i.kind]}] ${i.title} | person: ${p ? `${p.name} (${p.org})` : "-"} | project: ${projectOf(i.projectId)?.name ?? "-"} | ${i.kind === "waiting" ? `waiting ${waitingDays(i)} days` : dueLabel(i)} | source: ${i.source} | quote: "${i.quote}"`;
       })
       .join("\n");
-
-  const generateFollowUps = async () => {
-    const waitingItems = openItems(items).filter(
-      (i) => i.kind === "waiting" && waitingDays(i) >= 2,
-    );
-    const suggestions = await Promise.all(
-      waitingItems.slice(0, 3).map(async (item) => {
-        try {
-          const person = personOf(item.personId);
-          const res = await generateFollowUpMessageServer({
-            data: {
-              personName: person?.name || "teman Anda",
-              what: item.title,
-              tone: "friendly",
-            },
-          });
-          return {
-            itemId: item.id,
-            message: res.message,
-            personName: person?.name || "Unknown",
-          };
-        } catch {
-          return null;
-        }
-      }),
-    );
-    setFollowUpSuggestions(suggestions.filter(Boolean) as typeof followUpSuggestions);
-  };
 
   const send = async (question: string) => {
     if (!question.trim() || loading) return;
@@ -130,13 +71,6 @@ function AiPage() {
     try {
       const res = await askAssistant({ data: { question, context: buildContext() } });
       setMessages((m) => [...m, { role: "assistant", text: res.answer }]);
-
-      if (
-        question.toLowerCase().includes("follow up") ||
-        question.toLowerCase().includes("followup")
-      ) {
-        void generateFollowUps();
-      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "NANTI cannot answer right now");
     } finally {
@@ -144,130 +78,120 @@ function AiPage() {
     }
   };
 
-  const sendFollowUp = async (message: string) => {
-    setMessages((m) => [...m, { role: "user", text: message }]);
-    setLoading(true);
-    try {
-      const res = await askAssistant({
-        data: { question: `Help me send this follow-up: ${message}`, context: buildContext() },
-      });
-      setMessages((m) => [...m, { role: "assistant", text: res.answer }]);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Gagal mengirim follow-up");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="flex min-h-[calc(100vh-9rem)] flex-col">
-      <PageHeader title="Ask NANTI" subtitle="Your work memory" />
+    <div className="flex min-h-[calc(100vh-8rem)] flex-col items-center">
+      {messages.length === 0 ? (
+        <div className="flex flex-1 flex-col items-center justify-center">
+          <div className="mb-8 text-center">
+            <Logo showWord={false} />
+            <h1 className="mt-5 text-[28px] font-semibold tracking-tight sm:text-[34px]">
+              Ask NANTI
+            </h1>
+            <p className="mt-2 text-[15px] text-muted-foreground">Your memory, on demand.</p>
+          </div>
 
-      <div className="flex-1 space-y-6">
-        {messages.length === 0 && (
-          <div className="rise">
-            <div className="card-soft p-6">
-              <Logo showWord={false} />
-              <p className="mt-3 text-[15px] font-medium">
-                I remember all your work conversations.
-              </p>
-              <p className="mt-1 text-[13.5px] text-muted-foreground">
-                Ask me anything — I'll answer from your commitments, deadlines and waiting items.
-              </p>
+          <div className="w-full max-w-lg">
+            <div className="flex items-end gap-2 rounded-xl border border-border bg-surface p-2">
+              <Textarea
+                ref={ref}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    void send(input);
+                  }
+                }}
+                rows={1}
+                placeholder="Ask NANTI anything..."
+                className="max-h-32 min-h-10 resize-none border-0 bg-transparent text-[15px] shadow-none focus-visible:ring-0"
+              />
+              <button
+                type="submit"
+                disabled={loading || !input.trim()}
+                onClick={() => void send(input)}
+                className="mb-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-opacity disabled:opacity-40"
+              >
+                <ArrowUp className="size-4" />
+              </button>
             </div>
-            <div className="mt-4 flex flex-wrap gap-2">
+
+            <div className="mt-3 flex flex-wrap gap-1.5">
               {suggestions.map((s) => (
                 <button
                   key={s}
-                  onClick={() => send(s)}
-                  className="rounded-full border border-border bg-surface px-3.5 py-1.5 text-[13px] transition-colors hover:border-primary/50 hover:bg-accent/40"
+                  onClick={() => void send(s)}
+                  className="rounded-full border border-border px-3 py-1 text-[12.5px] text-muted-foreground transition-colors hover:border-foreground/20 hover:text-foreground"
                 >
                   {s}
                 </button>
               ))}
             </div>
           </div>
-        )}
-
-        {messages.map((m, i) =>
-          m.role === "user" ? (
-            <div key={i} className="rise flex justify-end">
-              <p className="max-w-[85%] rounded-2xl bg-primary px-4 py-2.5 text-[14.5px] text-primary-foreground">
-                {m.text}
-              </p>
-            </div>
-          ) : (
-            <div key={i} className="rise whitespace-pre-wrap text-[15px] leading-relaxed">
-              {renderRich(m.text)}
-            </div>
-          ),
-        )}
-
-        {loading && (
-          <p className="flex items-center gap-2 text-[14px] text-muted-foreground">
-            <Loader2 className="size-3.5 animate-spin" /> NANTI is thinking...
-          </p>
-        )}
-
-        {followUpSuggestions.length > 0 && !loading && (
-          <div className="rise rounded-xl border border-border bg-surface p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <MessageSquare className="size-4 text-primary" />
-              <h3 className="text-[14px] font-semibold">Saran Follow-up</h3>
-            </div>
-            <div className="space-y-2">
-              {followUpSuggestions.map((s) => (
-                <div
-                  key={s.itemId}
-                  className="flex items-start gap-3 rounded-lg border border-border p-3 transition-colors hover:border-primary/40"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[12px] text-muted-foreground">Untuk {s.personName}</p>
-                    <p className="mt-1 text-[13px]">{s.message}</p>
-                  </div>
-                  <Button size="sm" variant="outline" onClick={() => sendFollowUp(s.message)}>
-                    <ArrowRight className="size-3" />
-                  </Button>
-                </div>
-              ))}
-            </div>
+        </div>
+      ) : (
+        <div className="w-full max-w-2xl">
+          <div className="mb-8">
+            <h1 className="text-[24px] font-semibold tracking-tight">Ask NANTI</h1>
           </div>
-        )}
 
-        <div ref={endRef} />
-      </div>
+          <div className="space-y-6">
+            {messages.map((m, i) =>
+              m.role === "user" ? (
+                <div key={i} className="flex justify-end">
+                  <div className="max-w-[80%] rounded-xl bg-primary px-4 py-2.5 text-[14px] text-primary-foreground">
+                    {m.text}
+                  </div>
+                </div>
+              ) : (
+                <div key={i} className="whitespace-pre-wrap text-[14.5px] leading-relaxed">
+                  {renderRich(m.text)}
+                </div>
+              ),
+            )}
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          void send(input);
-        }}
-        className="sticky bottom-20 mt-6 lg:bottom-4"
-      >
-        <div className="flex items-end gap-2 rounded-2xl border border-border bg-surface p-2 shadow-soft">
-          <Textarea
-            ref={ref}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
+            {loading && (
+              <p className="flex items-center gap-2 text-[13px] text-muted-foreground">
+                <Loader2 className="size-3 animate-spin" /> Thinking...
+              </p>
+            )}
+
+            <div ref={endRef} />
+          </div>
+
+          <div className="sticky bottom-20 mt-8 lg:bottom-4">
+            <form
+              onSubmit={(e) => {
                 e.preventDefault();
                 void send(input);
-              }
-            }}
-            rows={1}
-            placeholder="Ask NANTI anything about your work..."
-            className="max-h-40 min-h-10 resize-none border-0 bg-transparent text-[14.5px] shadow-none focus-visible:ring-0"
-          />
-          <button
-            type="submit"
-            disabled={loading || !input.trim()}
-            className="mb-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-opacity disabled:opacity-40"
-          >
-            <ArrowUp className="size-4" />
-          </button>
+              }}
+              className="flex items-end gap-2 rounded-xl border border-border bg-surface p-2"
+            >
+              <Textarea
+                ref={ref}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    void send(input);
+                  }
+                }}
+                rows={1}
+                placeholder="Ask NANTI anything..."
+                className="max-h-32 min-h-10 resize-none border-0 bg-transparent text-[14.5px] shadow-none focus-visible:ring-0"
+              />
+              <button
+                type="submit"
+                disabled={loading || !input.trim()}
+                className="mb-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-opacity disabled:opacity-40"
+              >
+                <ArrowUp className="size-4" />
+              </button>
+            </form>
+          </div>
         </div>
-      </form>
+      )}
     </div>
   );
 }

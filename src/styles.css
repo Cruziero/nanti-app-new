@@ -43,78 +43,77 @@
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-border: var(--sidebar-border);
-  --shadow-soft: 0 1px 2px rgb(17 17 17 / 0.04), 0 10px 30px -18px rgb(17 17 17 / 0.16);
-  --shadow-lift: 0 1px 2px rgb(17 17 17 / 0.05), 0 24px 60px -28px rgb(17 17 17 / 0.24);
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.03);
+  --shadow-lift: 0 1px 3px rgb(0 0 0 / 0.06);
 }
 
 :root {
-  --radius: 0.75rem;
+  --radius: 0.625rem;
   --background: #ffffff;
-  --foreground: #111111;
-  --surface: #f7f8f7;
-  --surface-strong: #f0f2f0;
+  --foreground: #1a1a1a;
+  --surface: #fafafa;
+  --surface-strong: #f3f4f3;
   --card: #ffffff;
-  --card-foreground: #111111;
+  --card-foreground: #1a1a1a;
   --popover: #ffffff;
-  --popover-foreground: #111111;
-  /* Deep green carries actions and text; bright green is the brand signal. */
-  --primary: #0f7a6c;
+  --popover-foreground: #1a1a1a;
+  --primary: #1a1a1a;
   --primary-foreground: #ffffff;
   --brand: #25d366;
   --brand-foreground: #08301f;
-  --secondary: #f2f4f2;
-  --secondary-foreground: #111111;
-  --muted: #f7f8f7;
-  --muted-foreground: #6b7280;
-  --accent: #e9f9ef;
-  --accent-foreground: #0b6b5e;
-  --destructive: #c2410c;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #1a1a1a;
+  --muted: #f9f9f9;
+  --muted-foreground: #737373;
+  --accent: #f0fdf4;
+  --accent-foreground: #15803d;
+  --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --warning: #b45309;
-  --warning-foreground: #7c3a06;
-  --success: #128c7e;
+  --warning: #d97706;
+  --warning-foreground: #ffffff;
+  --success: #16a34a;
   --success-foreground: #ffffff;
-  --border: #e7e9e7;
-  --input: #e7e9e7;
-  --ring: #128c7e;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #111111;
-  --sidebar-accent: #e9f9ef;
-  --sidebar-border: #e7e9e7;
+  --border: #ebebeb;
+  --input: #ebebeb;
+  --ring: #1a1a1a;
+  --sidebar: #fafafa;
+  --sidebar-foreground: #1a1a1a;
+  --sidebar-accent: #f0f0f0;
+  --sidebar-border: #ebebeb;
 }
 
 .dark {
-  --background: #0c0f0e;
-  --foreground: #f4f6f5;
-  --surface: #141817;
-  --surface-strong: #1b201e;
-  --card: #141817;
-  --card-foreground: #f4f6f5;
-  --popover: #141817;
-  --popover-foreground: #f4f6f5;
-  --primary: #25d366;
-  --primary-foreground: #06231a;
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --surface: #141414;
+  --surface-strong: #1f1f1f;
+  --card: #141414;
+  --card-foreground: #ededed;
+  --popover: #141414;
+  --popover-foreground: #ededed;
+  --primary: #ededed;
+  --primary-foreground: #0a0a0a;
   --brand: #25d366;
   --brand-foreground: #06231a;
-  --secondary: #1b201e;
-  --secondary-foreground: #f4f6f5;
-  --muted: #1b201e;
-  --muted-foreground: #9aa4a0;
-  --accent: #12251d;
-  --accent-foreground: #7ce7ad;
-  --destructive: #f97316;
-  --destructive-foreground: #1a0e05;
-  --warning: #fbbf24;
-  --warning-foreground: #fde9b8;
-  --success: #25d366;
-  --success-foreground: #06231a;
-  --border: rgb(255 255 255 / 10%);
-  --input: rgb(255 255 255 / 14%);
-  --ring: #25d366;
-  --sidebar: #0f1312;
-  --sidebar-foreground: #f4f6f5;
-  --sidebar-accent: #12251d;
-  --sidebar-border: rgb(255 255 255 / 8%);
+  --secondary: #1a1a1a;
+  --secondary-foreground: #ededed;
+  --muted: #1a1a1a;
+  --muted-foreground: #8a8a8a;
+  --accent: #0f2a1a;
+  --accent-foreground: #4ade80;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #ffffff;
+  --success: #22c55e;
+  --success-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #525252;
+  --sidebar: #0f0f0f;
+  --sidebar-foreground: #ededed;
+  --sidebar-accent: #1a1a1a;
+  --sidebar-border: rgba(255, 255, 255, 0.06);
 }
 
 @layer base {
@@ -140,7 +139,7 @@
 @utility card-soft {
   background-color: var(--color-card);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
 }
 
 @utility display-xl {
@@ -193,13 +192,13 @@
 
 @keyframes nanti-pulse-ring {
   0% {
-    box-shadow: 0 0 0 0 rgb(37 211 102 / 0.35);
+    box-shadow: 0 0 0 0 rgb(26 26 26 / 0.15);
   }
   70% {
-    box-shadow: 0 0 0 12px rgb(37 211 102 / 0);
+    box-shadow: 0 0 0 12px rgb(26 26 26 / 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgb(37 211 102 / 0);
+    box-shadow: 0 0 0 0 rgb(26 26 26 / 0);
   }
 }
 

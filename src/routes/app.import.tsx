@@ -315,7 +315,7 @@ function ImportPage() {
       )}
 
       {drafts && !loading && (
-        <div className="rise mt-8">
+        <div className="mt-8">
           <div className="flex items-center gap-2">
             <Sparkles className="size-4 text-primary" />
             <h2 className="text-[16px] font-semibold">
@@ -341,7 +341,7 @@ function ImportPage() {
             {drafts.map((d, i) => (
               <label
                 key={i}
-                className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-surface p-4 transition-colors hover:border-primary/40"
+                className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 transition-colors hover:border-foreground/20"
               >
                 <Checkbox
                   checked={!!selected[i]}

@@ -1,56 +1,32 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+﻿import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ArrowRight, Hourglass, Calendar, Clock, AlertTriangle, TrendingUp } from "lucide-react";
+import { ArrowRight, Hourglass, Clock, AlertTriangle } from "lucide-react";
 import { EmptyState, Section } from "@/components/nanti/app-shell";
-import { ItemRow } from "@/components/nanti/item-row";
-import { Button } from "@/components/ui/button";
 import { useNanti } from "@/lib/nanti-store";
 import {
-  addDays,
   formatDayHeadline,
   greeting,
   isDueToday,
   isOverdue,
   isUpcoming,
-  jakartaHour,
   openItems,
-  todayISO,
   waitingDays,
 } from "@/lib/nanti-utils";
 import { useItemDetail } from "@/components/nanti/item-detail";
-import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/today")({
   head: () => ({
-    meta: [
-      { title: "Hari ini · NANTI" },
-      {
-        name: "description",
-        content:
-          "Briefing harian NANTI: apa yang terlambat, jatuh tempo, dan siapa yang Anda tunggu.",
-      },
-      { property: "og:title", content: "Hari ini · NANTI" },
-      {
-        property: "og:description",
-        content:
-          "Briefing harian NANTI: apa yang terlambat, jatuh tempo, dan siapa yang Anda tunggu.",
-      },
-    ],
+    meta: [{ title: "Today - NANTI" }, { name: "description", content: "What matters right now." }],
   }),
   component: Today,
 });
 
 function Today() {
-  const { items, settings, hydrated, personOf, projectOf, complete, snooze, update } = useNanti();
+  const { items, settings, hydrated, personOf, complete, snooze } = useNanti();
   const navigate = useNavigate();
   const openDetail = useItemDetail();
   const [dismissed, setDismissed] = useState(false);
-  const [sweepOpen, setSweepOpen] = useState(false);
-
-  useEffect(() => {
-    if (hydrated) setSweepOpen(jakartaHour() >= 17);
-  }, [hydrated]);
 
   useEffect(() => {
     if (hydrated && !settings.onboarded) void navigate({ to: "/welcome" });
@@ -66,193 +42,230 @@ function Today() {
         .sort((a, b) => waitingDays(b) - waitingDays(a)),
     [items],
   );
-  const totalToday = overdue.length + dueToday.length;
-  const urgentCount = overdue.length + dueToday.filter((i) => i.kind === "commitment").length;
+  const potentiallyForgotten = useMemo(
+    () =>
+      openItems(items).filter(
+        (i) =>
+          i.kind !== "waiting" &&
+          !isOverdue(i) &&
+          !isDueToday(i) &&
+          !isUpcoming(i) &&
+          i.since &&
+          new Date().getTime() - new Date(i.since).getTime() > 3 * 86400000,
+      ),
+    [items],
+  );
 
-  const getPriorityColor = (count: number) => {
-    if (count === 0) return "text-green-600";
-    if (count <= 2) return "text-amber-600";
-    return "text-red-600";
-  };
+  const needsAttention = overdue.length + dueToday.filter((i) => i.kind === "commitment").length;
 
   return (
     <div>
-      <div className="mb-9">
-        <p className="eyebrow">{hydrated ? formatDayHeadline() : "Hari ini"}</p>
-        <h1 className="mt-2 text-[28px] font-semibold tracking-tight sm:text-[34px]">
-          {greeting(settings.name)}
-        </h1>
-      </div>
-
-      <div className="rise card-soft mb-10 p-5 sm:p-7">
-        <div className="flex items-center gap-2">
-          <TrendingUp className="size-5 text-primary" />
-          <p className="eyebrow">Briefing NANTI</p>
-        </div>
-        <p className="mt-3 text-[17px] font-medium leading-relaxed sm:text-[19px]">
-          Ada {totalToday} hal yang perlu Anda tangani hari ini.
-          {overdue.length > 0 && <> {overdue.length} sudah terlambat.</>}
-          {waiting.length > 0 && <> {waiting.length} orang sedang Anda tunggu.</>}
+      <div className="mb-8">
+        <p className="text-[12px] font-medium text-muted-foreground">
+          {hydrated ? formatDayHeadline() : "Today"}
         </p>
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            {
-              label: "Tugas",
-              value: openItems(items).filter((i) => i.kind !== "waiting").length,
-              icon: Calendar,
-            },
-            {
-              label: "Terlambat",
-              value: overdue.length,
-              icon: AlertTriangle,
-              color: getPriorityColor(overdue.length),
-            },
-            { label: "Menunggu", value: waiting.length, icon: Clock },
-            { label: "Hari ini", value: dueToday.length, icon: Calendar },
-          ].map((s) => (
-            <div key={s.label} className="rounded-xl bg-surface px-3.5 py-3">
-              <div className="flex items-center gap-2">
-                <p className={cn("text-[22px] font-semibold leading-none tracking-tight", s.color)}>
-                  {s.value}
-                </p>
-                {s.icon && <s.icon className={cn("size-4", s.color || "text-muted-foreground")} />}
-              </div>
-              <p className="mt-2 text-[12px] text-muted-foreground">{s.label}</p>
-            </div>
-          ))}
-        </div>
-
-        {urgentCount > 0 && (
-          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
-            <p className="text-[13px] font-medium text-amber-800">
-              ⚠️ {urgentCount} item memerlukan perhatian segera
-            </p>
-          </div>
-        )}
+        <h1 className="mt-1 text-[26px] font-semibold tracking-tight sm:text-[30px]">
+          {hydrated ? greeting(settings.name) : "Hello."}
+        </h1>
+        <p className="mt-1 text-[14px] text-muted-foreground">Here&apos;s what matters today.</p>
       </div>
+
+      {needsAttention > 0 && (
+        <div className="mb-6 flex items-center gap-2 rounded-lg border border-border px-4 py-3">
+          <AlertTriangle className="size-4 shrink-0 text-amber-600" />
+          <p className="text-[13.5px] font-medium">
+            {needsAttention} thing{needsAttention !== 1 && "s"} need
+            {needsAttention === 1 && "s"} your attention
+          </p>
+        </div>
+      )}
 
       {overdue.length > 0 && (
-        <Section title="Terlambat" count={overdue.length}>
-          {overdue.map((i, n) => (
-            <ItemRow key={i.id} item={i} index={n} />
+        <Section title="Overdue" count={overdue.length}>
+          {overdue.map((item) => (
+            <div key={item.id} className="flex items-center gap-3 px-1 py-3">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[14px] font-medium">{item.title}</p>
+                <p className="mt-0.5 text-[12px] text-muted-foreground">
+                  {personOf(item.personId)?.name ?? item.source}
+                  {item.due && ` - Due ${item.due}`}
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => {
+                    complete(item.id);
+                    toast.success("Done");
+                  }}
+                  className="rounded-md border border-border px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground transition-colors hover:bg-secondary"
+                >
+                  Done
+                </button>
+                <button
+                  onClick={() => {
+                    snooze(item.id, 1);
+                    toast("Snoozed");
+                  }}
+                  className="rounded-md px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground/60 transition-colors hover:text-muted-foreground"
+                >
+                  Remind later
+                </button>
+              </div>
+            </div>
           ))}
         </Section>
       )}
 
-      <Section title="Jatuh tempo hari ini" count={dueToday.length}>
+      <Section title="Today" count={dueToday.length}>
         {dueToday.length ? (
-          dueToday.map((i, n) => <ItemRow key={i.id} item={i} index={n} />)
+          dueToday.map((item) => (
+            <div key={item.id} className="flex items-center gap-3 px-1 py-3">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[14px] font-medium">{item.title}</p>
+                <p className="mt-0.5 text-[12px] text-muted-foreground">
+                  {personOf(item.personId)?.name ?? item.source}
+                  {item.time && ` - ${item.time}`}
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => {
+                    complete(item.id);
+                    toast.success("Done");
+                  }}
+                  className="rounded-md border border-border px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground transition-colors hover:bg-secondary"
+                >
+                  Done
+                </button>
+                <button
+                  onClick={() => {
+                    snooze(item.id, 1);
+                    toast("Snoozed");
+                  }}
+                  className="rounded-md px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground/60 transition-colors hover:text-muted-foreground"
+                >
+                  Remind later
+                </button>
+              </div>
+            </div>
+          ))
         ) : (
-          <EmptyState
-            title="Tidak ada yang jatuh tempo hari ini."
-            hint="Napas dulu. NANTI tetap menjaga sisanya."
-          />
+          <EmptyState title="Nothing due today." hint="Enjoy the breathing room." />
         )}
       </Section>
 
       {upcoming.length > 0 && (
-        <Section title="Mendatang" count={upcoming.length}>
-          {upcoming.slice(0, 3).map((i, n) => (
-            <ItemRow key={i.id} item={i} index={n} />
+        <Section title="Upcoming" count={upcoming.length}>
+          {upcoming.slice(0, 5).map((item) => (
+            <div key={item.id} className="flex items-center gap-3 px-1 py-3">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[14px] font-medium">{item.title}</p>
+                <p className="mt-0.5 text-[12px] text-muted-foreground">
+                  {personOf(item.personId)?.name ?? item.source}
+                  {item.due && ` - ${item.due}`}
+                </p>
+              </div>
+            </div>
           ))}
+          {upcoming.length > 5 && (
+            <div className="px-1 py-3">
+              <Link
+                to="/app/reminders"
+                className="inline-flex items-center gap-1 text-[12.5px] font-medium text-muted-foreground hover:text-foreground"
+              >
+                See all upcoming <ArrowRight className="size-3" />
+              </Link>
+            </div>
+          )}
         </Section>
       )}
 
-      <Section title="Anda menunggu" count={waiting.length}>
-        {waiting.slice(0, 4).map((i, n) => {
-          const person = personOf(i.personId);
-          return (
-            <button
-              key={i.id}
-              onClick={() => openDetail(i.id)}
-              style={{ animationDelay: `${n * 35}ms` }}
-              className="rise flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-3 text-left transition-colors hover:border-border hover:bg-surface"
-            >
-              <Hourglass className="size-4 shrink-0 text-muted-foreground" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[14.5px] font-medium">
-                  {person?.name ?? i.source} — {i.title}
-                </p>
-                <p className="mt-0.5 text-[12.5px] text-muted-foreground">
-                  Menunggu {waitingDays(i)} hari
-                </p>
+      {waiting.length > 0 && (
+        <Section title="Waiting" count={waiting.length}>
+          {waiting.slice(0, 4).map((item) => {
+            const person = personOf(item.personId);
+            return (
+              <div key={item.id} className="flex items-center gap-3 px-1 py-3">
+                <Hourglass className="size-3.5 shrink-0 text-muted-foreground/60" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[13.5px] font-medium">
+                    {person?.name ?? item.source}
+                  </p>
+                  <p className="mt-0.5 text-[12px] text-muted-foreground">
+                    {item.title} - Waiting {waitingDays(item)} days
+                  </p>
+                </div>
+                <span className="text-[11px] text-muted-foreground/50">{waitingDays(item)}d</span>
               </div>
-            </button>
-          );
-        })}
-        <div className="px-3 pt-2">
-          <Link
-            to="/app/waiting"
-            className="inline-flex items-center gap-1 text-[13px] font-medium text-primary"
-          >
-            Lihat semua item menunggu <ArrowRight className="size-3.5" />
-          </Link>
-        </div>
-      </Section>
-
-      {!dismissed && overdue[0] && (
-        <div className="rise mb-8 rounded-xl border border-primary/25 bg-accent/60 p-5">
-          <p className="eyebrow text-accent-foreground">Saran NANTI</p>
-          <p className="mt-2.5 text-[14.5px] leading-relaxed">
-            Anda menjanjikan {overdue[0].title.toLowerCase()} kepada{" "}
-            {personOf(overdue[0].personId)?.name ?? "klien"} sebelumnya, tetapi saya tidak menemukan
-            tindak lanjut setelah percakapan itu.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              onClick={() => {
-                snooze(overdue[0]!.id, 1);
-                toast("Dijadwalkan untuk follow up");
-              }}
-            >
-              Follow up
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                complete(overdue[0]!.id);
-                toast.success("Ditandai selesai");
-              }}
-            >
-              Tandai selesai
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setDismissed(true)}>
-              Abaikan
-            </Button>
-          </div>
-        </div>
+            );
+          })}
+          {waiting.length > 4 && (
+            <div className="px-1 py-3">
+              <Link
+                to="/app/waiting"
+                className="inline-flex items-center gap-1 text-[12.5px] font-medium text-muted-foreground hover:text-foreground"
+              >
+                See all waiting <ArrowRight className="size-3" />
+              </Link>
+            </div>
+          )}
+        </Section>
       )}
 
-      {sweepOpen && (overdue.length > 0 || dueToday.length > 0) && (
-        <div className="rise mb-4 rounded-xl border border-border bg-surface p-5">
-          <p className="eyebrow">Sebelum Anda tutup hari ini</p>
-          <p className="mt-2.5 text-[15px] font-medium">
-            Masih ada {overdue.length + dueToday.length} hal yang belum selesai.
-          </p>
-          <ul className="mt-3 space-y-1.5">
-            {[...overdue, ...dueToday].slice(0, 5).map((i) => (
-              <li key={i.id} className="text-[13.5px] text-muted-foreground">
-                · {i.title}
-              </li>
-            ))}
-          </ul>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              onClick={() => {
-                const tomorrow = addDays(todayISO(), 1);
-                [...overdue, ...dueToday].forEach((i) => update(i.id, { due: tomorrow }));
-                setSweepOpen(false);
-                toast.success("Semua dipindahkan ke besok");
-              }}
+      {potentiallyForgotten.length > 0 && !dismissed && (
+        <Section title="Potentially forgotten" count={potentiallyForgotten.length}>
+          {potentiallyForgotten.slice(0, 3).map((item) => (
+            <div key={item.id} className="flex items-center gap-3 px-1 py-3">
+              <Clock className="size-3.5 shrink-0 text-muted-foreground/60" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13.5px] font-medium">{item.title}</p>
+                <p className="mt-0.5 text-[12px] text-muted-foreground">
+                  {item.since
+                    ? `Mentioned ${Math.floor((Date.now() - new Date(item.since).getTime()) / 86400000)} days ago`
+                    : "May be forgotten"}
+                </p>
+              </div>
+              <button
+                onClick={() => openDetail(item.id)}
+                className="rounded-md border border-border px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground transition-colors hover:bg-secondary"
+              >
+                Review
+              </button>
+            </div>
+          ))}
+          <div className="px-1 py-2">
+            <button
+              onClick={() => setDismissed(true)}
+              className="text-[12px] text-muted-foreground/50 hover:text-muted-foreground"
             >
-              Pindahkan semua ke besok
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setSweepOpen(false)}>
-              Nanti saja
-            </Button>
+              Dismiss
+            </button>
+          </div>
+        </Section>
+      )}
+
+      {(upcoming.length > 0 || waiting.length > 0) && (
+        <div className="mt-6 grid grid-cols-3 gap-3">
+          <div className="rounded-lg border border-border px-3 py-2.5">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60">
+              This week
+            </p>
+            <p className="mt-1 text-[18px] font-semibold">{upcoming.length + dueToday.length}</p>
+            <p className="text-[11px] text-muted-foreground">commitments</p>
+          </div>
+          <div className="rounded-lg border border-border px-3 py-2.5">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60">
+              Waiting
+            </p>
+            <p className="mt-1 text-[18px] font-semibold">{waiting.length}</p>
+            <p className="text-[11px] text-muted-foreground">items</p>
+          </div>
+          <div className="rounded-lg border border-border px-3 py-2.5">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60">
+              Total
+            </p>
+            <p className="mt-1 text-[18px] font-semibold">{openItems(items).length}</p>
+            <p className="text-[11px] text-muted-foreground">open</p>
           </div>
         </div>
       )}

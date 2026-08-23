@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { FileText, Plus, Download, Send, Trash2 } from "lucide-react";
-import { PageHeader, EmptyState } from "@/components/nanti/app-shell";
+import { FileText, Plus, Download, Trash2 } from "lucide-react";
+import { PageHeader, EmptyState, Section } from "@/components/nanti/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,8 +11,8 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/app/invoices")({
   head: () => ({
     meta: [
-      { title: "Invoice · NANTI" },
-      { name: "description", content: "Buat dan kelola invoice profesional." },
+      { title: "Invoices - NANTI" },
+      { name: "description", content: "Create and manage professional invoices." },
     ],
   }),
   component: InvoicesPage,
@@ -38,7 +38,6 @@ interface Invoice {
   total: number;
   currency: string;
   status: "draft" | "sent" | "paid" | "overdue";
-  template: "minimal" | "modern" | "premium";
 }
 
 const statusColors: Record<string, string> = {
@@ -50,21 +49,19 @@ const statusColors: Record<string, string> = {
 
 const statusLabels: Record<string, string> = {
   draft: "Draft",
-  sent: "Terkirim",
-  paid: "Lunas",
-  overdue: "Terlambat",
+  sent: "Sent",
+  paid: "Paid",
+  overdue: "Overdue",
 };
 
 function InvoicesPage() {
   const [showForm, setShowForm] = useState(false);
   const [invoices] = useState<Invoice[]>([]);
-
   const [form, setForm] = useState({
     clientName: "",
     dueDate: "",
     items: [{ id: "1", description: "", quantity: 1, unitPrice: 0, amount: 0 }] as InvoiceItem[],
     notes: "",
-    template: "modern" as "minimal" | "modern" | "premium",
   });
 
   const updateItem = (index: number, field: keyof InvoiceItem, value: string | number) => {
@@ -89,17 +86,14 @@ function InvoicesPage() {
   };
 
   const removeItem = (index: number) => {
-    setForm((prev) => ({
-      ...prev,
-      items: prev.items.filter((_, i) => i !== index),
-    }));
+    setForm((prev) => ({ ...prev, items: prev.items.filter((_, i) => i !== index) }));
   };
 
   const subtotal = form.items.reduce((sum, item) => sum + item.amount, 0);
   const tax = subtotal * 0.11;
   const total = subtotal + tax;
 
-  const formatCurrency = (amount: number) =>
+  const fmt = (amount: number) =>
     new Intl.NumberFormat("id-ID", {
       style: "currency",
       currency: "IDR",
@@ -109,139 +103,127 @@ function InvoicesPage() {
   return (
     <div>
       <PageHeader
-        title="Invoice"
-        subtitle="Buat dan kelola invoice profesional"
+        title="Invoices"
+        subtitle="Create and manage professional invoices"
         action={
           <Button onClick={() => setShowForm(!showForm)}>
             <Plus className="mr-1 size-4" />
-            Buat Invoice
+            {showForm ? "Cancel" : "New Invoice"}
           </Button>
         }
       />
 
       {!showForm && invoices.length === 0 && (
-        <EmptyState
-          title="Belum ada invoice"
-          hint="Klik 'Buat Invoice' untuk membuat invoice pertama Anda."
-        />
+        <EmptyState title="No invoices yet" hint="Click 'New Invoice' to create your first one." />
       )}
 
       {showForm && (
-        <div className="rise space-y-6">
-          <div className="card-soft p-5">
-            <h2 className="mb-4 text-[14px] font-semibold">Detail Invoice</h2>
+        <div className="max-w-xl space-y-6">
+          <section>
+            <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+              Details
+            </h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label className="text-[13px]">Nama Klien</Label>
+                <Label className="text-[13px]">Client</Label>
                 <Input
-                  className="mt-1.5 bg-surface"
+                  className="mt-1.5"
                   placeholder="PT ABC Export"
                   value={form.clientName}
                   onChange={(e) => setForm((p) => ({ ...p, clientName: e.target.value }))}
                 />
               </div>
               <div>
-                <Label className="text-[13px]">Tanggal Jatuh Tempo</Label>
+                <Label className="text-[13px]">Due Date</Label>
                 <Input
                   type="date"
-                  className="mt-1.5 bg-surface"
+                  className="mt-1.5"
                   value={form.dueDate}
                   onChange={(e) => setForm((p) => ({ ...p, dueDate: e.target.value }))}
                 />
               </div>
             </div>
-          </div>
+          </section>
 
-          <div className="card-soft p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-[14px] font-semibold">Item</h2>
-              <Button variant="outline" size="sm" onClick={addItem}>
-                <Plus className="mr-1 size-3" /> Tambah Item
-              </Button>
+          <section>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                Items
+              </h2>
+              <button
+                onClick={addItem}
+                className="text-[12px] font-medium text-muted-foreground hover:text-foreground"
+              >
+                + Add item
+              </button>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {form.items.map((item, i) => (
                 <div key={item.id} className="flex gap-2">
                   <Input
-                    className="flex-1 bg-surface"
-                    placeholder="Deskripsi"
+                    className="flex-1"
+                    placeholder="Description"
                     value={item.description}
                     onChange={(e) => updateItem(i, "description", e.target.value)}
                   />
                   <Input
                     type="number"
-                    className="w-20 bg-surface"
+                    className="w-20"
                     placeholder="Qty"
                     value={item.quantity || ""}
                     onChange={(e) => updateItem(i, "quantity", Number(e.target.value))}
                   />
                   <Input
                     type="number"
-                    className="w-32 bg-surface"
-                    placeholder="Harga"
+                    className="w-32"
+                    placeholder="Price"
                     value={item.unitPrice || ""}
                     onChange={(e) => updateItem(i, "unitPrice", Number(e.target.value))}
                   />
                   <span className="flex items-center text-[13px] text-muted-foreground">
-                    {formatCurrency(item.amount)}
+                    {fmt(item.amount)}
                   </span>
                   {form.items.length > 1 && (
-                    <Button variant="ghost" size="sm" onClick={() => removeItem(i)}>
-                      <Trash2 className="size-3" />
-                    </Button>
+                    <button
+                      onClick={() => removeItem(i)}
+                      className="text-muted-foreground/40 hover:text-muted-foreground"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
                   )}
                 </div>
               ))}
             </div>
-          </div>
+          </section>
 
-          <div className="card-soft p-5">
-            <h2 className="mb-4 text-[14px] font-semibold">Template</h2>
-            <div className="grid grid-cols-3 gap-3">
-              {(["minimal", "modern", "premium"] as const).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setForm((p) => ({ ...p, template: t }))}
-                  className={cn(
-                    "rounded-xl border p-4 text-center transition-colors",
-                    form.template === t
-                      ? "border-primary bg-accent/50"
-                      : "border-border bg-surface hover:border-primary/40",
-                  )}
-                >
-                  <FileText className="mx-auto mb-2 size-6 text-muted-foreground" />
-                  <p className="text-[13px] font-medium capitalize">{t}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="card-soft p-5">
-            <h2 className="mb-4 text-[14px] font-semibold">Ringkasan</h2>
-            <div className="space-y-2 text-[13px]">
+          <section>
+            <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+              Summary
+            </h2>
+            <div className="space-y-1.5 text-[13px]">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>{formatCurrency(subtotal)}</span>
+                <span>{fmt(subtotal)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">PPN (11%)</span>
-                <span>{formatCurrency(tax)}</span>
+                <span className="text-muted-foreground">Tax (11%)</span>
+                <span>{fmt(tax)}</span>
               </div>
-              <div className="flex justify-between border-t border-border pt-2 font-semibold">
+              <div className="flex justify-between border-t border-border pt-1.5 font-semibold">
                 <span>Total</span>
-                <span>{formatCurrency(total)}</span>
+                <span>{fmt(total)}</span>
               </div>
             </div>
-          </div>
+          </section>
 
           <div className="flex gap-2">
             <Button
               onClick={() => {
-                toast.success("Invoice disimpan sebagai draft");
+                toast.success("Invoice saved as draft");
                 setShowForm(false);
               }}
             >
-              Simpan Draft
+              Save Draft
             </Button>
             <Button
               variant="outline"
@@ -261,44 +243,36 @@ function InvoicesPage() {
                       total,
                       currency: "IDR",
                       notes: form.notes,
-                      template: form.template,
+                      template: "modern",
                       companyName: "NANTI",
                     }),
                   });
-
-                  if (!response.ok) throw new Error("Gagal generate PDF");
-
+                  if (!response.ok) throw new Error("Failed");
                   const html = await response.text();
-                  const printWindow = window.open("", "_blank");
-                  if (printWindow) {
-                    printWindow.document.write(html);
-                    printWindow.document.close();
-                    setTimeout(() => printWindow.print(), 500);
+                  const w = window.open("", "_blank");
+                  if (w) {
+                    w.document.write(html);
+                    w.document.close();
+                    setTimeout(() => w.print(), 500);
                   }
-                  toast.success("Invoice berhasil dibuat");
+                  toast.success("Invoice created");
                 } catch {
-                  toast.error("Gagal membuat invoice");
+                  toast.error("Failed to create invoice");
                 }
               }}
             >
-              <Download className="mr-1 size-4" /> Download PDF
-            </Button>
-            <Button variant="ghost" onClick={() => setShowForm(false)}>
-              Batal
+              <Download className="mr-1 size-4" /> PDF
             </Button>
           </div>
         </div>
       )}
 
       {!showForm && invoices.length > 0 && (
-        <div className="space-y-2">
+        <Section count={invoices.length}>
           {invoices.map((inv) => (
-            <div
-              key={inv.id}
-              className="flex items-center gap-4 rounded-xl border border-border bg-surface px-4 py-3 transition-colors hover:border-primary/30"
-            >
-              <FileText className="size-5 text-muted-foreground" />
-              <div className="flex-1">
+            <div key={inv.id} className="flex items-center gap-3 px-1 py-3">
+              <FileText className="size-4 shrink-0 text-muted-foreground" />
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="text-[14px] font-medium">{inv.invoiceNumber}</span>
                   <span
@@ -311,20 +285,12 @@ function InvoicesPage() {
                   </span>
                 </div>
                 <p className="text-[12px] text-muted-foreground">
-                  {inv.clientName} · {formatCurrency(inv.total)}
+                  {inv.clientName} - {fmt(inv.total)}
                 </p>
-              </div>
-              <div className="flex gap-1">
-                <Button variant="ghost" size="sm">
-                  <Download className="size-3.5" />
-                </Button>
-                <Button variant="ghost" size="sm">
-                  <Send className="size-3.5" />
-                </Button>
               </div>
             </div>
           ))}
-        </div>
+        </Section>
       )}
     </div>
   );
