@@ -36,7 +36,7 @@ function SignupPage() {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/app/today`,
+        emailRedirectTo: `${window.location.origin}/welcome`,
       },
     });
 
@@ -59,7 +59,7 @@ function SignupPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/app/today`,
+        redirectTo: `${window.location.origin}/welcome`,
       },
     });
 

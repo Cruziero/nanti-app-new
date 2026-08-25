@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { useNanti } from "@/lib/nanti-store";
 
 export const Route = createFileRoute("/auth/login")({
   component: LoginPage,
@@ -16,6 +17,7 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
+  const { settings } = useNanti();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +39,11 @@ function LoginPage() {
     }
 
     toast.success("Berhasil masuk!");
-    navigate({ to: "/app/today" });
+    if (settings.onboarded) {
+      navigate({ to: "/app/today" });
+    } else {
+      navigate({ to: "/welcome" });
+    }
   };
 
   const handleGoogleLogin = async () => {
@@ -45,7 +51,7 @@ function LoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/app/today`,
+        redirectTo: `${window.location.origin}/welcome`,
       },
     });
 

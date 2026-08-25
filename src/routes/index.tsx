@@ -61,22 +61,11 @@ function Hero() {
 
   return (
     <section className="relative overflow-hidden bg-white">
-      {/* Floating decorative elements */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-10 -right-20 size-72 rounded-full bg-[#25D366]/5 blur-3xl" />
-        <div className="absolute -bottom-20 -left-20 size-60 rounded-full bg-[#128C7E]/5 blur-3xl" />
-        <div className="absolute top-20 left-[15%] animate-float-slow text-[28px] opacity-20">💬</div>
-        <div className="absolute top-32 right-[10%] animate-float-medium text-[24px] opacity-15" style={{ animationDelay: "1s" }}>📱</div>
-        <div className="absolute bottom-20 left-[8%] animate-float-slow text-[20px] opacity-15" style={{ animationDelay: "2s" }}>🧠</div>
-        <div className="absolute top-40 left-[45%] animate-float-medium text-[22px] opacity-10" style={{ animationDelay: "0.5s" }}>✨</div>
-      </div>
-
       <div className="relative mx-auto max-w-[1200px] px-5 pt-24 pb-16 sm:px-8 sm:pt-32 sm:pb-20">
         <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.1fr]">
           <div>
             <Reveal>
               <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#25D366]/10 px-4 py-1.5">
-                <span className="text-[13px]">🧠</span>
                 <span className="text-[12px] font-semibold text-[#25D366]">AI Memory for WhatsApp</span>
               </div>
             </Reveal>
@@ -89,7 +78,7 @@ function Hero() {
             </Reveal>
             <Reveal delay={150}>
               <p className="mt-5 max-w-[440px] text-[16px] leading-[1.7] text-[#5F6368]">
-                Your AI memory for the conversations that matter. 🤝
+                Your AI memory for the conversations that matter.
               </p>
             </Reveal>
             <Reveal delay={250}>
@@ -104,13 +93,13 @@ function Hero() {
                   to="/auth/signup"
                   className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-6 py-3 text-[14px] font-semibold text-white shadow-[0_4px_14px_rgba(37,211,102,0.3)] transition-all hover:bg-[#1fb85c] hover:shadow-[0_6px_20px_rgba(37,211,102,0.4)]"
                 >
-                  Try NANTI for free 🚀
+                  Try NANTI for free
                 </Link>
                 <Link
                   to="/how-it-works"
                   className="inline-flex items-center gap-2 rounded-xl border border-[#E7E9E7] px-6 py-3 text-[14px] font-medium text-[#111111] transition-all hover:bg-[#F7F8F6] hover:border-[#25D366]/30"
                 >
-                  See how it works 👇
+                  See how it works
                 </Link>
               </div>
             </Reveal>
@@ -211,7 +200,7 @@ function Insight() {
         </Reveal>
         <Reveal delay={100}>
           <p className="mt-4 text-[15px] text-[#5F6368]">
-            They live inside conversations. NANTI remembers them. 🧠
+            They live inside conversations. NANTI remembers them.
           </p>
         </Reveal>
         <Reveal delay={200}>
@@ -233,7 +222,7 @@ function Insight() {
         </Reveal>
         <Reveal delay={300}>
           <p className="mt-6 text-[16px] font-semibold text-[#111111]">
-            You said it. <span className="text-[#25D366]">NANTI remembers it.</span> ✨
+            You said it. <span className="text-[#25D366]">NANTI remembers it.</span>
           </p>
         </Reveal>
       </div>
@@ -261,7 +250,7 @@ function CoreLoop() {
               From conversation to action.
             </h2>
             <p className="mt-2 text-[14px] text-[#5F6368]">
-              You don&apos;t create tasks. You just talk. 🗣️
+              You don&apos;t create tasks. You just talk.
             </p>
           </div>
         </Reveal>
@@ -341,7 +330,7 @@ function Integrations() {
       <div className="mx-auto max-w-[640px] px-5 text-center sm:px-8">
         <Reveal>
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#5F6368]">
-            Integrations 🔗
+            Integrations
           </p>
           <p className="mt-3 text-[14px] text-[#5F6368]">
             Works with the tools you already use.
@@ -370,14 +359,6 @@ function Integrations() {
 function FinalCta() {
   return (
     <section className="relative overflow-hidden bg-[#F7F8F6] py-16 sm:py-20">
-      {/* Floating decorative elements */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-10 -right-10 size-40 rounded-full bg-[#25D366]/5 blur-2xl" />
-        <div className="absolute -bottom-10 -left-10 size-40 rounded-full bg-[#128C7E]/5 blur-2xl" />
-        <div className="absolute top-10 right-[20%] animate-float-slow text-[20px] opacity-15">✨</div>
-        <div className="absolute bottom-10 left-[15%] animate-float-medium text-[18px] opacity-15" style={{ animationDelay: "1s" }}>🚀</div>
-      </div>
-
       <div className="relative mx-auto max-w-[500px] px-5 text-center sm:px-8">
         <Reveal>
           <div className="mb-3 text-[28px]">🧠</div>
@@ -385,15 +366,15 @@ function FinalCta() {
             Stop remembering everything.
           </h2>
           <p className="mt-3 text-[15px] text-[#5F6368]">
-            Let NANTI remember what matters. 💚
+            Let NANTI remember what matters.
           </p>
           <Link
             to="/auth/signup"
             className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-7 py-3.5 text-[15px] font-semibold text-white shadow-[0_4px_14px_rgba(37,211,102,0.3)] transition-all hover:bg-[#1fb85c] hover:shadow-[0_6px_20px_rgba(37,211,102,0.4)]"
           >
-            Try NANTI for free 🚀
+            Try NANTI for free
           </Link>
-          <p className="mt-3 text-[12px] text-[#5F6368]">Start in minutes ⏱️</p>
+          <p className="mt-3 text-[12px] text-[#5F6368]">Start in minutes</p>
         </Reveal>
       </div>
     </section>

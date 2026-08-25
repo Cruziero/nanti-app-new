@@ -53,13 +53,6 @@ function Steps() {
 
   return (
     <section className="relative overflow-hidden bg-white pt-24 pb-16 sm:pt-32 sm:pb-20">
-      {/* Floating decorative */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-[10%] animate-float-slow text-[24px] opacity-15">💬</div>
-        <div className="absolute top-32 right-[15%] animate-float-medium text-[20px] opacity-10" style={{ animationDelay: "1s" }}>🧠</div>
-        <div className="absolute bottom-20 left-[20%] animate-float-slow text-[18px] opacity-10" style={{ animationDelay: "2s" }}>🔔</div>
-      </div>
-
       <div className="relative mx-auto max-w-[800px] px-5 sm:px-8">
         <Reveal>
           <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#25D366]/10 px-4 py-1.5">
@@ -67,7 +60,7 @@ function Steps() {
             <span className="text-[12px] font-semibold text-[#25D366]">How it works</span>
           </div>
           <h1 className="mt-3 text-[28px] font-bold tracking-tight text-[#111111] sm:text-[36px]">
-            You don&apos;t create tasks. You just talk. 🗣️
+            You don&apos;t create tasks. You just talk.
           </h1>
           <p className="mt-3 max-w-[480px] text-[15px] leading-[1.7] text-[#5F6368]">
             Forward the message, or paste the conversation. NANTI reads it, and remembers what
@@ -116,10 +109,10 @@ function Context() {
                 It&apos;s not just a reminder.
               </h2>
               <p className="mt-3 text-[16px] font-semibold text-[#111111]">
-                NANTI understands why. 🧠
+                NANTI understands why.
               </p>
               <p className="mt-3 text-[14px] text-[#5F6368]">
-                That&apos;s the difference between a reminder and memory. ✨
+                That&apos;s the difference between a reminder and memory.
               </p>
             </div>
           </Reveal>
@@ -168,7 +161,7 @@ function BringAnything() {
             Just bring it to NANTI.
           </h2>
           <p className="mt-2 text-[14px] text-[#5F6368]">
-            Forward a conversation. Paste a message. Upload a screenshot. ✨
+            Forward a conversation. Paste a message. Upload a screenshot.
           </p>
         </Reveal>
 
@@ -197,12 +190,7 @@ function BringAnything() {
 
 function Cta() {
   return (
-    <section className="relative overflow-hidden bg-[#F7F8F6] py-16 sm:py-20">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute top-10 right-[20%] animate-float-slow text-[20px] opacity-15">✨</div>
-        <div className="absolute bottom-10 left-[15%] animate-float-medium text-[18px] opacity-15" style={{ animationDelay: "1s" }}>🚀</div>
-      </div>
-
+    <section className="bg-[#F7F8F6] py-16 sm:py-20">
       <div className="relative mx-auto max-w-[500px] px-5 text-center sm:px-8">
         <Reveal>
           <div className="mb-3 text-[28px]">🚀</div>
@@ -216,7 +204,7 @@ function Cta() {
             to="/auth/signup"
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-6 py-3 text-[14px] font-semibold text-white shadow-[0_4px_14px_rgba(37,211,102,0.3)] transition-all hover:bg-[#1fb85c] hover:shadow-[0_6px_20px_rgba(37,211,102,0.4)]"
           >
-            Get started 🚀
+            Get started
           </Link>
         </Reveal>
       </div>
