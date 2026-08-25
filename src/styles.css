@@ -57,7 +57,7 @@
   --card-foreground: #1a1a1a;
   --popover: #ffffff;
   --popover-foreground: #1a1a1a;
-  --primary: #1a1a1a;
+  --primary: #25D366;
   --primary-foreground: #ffffff;
   --brand: #25d366;
   --brand-foreground: #08301f;
@@ -102,8 +102,8 @@
   --card-foreground: #ededed;
   --popover: #141414;
   --popover-foreground: #ededed;
-  --primary: #ededed;
-  --primary-foreground: #0a0a0a;
+  --primary: #25D366;
+  --primary-foreground: #08301f;
   --brand: #25d366;
   --brand-foreground: #06231a;
   --secondary: #1a1a1a;
@@ -221,10 +221,10 @@
 
 @keyframes nanti-pulse-ring {
   0% {
-    box-shadow: 0 0 0 0 rgb(26 26 26 / 0.15);
+    box-shadow: 0 0 0 0 rgb(37 211 102 / 0.15);
   }
   70% {
-    box-shadow: 0 0 0 12px rgb(26 26 26 / 0);
+    box-shadow: 0 0 0 12px rgb(37 211 102 / 0);
   }
   100% {
     box-shadow: 0 0 0 0 rgb(26 26 26 / 0);
