@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNanti } from "@/lib/nanti-store";
 import type { ConversationTone, FocusArea, ReminderChannel } from "@/lib/nanti-types";
-import { Check, ArrowRight, Sparkles } from "lucide-react";
+import { Check, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/welcome")({
@@ -21,48 +21,13 @@ export const Route = createFileRoute("/welcome")({
 });
 
 const tones: { id: ConversationTone; label: string; desc: string; example: string }[] = [
-  {
-    id: "formal",
-    label: "Formal",
-    desc: "Professional dan sopan",
-    example: "Reminder: Anda memiliki komitmen untuk mengirim invoice hari ini.",
-  },
-  {
-    id: "professional",
-    label: "Professional",
-    desc: "Langsung dan jelas",
-    example: "Reminder: Invoice untuk Pak Tom perlu dikirim hari ini.",
-  },
-  {
-    id: "casual",
-    label: "Casual",
-    desc: "Santai dan ramah",
-    example: "Hey Rizky, jangan lupa kirim invoice ke Pak Tom hari ini.",
-  },
-  {
-    id: "friendly",
-    label: "Friendly",
-    desc: "Hangat dan positif",
-    example: "Halo Rizky! Just checking in — invoice untuk Pak Tom hari ini ya.",
-  },
-  {
-    id: "warm",
-    label: "Warm",
-    desc: "Penuh perhatian",
-    example: "Rizky, just a little reminder. Invoice untuk Pak Tom hari ini.",
-  },
-  {
-    id: "loving",
-    label: "Loving",
-    desc: "Penuh kasih sayang",
-    example: "Sayang, jangan lupa invoice untuk Pak Tom hari ini ya.",
-  },
-  {
-    id: "direct",
-    label: "Direct",
-    desc: "Tanpa basa-basi",
-    example: "Invoice Pak Tom — due today.",
-  },
+  { id: "formal", label: "Formal", desc: "Professional dan sopan", example: "Reminder: Anda memiliki komitmen untuk mengirim invoice hari ini." },
+  { id: "professional", label: "Professional", desc: "Langsung dan jelas", example: "Reminder: Invoice untuk Pak Tom perlu dikirim hari ini." },
+  { id: "casual", label: "Casual", desc: "Santai dan ramah", example: "Hey Rizky, jangan lupa kirim invoice ke Pak Tom hari ini." },
+  { id: "friendly", label: "Friendly", desc: "Hangat dan positif", example: "Halo Rizky! Just checking in — invoice untuk Pak Tom hari ini ya." },
+  { id: "warm", label: "Warm", desc: "Penuh perhatian", example: "Rizky, just a little reminder. Invoice untuk Pak Tom hari ini." },
+  { id: "loving", label: "Loving", desc: "Penuh kasih sayang", example: "Sayang, jangan lupa invoice untuk Pak Tom hari ini ya." },
+  { id: "direct", label: "Direct", desc: "Tanpa basa-basi", example: "Invoice Pak Tom — due today." },
 ];
 
 const focusAreas: { id: FocusArea; label: string; icon: string }[] = [
@@ -104,7 +69,7 @@ function Welcome() {
   const { setSettings } = useNanti();
   const navigate = useNavigate();
 
-  const totalSteps = 7;
+  const totalSteps = 4;
 
   const next = () => setStep((s) => Math.min(s + 1, totalSteps - 1));
   const prev = () => setStep((s) => Math.max(s - 1, 0));
@@ -135,27 +100,9 @@ function Welcome() {
           <StepIndicator current={step} total={totalSteps} />
         </div>
 
+        {/* Step 1: Name */}
         {step === 0 && (
           <div className="rise">
-            <div className="mb-6 flex size-12 items-center justify-center rounded-2xl bg-primary/10">
-              <Sparkles className="size-6 text-primary" />
-            </div>
-            <h1 className="text-[30px] font-bold leading-tight">Halo. Saya NANTI.</h1>
-            {/* TODO: i18n — EN: "Hi. I'm NANTI." */}
-            <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-              {/* TODO: i18n — EN: "I help you remember the important things that get lost in WhatsApp. Forward or paste one message, and I'll take it from there." */}
-              Saya bantu Anda mengingat hal-hal penting yang terselip di WhatsApp. Forward atau
-              tempel satu pesan, dan saya urus sisanya.
-            </p>
-            <Button className="mt-8 w-full" size="lg" onClick={next}>
-              Mulai <ArrowRight className="ml-2 size-4" />
-            </Button>
-          </div>
-        )}
-
-        {step === 1 && (
-          <div className="rise">
-            {/* TODO: i18n — EN: "What should I call you?" / "So I know how to talk to you." */}
             <h1 className="text-[24px] font-bold">Siapa nama Anda?</h1>
             <p className="mt-2 text-[14px] text-muted-foreground">
               Supaya saya tahu cara memanggil Anda.
@@ -174,9 +121,9 @@ function Welcome() {
           </div>
         )}
 
-        {step === 2 && (
+        {/* Step 2: Tone */}
+        {step === 1 && (
           <div className="rise">
-            {/* TODO: i18n — EN: "Pick the tone that feels most like you." */}
             <h1 className="text-[24px] font-bold">Bagaimana saya bicara dengan Anda?</h1>
             <p className="mt-2 text-[14px] text-muted-foreground">
               Pilih nada yang paling terasa seperti Anda.
@@ -217,9 +164,9 @@ function Welcome() {
           </div>
         )}
 
-        {step === 3 && (
+        {/* Step 3: Focus */}
+        {step === 2 && (
           <div className="rise">
-            {/* TODO: i18n — EN: "What's your focus?" / "NANTI tailors your reminders around this." */}
             <h1 className="text-[24px] font-bold">Apa fokus Anda?</h1>
             <p className="mt-2 text-[14px] text-muted-foreground">
               NANTI akan menyesuaikan cara mengingatkan sesuai fokus Anda.
@@ -253,11 +200,12 @@ function Welcome() {
           </div>
         )}
 
-        {step === 4 && (
+        {/* Step 4: Notifications + Calendar + Welcome */}
+        {step === 3 && (
           <div className="rise">
-            <h1 className="text-[24px] font-bold">Bagaimana saya mengingatkan Anda?</h1>
+            <h1 className="text-[24px] font-bold">Notifikasi & Kalender</h1>
             <p className="mt-2 text-[14px] text-muted-foreground">
-              Pilih channel notifikasi yang Anda inginkan.
+              Pilih bagaimana NANTI mengingatkan Anda.
             </p>
             <div className="mt-6 space-y-2">
               {channelOptions.map((ch) => (
@@ -289,76 +237,29 @@ function Welcome() {
                 </button>
               ))}
             </div>
+
+            <div className="mt-6 rounded-xl border border-border bg-surface p-5">
+              <p className="text-[13px] font-medium text-foreground">Contoh pesan:</p>
+              <p className="mt-1 text-[13px] text-muted-foreground">
+                &quot;nanti saya kirim invoice tgl 28 agustus ya pak Tom&quot;
+              </p>
+              <p className="mt-2 text-[13px] text-muted-foreground">
+                NANTI akan mengingatkan Anda tepat waktu.
+              </p>
+            </div>
+
             <div className="mt-6 flex gap-2">
               <Button variant="outline" className="flex-1" onClick={prev}>
                 Kembali
               </Button>
-              <Button className="flex-1" onClick={next} disabled={selectedChannels.length === 0}>
-                Lanjut
+              <Button className="flex-1" size="lg" onClick={finish}>
+                Mulai <ArrowRight className="ml-2 size-4" />
               </Button>
             </div>
-          </div>
-        )}
-
-        {step === 5 && (
-          <div className="rise">
-            {/* TODO: i18n — EN: "Connect your calendar?" / "So NANTI can see your schedule from Google Calendar." */}
-            <h1 className="text-[24px] font-bold">Hubungkan kalender?</h1>
-            <p className="mt-2 text-[14px] text-muted-foreground">
-              Supaya NANTI bisa melihat jadwal Anda dari Google Calendar.
-            </p>
-            <div className="mt-6 space-y-3">
-              <Button
-                variant="outline"
-                className="w-full justify-start gap-3"
-                onClick={() => {
-                  setSettings({ calendarConnected: true });
-                  next();
-                }}
-              >
-                <span className="text-xl">{"\uD83D\uDCC5"}</span>
-                <div className="text-left">
-                  <p className="text-[14px] font-semibold">Hubungkan Google Calendar</p>
-                  <p className="text-[12px] text-muted-foreground">Baca jadwal dari kalender</p>
-                </div>
-              </Button>
-              <Button variant="ghost" className="w-full" onClick={next}>
-                Lewati untuk sekarang
-              </Button>
-            </div>
-            <Button variant="outline" className="mt-6 w-full" onClick={prev}>
-              Kembali
-            </Button>
-          </div>
-        )}
-
-        {step === 6 && (
-          <div className="rise">
-            <div className="mb-6 flex size-12 items-center justify-center rounded-2xl bg-primary/10">
-              <Sparkles className="size-6 text-primary" />
-            </div>
-            {/* TODO: i18n — EN: "Try it now." / "Send one thing you can't afford to forget." */}
-            <h1 className="text-[24px] font-bold">Coba sekarang.</h1>
-            <p className="mt-2 text-[14px] text-muted-foreground">
-              Kirim satu hal yang tidak boleh Anda lupakan.
-            </p>
-            <div className="mt-6 rounded-xl border border-border bg-surface p-5">
-              <p className="text-[13px] text-muted-foreground">
-                Contoh: &quot;nanti saya kirim invoice tgl 28 agustus ya pak Tom&quot;
-              </p>
-              <p className="mt-2 text-[13px] text-muted-foreground">
-                {/* TODO: i18n — EN: "I'll remind you right on time." */}
-                Saya akan mengingatkan Anda tepat waktu.
-              </p>
-            </div>
-            <Button className="mt-6 w-full" size="lg" onClick={finish}>
-              Mulai menggunakan NANTI
-            </Button>
           </div>
         )}
 
         <p className="mt-10 text-center text-[12px] text-muted-foreground">
-          {/* TODO: i18n — EN: "Never lose a commitment in WhatsApp again." */}
           Jangan biarkan komitmen hilang di WhatsApp lagi.
         </p>
       </div>
