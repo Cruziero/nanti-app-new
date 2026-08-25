@@ -11,7 +11,6 @@ const navLinks = [
   { to: "/how-it-works", label: "How it works" },
   { to: "/business", label: "For Business" },
   { to: "/personal", label: "For Personal" },
-  { to: "/pricing", label: "Pricing" },
 ];
 
 export function MarketingNav() {
