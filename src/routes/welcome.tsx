@@ -69,7 +69,7 @@ function Welcome() {
   const { setSettings } = useNanti();
   const navigate = useNavigate();
 
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   const next = () => setStep((s) => Math.min(s + 1, totalSteps - 1));
   const prev = () => setStep((s) => Math.max(s - 1, 0));
@@ -200,7 +200,7 @@ function Welcome() {
           </div>
         )}
 
-        {/* Step 4: Notifications + Calendar + Welcome */}
+        {/* Step 4: Notifications + Calendar */}
         {step === 3 && (
           <div className="rise">
             <h1 className="text-[24px] font-bold">Notifikasi & Kalender</h1>
@@ -237,25 +237,38 @@ function Welcome() {
                 </button>
               ))}
             </div>
+            <div className="mt-6 flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={prev}>
+                Kembali
+              </Button>
+              <Button className="flex-1" onClick={next} disabled={selectedChannels.length === 0}>
+                Lanjut
+              </Button>
+            </div>
+          </div>
+        )}
 
+        {/* Step 5: Welcome / Try it */}
+        {step === 4 && (
+          <div className="rise">
+            <h1 className="text-[24px] font-bold">Coba sekarang.</h1>
+            <p className="mt-2 text-[14px] text-muted-foreground">
+              Kirim satu hal yang tidak boleh Anda lupakan.
+            </p>
             <div className="mt-6 rounded-xl border border-border bg-surface p-5">
-              <p className="text-[13px] font-medium text-foreground">Contoh pesan:</p>
-              <p className="mt-1 text-[13px] text-muted-foreground">
-                &quot;nanti saya kirim invoice tgl 28 agustus ya pak Tom&quot;
+              <p className="text-[13px] text-muted-foreground">
+                Contoh: &quot;nanti saya kirim invoice tgl 28 agustus ya pak Tom&quot;
               </p>
               <p className="mt-2 text-[13px] text-muted-foreground">
                 NANTI akan mengingatkan Anda tepat waktu.
               </p>
             </div>
-
-            <div className="mt-6 flex gap-2">
-              <Button variant="outline" className="flex-1" onClick={prev}>
-                Kembali
-              </Button>
-              <Button className="flex-1" size="lg" onClick={finish}>
-                Mulai <ArrowRight className="ml-2 size-4" />
-              </Button>
-            </div>
+            <Button className="mt-6 w-full" size="lg" onClick={finish}>
+              Mulai menggunakan NANTI
+            </Button>
+            <Button variant="outline" className="mt-2 w-full" onClick={prev}>
+              Kembali
+            </Button>
           </div>
         )}
 
