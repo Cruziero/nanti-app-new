@@ -34,6 +34,7 @@ import {
   deleteWaitingItem as deleteWaitingItemFn,
   createInboxItem as createInboxItemFn,
   updateInboxItem as updateInboxItemFn,
+  createConversation as createConversationFn,
   seedDemoData,
 } from "./nanti-supabase";
 
@@ -250,7 +251,7 @@ function personToPerson(person: Record<string, unknown>): Person {
 interface Ctx extends State {
   hydrated: boolean;
   update: (id: string, patch: Partial<Item>) => void;
-  addItems: (items: Item[]) => void;
+  addItems: (items: Item[], conversationText?: string) => void;
   complete: (id: string) => void;
   snooze: (id: string, days: number) => void;
   track: (id: string) => void;
@@ -423,34 +424,71 @@ export function NantiProvider({ children }: { children: ReactNode }) {
           items: s.items.map((i) => (i.id === id ? { ...i, ...patch } : i)),
         }));
       },
-      addItems: (newItems) => {
+      addItems: (newItems, conversationText?: string) => {
         if (useSupabase) {
-          for (const item of newItems) {
-            if (item.kind === "waiting") {
-              createWaitingItemFn({
-                data: {
-                  title: item.title,
-                  person_id: item.personId,
-                  project_id: item.projectId,
-                  started_at: item.since || new Date().toISOString(),
-                },
-              }).catch(console.error);
-            } else {
-              createTaskFn({
-                data: {
-                  title: item.title,
-                  description: item.description,
-                  type: item.kind,
-                  status: "pending",
-                  priority: item.priority,
-                  due_date: item.due,
-                  project_id: item.projectId,
-                  person_id: item.personId,
-                  source: item.source,
-                },
-              }).catch(console.error);
-            }
+          // Save conversation text if provided
+          let conversationPromise: Promise<string | null> = Promise.resolve(null);
+          if (conversationText) {
+            conversationPromise = createConversationFn({
+              data: {
+                source: "Impor percakapan",
+                message_text: conversationText.slice(0, 20000),
+              },
+            })
+              .then((conv) => conv?.id ?? null)
+              .catch((e) => {
+                console.error("Failed to save conversation:", e);
+                return null;
+              });
           }
+
+          conversationPromise.then((conversationId) => {
+            for (const item of newItems) {
+              if (item.kind === "waiting") {
+                createWaitingItemFn({
+                  data: {
+                    title: item.title,
+                    person_id: item.personId,
+                    project_id: item.projectId,
+                    started_at: item.since || new Date().toISOString(),
+                  },
+                }).catch(console.error);
+              } else if (item.status === "inbox") {
+                // Items needing clarification → save to inbox_items table
+                createInboxItemFn({
+                  data: {
+                    type: item.kind,
+                    title: item.title,
+                    person_name: item.personName,
+                    project_name: item.projectName,
+                    due_date: item.due,
+                    conversation_text: conversationText?.slice(0, 5000),
+                    status: "pending",
+                  },
+                }).catch(console.error);
+              } else {
+                createTaskFn({
+                  data: {
+                    title: item.title,
+                    description: item.description,
+                    type: item.kind,
+                    status: "pending",
+                    priority: item.priority,
+                    due_date: item.due,
+                    project_id: item.projectId,
+                    person_id: item.personId,
+                    source: item.source,
+                    quote: item.quote,
+                    ai_note: item.aiNote,
+                    confidence: item.confidence,
+                    source_type: item.sourceType,
+                    time: item.time,
+                    ...(conversationId ? { conversation_id: conversationId } : {}),
+                  },
+                }).catch(console.error);
+              }
+            }
+          });
         }
         mutate((s) => ({ ...s, items: [...newItems, ...s.items] }));
       },

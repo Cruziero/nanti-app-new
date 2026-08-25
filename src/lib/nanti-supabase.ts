@@ -183,6 +183,11 @@ export const createTask = createServerFn({ method: "POST" })
         person_id: z.string().uuid().optional(),
         conversation_id: z.string().uuid().optional(),
         source: z.string().max(200).optional(),
+        quote: z.string().max(2000).optional(),
+        ai_note: z.string().max(2000).optional(),
+        confidence: z.number().optional(),
+        source_type: z.string().max(50).optional(),
+        time: z.string().max(20).optional(),
       })
       .parse(data),
   )

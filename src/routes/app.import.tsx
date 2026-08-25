@@ -213,7 +213,7 @@ function ImportPage() {
       toast("Pilih minimal satu item.");
       return;
     }
-    addItems(chosen.map((d) => draftToItem(d, { people, projects, sourceType })));
+    addItems(chosen.map((d) => draftToItem(d, { people, projects, sourceType })), text || undefined);
     toast.success(`${chosen.length} item disimpan ke memori NANTI`);
     reset();
     setText("");
