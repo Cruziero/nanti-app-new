@@ -383,10 +383,7 @@ function HomepageEditor({
       </Section>
 
       <Section title="Hero" emoji="🏠" expanded={!!expanded["h-hero"]} onToggle={() => toggle("h-hero")}>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Badge Text" value={h.hero.badge} onChange={(v) => update("homepage.hero.badge", v)} />
-          <Field label="Badge Emoji" value={h.hero.badgeEmoji} onChange={(v) => update("homepage.hero.badgeEmoji", v)} />
-        </div>
+        <Field label="Badge Text" value={h.hero.badge} onChange={(v) => update("homepage.hero.badge", v)} />
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Headline" value={h.hero.headline} onChange={(v) => update("homepage.hero.headline", v)} />
           <Field label="Highlight" value={h.hero.highlight} onChange={(v) => update("homepage.hero.highlight", v)} />
@@ -400,7 +397,7 @@ function HomepageEditor({
         </div>
 
         <div className="mt-4 border-t border-[#E7E9E7] pt-4">
-          <p className="mb-3 text-[12px] font-semibold text-[#5F6368]">💬 Chat Demo</p>
+          <p className="mb-3 text-[12px] font-semibold text-[#5F6368]">Chat Demo</p>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Chat Name" value={h.hero.chatName} onChange={(v) => update("homepage.hero.chatName", v)} />
             <Field label="Chat Time" value={h.hero.chatTime} onChange={(v) => update("homepage.hero.chatTime", v)} />
@@ -414,7 +411,7 @@ function HomepageEditor({
         </div>
 
         <div className="mt-4 border-t border-[#E7E9E7] pt-4">
-          <p className="mb-3 text-[12px] font-semibold text-[#5F6368]">🎯 Extracted Items</p>
+          <p className="mb-3 text-[12px] font-semibold text-[#5F6368]">Extracted Items</p>
           <ArrayEditor
             items={h.hero.extractedItems}
             onChange={(items) => update("homepage.hero.extractedItems", items)}
@@ -425,24 +422,13 @@ function HomepageEditor({
             addLabel="Tambah Item"
           />
         </div>
-
-        <div className="mt-4 border-t border-[#E7E9E7] pt-4">
-          <p className="mb-3 text-[12px] font-semibold text-[#5F6368]">✨ Floating Emojis</p>
-          <ArrayEditor
-            items={h.hero.floatingEmojis.map((e) => ({ emoji: e }))}
-            onChange={(items) => update("homepage.hero.floatingEmojis", items.map((i) => i.emoji))}
-            fields={[{ key: "emoji", label: "Emoji" }]}
-            addLabel="Tambah Emoji"
-          />
-        </div>
       </Section>
 
       <Section title="Insight" emoji="💭" expanded={!!expanded["h-insight"]} onToggle={() => toggle("h-insight")}>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Emoji" value={h.insight.emoji} onChange={(v) => update("homepage.insight.emoji", v)} />
           <Field label="Headline" value={h.insight.headline} onChange={(v) => update("homepage.insight.headline", v)} />
+          <Field label="Subheadline" value={h.insight.subheadline} onChange={(v) => update("homepage.insight.subheadline", v)} />
         </div>
-        <Field label="Subheadline" value={h.insight.subheadline} onChange={(v) => update("homepage.insight.subheadline", v)} />
         <Field label="Conclusion" value={h.insight.conclusion} onChange={(v) => update("homepage.insight.conclusion", v)} />
         <Field label="Conclusion Highlight" value={h.insight.conclusionHighlight} onChange={(v) => update("homepage.insight.conclusionHighlight", v)} />
         <p className="mt-3 text-[12px] font-semibold text-[#5F6368]">Quotes</p>
@@ -451,7 +437,6 @@ function HomepageEditor({
           onChange={(items) => update("homepage.insight.quotes", items)}
           fields={[
             { key: "text", label: "Quote Text" },
-            { key: "emoji", label: "Emoji" },
           ]}
           addLabel="Tambah Quote"
         />
@@ -459,15 +444,13 @@ function HomepageEditor({
 
       <Section title="Core Loop" emoji="⚡" expanded={!!expanded["h-core"]} onToggle={() => toggle("h-core")}>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Emoji" value={h.coreLoop.emoji} onChange={(v) => update("homepage.coreLoop.emoji", v)} />
           <Field label="Headline" value={h.coreLoop.headline} onChange={(v) => update("homepage.coreLoop.headline", v)} />
+          <Field label="Subheadline" value={h.coreLoop.subheadline} onChange={(v) => update("homepage.coreLoop.subheadline", v)} />
         </div>
-        <Field label="Subheadline" value={h.coreLoop.subheadline} onChange={(v) => update("homepage.coreLoop.subheadline", v)} />
         <ArrayEditor
           items={h.coreLoop.steps}
           onChange={(items) => update("homepage.coreLoop.steps", items)}
           fields={[
-            { key: "emoji", label: "Emoji" },
             { key: "label", label: "Label" },
             { key: "desc", label: "Description" },
           ]}
@@ -476,10 +459,7 @@ function HomepageEditor({
       </Section>
 
       <Section title="Testimonial" emoji="⭐" expanded={!!expanded["h-testimonial"]} onToggle={() => toggle("h-testimonial")}>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Emoji" value={h.testimonial.emoji} onChange={(v) => update("homepage.testimonial.emoji", v)} />
-          <Field label="Author Initial" value={h.testimonial.authorInitial} onChange={(v) => update("homepage.testimonial.authorInitial", v)} />
-        </div>
+        <Field label="Author Initial" value={h.testimonial.authorInitial} onChange={(v) => update("homepage.testimonial.authorInitial", v)} />
         <Field label="Quote" value={h.testimonial.quote} onChange={(v) => update("homepage.testimonial.quote", v)} multiline />
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Author Name" value={h.testimonial.authorName} onChange={(v) => update("homepage.testimonial.authorName", v)} />
@@ -488,25 +468,41 @@ function HomepageEditor({
       </Section>
 
       <Section title="Integrations" emoji="🔗" expanded={!!expanded["h-integrations"]} onToggle={() => toggle("h-integrations")}>
-        <Field label="Label" value={h.integrations.label} onChange={(v) => update("homepage.integrations.label", v)} />
-        <Field label="Subheadline" value={h.integrations.subheadline} onChange={(v) => update("homepage.integrations.subheadline", v)} />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Label" value={h.integrations.label} onChange={(v) => update("homepage.integrations.label", v)} />
+          <Field label="Subheadline" value={h.integrations.subheadline} onChange={(v) => update("homepage.integrations.subheadline", v)} />
+        </div>
         <ArrayEditor
           items={h.integrations.items}
           onChange={(items) => update("homepage.integrations.items", items)}
           fields={[
             { key: "name", label: "Name" },
-            { key: "emoji", label: "Emoji" },
           ]}
           addLabel="Tambah Integration"
         />
       </Section>
 
+      <Section title="Privacy & Security" emoji="🔒" expanded={!!expanded["h-privacy"]} onToggle={() => toggle("h-privacy")}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Label" value={h.privacy.label} onChange={(v) => update("homepage.privacy.label", v)} />
+          <Field label="Headline" value={h.privacy.headline} onChange={(v) => update("homepage.privacy.headline", v)} />
+        </div>
+        <ArrayEditor
+          items={h.privacy.items}
+          onChange={(items) => update("homepage.privacy.items", items)}
+          fields={[
+            { key: "title", label: "Title" },
+            { key: "desc", label: "Description" },
+          ]}
+          addLabel="Tambah Item"
+        />
+      </Section>
+
       <Section title="Final CTA" emoji="🚀" expanded={!!expanded["h-cta"]} onToggle={() => toggle("h-cta")}>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Emoji" value={h.finalCta.emoji} onChange={(v) => update("homepage.finalCta.emoji", v)} />
           <Field label="Headline" value={h.finalCta.headline} onChange={(v) => update("homepage.finalCta.headline", v)} />
+          <Field label="Subheadline" value={h.finalCta.subheadline} onChange={(v) => update("homepage.finalCta.subheadline", v)} />
         </div>
-        <Field label="Subheadline" value={h.finalCta.subheadline} onChange={(v) => update("homepage.finalCta.subheadline", v)} />
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="CTA Button" value={h.finalCta.cta} onChange={(v) => update("homepage.finalCta.cta", v)} />
           <Field label="Fine Print" value={h.finalCta.finePrint} onChange={(v) => update("homepage.finalCta.finePrint", v)} />
@@ -546,7 +542,6 @@ function HowItWorksEditor({
           items={h.steps}
           onChange={(items) => update("howItWorks.steps", items)}
           fields={[
-            { key: "emoji", label: "Emoji" },
             { key: "title", label: "Title" },
             { key: "desc", label: "Description" },
           ]}
@@ -556,12 +551,13 @@ function HowItWorksEditor({
 
       <Section title="Context Section" emoji="🧠" expanded={!!expanded["hi-context"]} onToggle={() => toggle("hi-context")}>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Emoji" value={h.context.emoji} onChange={(v) => update("howItWorks.context.emoji", v)} />
           <Field label="Label" value={h.context.label} onChange={(v) => update("howItWorks.context.label", v)} />
+          <Field label="Headline" value={h.context.headline} onChange={(v) => update("howItWorks.context.headline", v)} />
         </div>
-        <Field label="Headline" value={h.context.headline} onChange={(v) => update("howItWorks.context.headline", v)} />
-        <Field label="Subheadline" value={h.context.subheadline} onChange={(v) => update("howItWorks.context.subheadline", v)} />
-        <Field label="Description" value={h.context.description} onChange={(v) => update("howItWorks.context.description", v)} />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Subheadline" value={h.context.subheadline} onChange={(v) => update("howItWorks.context.subheadline", v)} />
+          <Field label="Description" value={h.context.description} onChange={(v) => update("howItWorks.context.description", v)} />
+        </div>
         <Field label="Conversation Example" value={h.context.conversation} onChange={(v) => update("howItWorks.context.conversation", v)} multiline />
         <p className="mt-3 text-[12px] font-semibold text-[#5F6368]">Extraction Fields</p>
         <ArrayEditor
@@ -577,15 +573,13 @@ function HowItWorksEditor({
 
       <Section title="Bring Anything" emoji="📦" expanded={!!expanded["hi-bring"]} onToggle={() => toggle("hi-bring")}>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Emoji" value={h.bringAnything.emoji} onChange={(v) => update("howItWorks.bringAnything.emoji", v)} />
           <Field label="Headline" value={h.bringAnything.headline} onChange={(v) => update("howItWorks.bringAnything.headline", v)} />
+          <Field label="Subheadline" value={h.bringAnything.subheadline} onChange={(v) => update("howItWorks.bringAnything.subheadline", v)} />
         </div>
-        <Field label="Subheadline" value={h.bringAnything.subheadline} onChange={(v) => update("howItWorks.bringAnything.subheadline", v)} />
         <ArrayEditor
           items={h.bringAnything.options}
           onChange={(items) => update("howItWorks.bringAnything.options", items)}
           fields={[
-            { key: "emoji", label: "Emoji" },
             { key: "label", label: "Label" },
             { key: "desc", label: "Description" },
           ]}
@@ -595,10 +589,9 @@ function HowItWorksEditor({
 
       <Section title="CTA" emoji="🚀" expanded={!!expanded["hi-cta"]} onToggle={() => toggle("hi-cta")}>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Emoji" value={h.cta.emoji} onChange={(v) => update("howItWorks.cta.emoji", v)} />
           <Field label="Headline" value={h.cta.headline} onChange={(v) => update("howItWorks.cta.headline", v)} />
+          <Field label="Subheadline" value={h.cta.subheadline} onChange={(v) => update("howItWorks.cta.subheadline", v)} />
         </div>
-        <Field label="Subheadline" value={h.cta.subheadline} onChange={(v) => update("howItWorks.cta.subheadline", v)} />
         <Field label="Button Text" value={h.cta.button} onChange={(v) => update("howItWorks.cta.button", v)} />
       </Section>
     </div>

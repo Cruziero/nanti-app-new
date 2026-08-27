@@ -5,7 +5,6 @@ export interface SiteConfig {
     meta: { title: string; description: string };
     hero: {
       badge: string;
-      badgeEmoji: string;
       headline: string;
       highlight: string;
       subheadline: string;
@@ -22,24 +21,20 @@ export interface SiteConfig {
       extractedItems: Array<{ label: string; value: string }>;
       trackLabel: string;
       dismissLabel: string;
-      floatingEmojis: string[];
     };
     insight: {
-      emoji: string;
       headline: string;
       subheadline: string;
-      quotes: Array<{ text: string; emoji: string }>;
+      quotes: Array<{ text: string }>;
       conclusion: string;
       conclusionHighlight: string;
     };
     coreLoop: {
-      emoji: string;
       headline: string;
       subheadline: string;
-      steps: Array<{ emoji: string; label: string; desc: string }>;
+      steps: Array<{ label: string; desc: string }>;
     };
     testimonial: {
-      emoji: string;
       quote: string;
       authorInitial: string;
       authorName: string;
@@ -48,10 +43,14 @@ export interface SiteConfig {
     integrations: {
       label: string;
       subheadline: string;
-      items: Array<{ name: string; emoji: string }>;
+      items: Array<{ name: string }>;
+    };
+    privacy: {
+      label: string;
+      headline: string;
+      items: Array<{ title: string; desc: string }>;
     };
     finalCta: {
-      emoji: string;
       headline: string;
       subheadline: string;
       cta: string;
@@ -138,75 +137,78 @@ export const defaultConfig: SiteConfig = {
     },
     hero: {
       badge: "AI Memory for WhatsApp",
-      badgeEmoji: "🧠",
       headline: "You talk.",
       highlight: "NANTI",
       subheadline: "remembers.",
-      description: "Your AI memory for the conversations that matter. 🤝",
+      description: "Forward a WhatsApp message. NANTI extracts the commitment, tracks the deadline, and reminds you when it's time.",
       descriptionLong:
         "WhatsApp is where work and life happen. NANTI understands what you promised, who you're waiting for, and what needs to happen next.",
-      ctaPrimary: "Try NANTI for free 🚀",
+      ctaPrimary: "Try NANTI for free",
       ctaPrimaryLink: "/auth/signup",
-      ctaSecondary: "See how it works 👇",
+      ctaSecondary: "See how it works",
       ctaSecondaryLink: "/how-it-works",
-      chatName: "Pak Tom 🏭",
+      chatName: "Pak Tom",
       chatTime: "14:32",
       chatMessage: "nanti saya kirim invoice tgl 28 agustus ya pak Tom",
-      forwardedLabel: "↩ Forwarded to NANTI",
+      forwardedLabel: "Forwarded to NANTI",
       extractedItems: [
-        { label: "WHO", value: "Pak Tom 👤" },
-        { label: "WHAT", value: "Send invoice 📄" },
-        { label: "WHEN", value: "28 August 📅" },
+        { label: "WHO", value: "Pak Tom" },
+        { label: "WHAT", value: "Send invoice" },
+        { label: "WHEN", value: "28 August" },
       ],
-      trackLabel: "✅ Track",
+      trackLabel: "Track",
       dismissLabel: "Dismiss",
-      floatingEmojis: ["💬", "📱", "🧠", "✨"],
     },
     insight: {
-      emoji: "💭",
       headline: "Most of your commitments never become tasks.",
-      subheadline: "They live inside conversations. NANTI remembers them. 🧠",
+      subheadline: "They live inside conversations. NANTI remembers them.",
       quotes: [
-        { text: '"Besok saya kirim revisinya ya Pak."', emoji: "📋" },
-        { text: '"Nanti saya follow up suppliernya."', emoji: "🔄" },
-        { text: '"Saya kirim invoice tanggal 28."', emoji: "💰" },
+        { text: '"Besok saya kirim revisinya ya Pak."' },
+        { text: '"Nanti saya follow up suppliernya."' },
+        { text: '"Saya kirim invoice tanggal 28."' },
       ],
-      conclusion: "You said it. NANTI remembers it. ✨",
+      conclusion: "You said it. NANTI remembers it.",
       conclusionHighlight: "NANTI remembers it.",
     },
     coreLoop: {
-      emoji: "⚡",
       headline: "From conversation to action.",
-      subheadline: "You don't create tasks. You just talk. 🗣️",
+      subheadline: "You don't create tasks. You just talk.",
       steps: [
-        { emoji: "💬", label: "TALK", desc: "Your conversations already contain what needs to get done." },
-        { emoji: "🧠", label: "UNDERSTAND", desc: "NANTI finds the commitments hidden inside them." },
-        { emoji: "💾", label: "REMEMBER", desc: "NANTI keeps track of what you promised and who you're waiting for." },
-        { emoji: "🔔", label: "FOLLOW UP", desc: "When the time comes, NANTI brings it back to you." },
+        { label: "TALK", desc: "Your conversations already contain what needs to get done." },
+        { label: "UNDERSTAND", desc: "NANTI finds the commitments hidden inside them." },
+        { label: "REMEMBER", desc: "NANTI keeps track of what you promised and who you're waiting for." },
+        { label: "FOLLOW UP", desc: "When the time comes, NANTI brings it back to you." },
       ],
     },
     testimonial: {
-      emoji: "⭐",
       quote: "NANTI helped me stop losing promises in WhatsApp.",
       authorInitial: "T",
       authorName: "Tom",
       authorTitle: "Owner, PT Maju Jaya",
     },
     integrations: {
-      label: "Integrations 🔗",
+      label: "Integrations",
       subheadline: "Works with the tools you already use.",
       items: [
-        { name: "WhatsApp", emoji: "💬" },
-        { name: "Google Calendar", emoji: "📅" },
-        { name: "Phone Widget", emoji: "📱" },
+        { name: "WhatsApp" },
+        { name: "Google Calendar" },
+        { name: "Phone Widget" },
+      ],
+    },
+    privacy: {
+      label: "Privacy & Security",
+      headline: "Your conversations are safe with us.",
+      items: [
+        { title: "End-to-end encrypted", desc: "Your messages are encrypted in transit and at rest. We never store raw conversation data." },
+        { title: "You control your data", desc: "Delete your data anytime. We never sell or share your information with third parties." },
+        { title: "AI reads patterns, not people", desc: "NANTI extracts commitments and deadlines. It never reads your messages for advertising or profiling." },
       ],
     },
     finalCta: {
-      emoji: "🧠",
       headline: "Stop remembering everything.",
-      subheadline: "Let NANTI remember what matters. 💚",
-      cta: "Try NANTI for free 🚀",
-      finePrint: "Start in minutes ⏱️",
+      subheadline: "Let NANTI remember what matters.",
+      cta: "Try NANTI for free",
+      finePrint: "No credit card required. Free forever.",
     },
   },
   howItWorks: {
@@ -216,43 +218,40 @@ export const defaultConfig: SiteConfig = {
         "Forward the message, or paste the conversation. NANTI reads it, and remembers what needs remembering.",
     },
     badge: "How it works",
-    headline: "You don't create tasks. You just talk. 🗣️",
+    headline: "You don't create tasks. You just talk.",
     description:
       "Forward the message, or paste the conversation. NANTI reads it, and remembers what needs remembering.",
     steps: [
-      { emoji: "💬", title: "Bring a conversation", desc: "Forward, paste or upload a screenshot." },
-      { emoji: "🧠", title: "NANTI understands it", desc: "It finds the people, commitments, dates and context." },
-      { emoji: "🔔", title: "NANTI reminds you", desc: "When something matters, NANTI brings it back." },
+      { title: "Bring a conversation", desc: "Forward, paste or upload a screenshot." },
+      { title: "NANTI understands it", desc: "It finds the people, commitments, dates and context." },
+      { title: "NANTI reminds you", desc: "When something matters, NANTI brings it back." },
     ],
     context: {
-      emoji: "🎯",
       label: "Context",
       headline: "It's not just a reminder.",
-      subheadline: "NANTI understands why. 🧠",
-      description: "That's the difference between a reminder and memory. ✨",
+      subheadline: "NANTI understands why.",
+      description: "That's the difference between a reminder and memory.",
       conversation: "Pak Tom, nanti saya kirim invoice tanggal 28 ya.",
       extractions: [
-        { label: "WHO", value: "Pak Tom 👤" },
-        { label: "WHAT", value: "Invoice 📄" },
-        { label: "WHEN", value: "28 August 📅" },
-        { label: "WHY", value: "You promised to send it. 🤝" },
+        { label: "WHO", value: "Pak Tom" },
+        { label: "WHAT", value: "Invoice" },
+        { label: "WHEN", value: "28 August" },
+        { label: "WHY", value: "You promised to send it." },
       ],
     },
     bringAnything: {
-      emoji: "📦",
       headline: "Just bring it to NANTI.",
-      subheadline: "Forward a conversation. Paste a message. Upload a screenshot. ✨",
+      subheadline: "Forward a conversation. Paste a message. Upload a screenshot.",
       options: [
-        { emoji: "💬", label: "WHATSAPP", desc: "Forward the conversation." },
-        { emoji: "📸", label: "SCREENSHOT", desc: "Upload what you captured." },
-        { emoji: "📋", label: "TEXT", desc: "Paste anything you want NANTI to remember." },
+        { label: "WHATSAPP", desc: "Forward the conversation." },
+        { label: "SCREENSHOT", desc: "Upload what you captured." },
+        { label: "TEXT", desc: "Paste anything you want NANTI to remember." },
       ],
     },
     cta: {
-      emoji: "🚀",
       headline: "Ready to try it?",
-      subheadline: "Paste your first conversation. See what NANTI catches. 👀",
-      button: "Get started 🚀",
+      subheadline: "Paste your first conversation. See what NANTI catches.",
+      button: "Get started",
     },
   },
   business: {
