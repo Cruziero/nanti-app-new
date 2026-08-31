@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { AppShell } from "@/components/nanti/app-shell";
 import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
+import { useNanti } from "@/lib/nanti-store";
 
 export const Route = createFileRoute("/app")({
   component: WorkspaceLayout,
@@ -9,6 +10,7 @@ export const Route = createFileRoute("/app")({
 
 function WorkspaceLayout() {
   const { user, loading } = useSupabaseAuth();
+  const { settings, hydrated } = useNanti();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,7 +19,13 @@ function WorkspaceLayout() {
     }
   }, [user, loading, navigate]);
 
-  if (loading) {
+  useEffect(() => {
+    if (hydrated && user && !settings.onboarded) {
+      navigate({ to: "/welcome" });
+    }
+  }, [hydrated, user, settings.onboarded, navigate]);
+
+  if (loading || !hydrated) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -26,6 +34,7 @@ function WorkspaceLayout() {
   }
 
   if (!user) return null;
+  if (!settings.onboarded) return null;
 
   return (
     <AppShell>

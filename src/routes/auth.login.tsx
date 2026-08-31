@@ -5,7 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { useNanti } from "@/lib/nanti-store";
+
+const SETTINGS_KEY = "nanti.settings.v1";
+
+function isOnboarded(): boolean {
+  try {
+    const raw = window.localStorage.getItem(SETTINGS_KEY);
+    if (raw) {
+      const settings = JSON.parse(raw);
+      return settings.onboarded === true;
+    }
+  } catch { /* ignore */ }
+  return false;
+}
 
 export const Route = createFileRoute("/auth/login")({
   component: LoginPage,
@@ -17,7 +29,6 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
-  const { settings } = useNanti();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +50,7 @@ function LoginPage() {
     }
 
     toast.success("Berhasil masuk!");
-    if (settings.onboarded) {
+    if (isOnboarded()) {
       navigate({ to: "/app/today" });
     } else {
       navigate({ to: "/welcome" });

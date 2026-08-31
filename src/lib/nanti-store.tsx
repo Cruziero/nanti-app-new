@@ -39,6 +39,7 @@ import {
 } from "./nanti-supabase";
 
 const KEY = "nanti.state.v1";
+const SETTINGS_KEY = "nanti.settings.v1";
 
 export interface Settings {
   name: string;
@@ -291,6 +292,15 @@ export function NantiProvider({ children }: { children: ReactNode }) {
             fetchInboxItems(),
           ]);
 
+          // Load settings from localStorage (onboarding preferences)
+          let savedSettings = defaultSettings;
+          try {
+            const raw = window.localStorage.getItem(SETTINGS_KEY);
+            if (raw) {
+              savedSettings = { ...defaultSettings, ...JSON.parse(raw) };
+            }
+          } catch { /* ignore */ }
+
           // If no data exists, seed demo data
           if (projectsData.length === 0 && tasksData.length === 0) {
             await seedDemoData();
@@ -306,7 +316,7 @@ export function NantiProvider({ children }: { children: ReactNode }) {
               projects: p2.map(projectToProject),
               people: pe2.map(personToPerson),
               items: [...t2.map(taskToItem), ...w2.map(waitingToItem), ...i2.map(inboxToItem)],
-              settings: { ...defaultSettings, onboarded: true },
+              settings: savedSettings,
             });
           } else {
             setState({
@@ -317,7 +327,7 @@ export function NantiProvider({ children }: { children: ReactNode }) {
                 ...waitingData.map(waitingToItem),
                 ...inboxData.map(inboxToItem),
               ],
-              settings: { ...defaultSettings, onboarded: true },
+              settings: savedSettings,
             });
           }
         } catch (err) {
@@ -559,7 +569,16 @@ export function NantiProvider({ children }: { children: ReactNode }) {
         }
         mutate((s) => ({ ...s, items: s.items.filter((i) => i.id !== id) }));
       },
-      setSettings: (patch) => mutate((s) => ({ ...s, settings: { ...s.settings, ...patch } })),
+      setSettings: (patch) => {
+        mutate((s) => {
+          const newSettings = { ...s.settings, ...patch };
+          // Always save settings to localStorage
+          try {
+            window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(newSettings));
+          } catch { /* ignore */ }
+          return { ...s, settings: newSettings };
+        });
+      },
       reset: () => {
         if (useSupabase) {
           seedDemoData().then(() => {

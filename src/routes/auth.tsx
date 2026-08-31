@@ -3,6 +3,19 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
+const SETTINGS_KEY = "nanti.settings.v1";
+
+function isOnboarded(): boolean {
+  try {
+    const raw = window.localStorage.getItem(SETTINGS_KEY);
+    if (raw) {
+      const settings = JSON.parse(raw);
+      return settings.onboarded === true;
+    }
+  } catch { /* ignore */ }
+  return false;
+}
+
 export const Route = createFileRoute("/auth")({
   component: AuthLayout,
 });
@@ -20,7 +33,11 @@ function AuthLayout() {
       setUser(user);
       setLoading(false);
       if (user) {
-        navigate({ to: "/app/today" });
+        if (isOnboarded()) {
+          navigate({ to: "/app/today" });
+        } else {
+          navigate({ to: "/welcome" });
+        }
       }
     };
     getUser();
@@ -30,7 +47,11 @@ function AuthLayout() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser(session.user);
-        navigate({ to: "/app/today" });
+        if (isOnboarded()) {
+          navigate({ to: "/app/today" });
+        } else {
+          navigate({ to: "/welcome" });
+        }
       } else {
         setUser(null);
       }
