@@ -37,6 +37,7 @@ import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-pas
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthSignupRouteImport } from './routes/auth.signup'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as LegalPrivacyRouteImport } from './routes/legal.privacy'
 import { Route as LegalTermsRouteImport } from './routes/legal.terms'
 import { Route as ApiAuthGoogleRouteImport } from './routes/api/auth/google'
@@ -191,6 +192,11 @@ const AuthSignupRoute = AuthSignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => AuthRoute,
 } as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => BlogRoute,
+} as any)
 const LegalPrivacyRoute = LegalPrivacyRouteImport.update({
   id: '/legal/privacy',
   path: '/legal/privacy',
@@ -264,7 +270,7 @@ export interface FileRoutesByFullPath {
   '/affiliates': typeof AffiliatesRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
-  '/blog': typeof BlogRoute
+  '/blog': typeof BlogRouteWithChildren
   '/business': typeof BusinessRoute
   '/careers': typeof CareersRoute
   '/help': typeof HelpRoute
@@ -285,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/app/': typeof AppIndexRoute
@@ -306,7 +313,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/affiliates': typeof AffiliatesRoute
   '/auth': typeof AuthRouteWithChildren
-  '/blog': typeof BlogRoute
+  '/blog': typeof BlogRouteWithChildren
   '/business': typeof BusinessRoute
   '/careers': typeof CareersRoute
   '/help': typeof HelpRoute
@@ -327,6 +334,7 @@ export interface FileRoutesByTo {
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/app': typeof AppIndexRoute
@@ -350,7 +358,7 @@ export interface FileRoutesById {
   '/affiliates': typeof AffiliatesRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
-  '/blog': typeof BlogRoute
+  '/blog': typeof BlogRouteWithChildren
   '/business': typeof BusinessRoute
   '/careers': typeof CareersRoute
   '/help': typeof HelpRoute
@@ -371,6 +379,7 @@ export interface FileRoutesById {
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/app/': typeof AppIndexRoute
@@ -416,6 +425,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/reset-password'
     | '/auth/signup'
+    | '/blog/$slug'
     | '/legal/privacy'
     | '/legal/terms'
     | '/app/'
@@ -458,6 +468,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/reset-password'
     | '/auth/signup'
+    | '/blog/$slug'
     | '/legal/privacy'
     | '/legal/terms'
     | '/app'
@@ -501,6 +512,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/reset-password'
     | '/auth/signup'
+    | '/blog/$slug'
     | '/legal/privacy'
     | '/legal/terms'
     | '/app/'
@@ -524,7 +536,7 @@ export interface RootRouteChildren {
   AffiliatesRoute: typeof AffiliatesRoute
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
-  BlogRoute: typeof BlogRoute
+  BlogRoute: typeof BlogRouteWithChildren
   BusinessRoute: typeof BusinessRoute
   CareersRoute: typeof CareersRoute
   HelpRoute: typeof HelpRoute
@@ -743,6 +755,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSignupRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof BlogRoute
+    }
     '/legal/privacy': {
       id: '/legal/privacy'
       path: '/legal/privacy'
@@ -885,6 +904,16 @@ const AuthRouteChildren: AuthRouteChildren = {
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
+interface BlogRouteChildren {
+  BlogSlugRoute: typeof BlogSlugRoute
+}
+
+const BlogRouteChildren: BlogRouteChildren = {
+  BlogSlugRoute: BlogSlugRoute,
+}
+
+const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
@@ -892,7 +921,7 @@ const rootRouteChildren: RootRouteChildren = {
   AffiliatesRoute: AffiliatesRoute,
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
-  BlogRoute: BlogRoute,
+  BlogRoute: BlogRouteWithChildren,
   BusinessRoute: BusinessRoute,
   CareersRoute: CareersRoute,
   HelpRoute: HelpRoute,
