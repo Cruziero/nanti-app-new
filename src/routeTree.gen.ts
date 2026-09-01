@@ -48,6 +48,7 @@ import { Route as ApiPushSubscribeRouteImport } from './routes/api/push/subscrib
 import { Route as ApiPushUnsubscribeRouteImport } from './routes/api/push/unsubscribe'
 import { Route as ApiRemindersCompleteRouteImport } from './routes/api/reminders/complete'
 import { Route as ApiRemindersSnoozeRouteImport } from './routes/api/reminders/snooze'
+import { Route as ApiTestAiRouteImport } from './routes/api/test/ai'
 import { Route as ApiWebhooksWhatsappRouteImport } from './routes/api/webhooks/whatsapp'
 import { Route as AppProjectsIndexRouteImport } from './routes/app.projects.index'
 import { Route as AppProjectsProjectIdRouteImport } from './routes/app.projects.$projectId'
@@ -247,6 +248,11 @@ const ApiRemindersSnoozeRoute = ApiRemindersSnoozeRouteImport.update({
   path: '/api/reminders/snooze',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTestAiRoute = ApiTestAiRouteImport.update({
+  id: '/api/test/ai',
+  path: '/api/test/ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiWebhooksWhatsappRoute = ApiWebhooksWhatsappRouteImport.update({
   id: '/api/webhooks/whatsapp',
   path: '/api/webhooks/whatsapp',
@@ -303,6 +309,7 @@ export interface FileRoutesByFullPath {
   '/api/push/unsubscribe': typeof ApiPushUnsubscribeRoute
   '/api/reminders/complete': typeof ApiRemindersCompleteRoute
   '/api/reminders/snooze': typeof ApiRemindersSnoozeRoute
+  '/api/test/ai': typeof ApiTestAiRoute
   '/api/webhooks/whatsapp': typeof ApiWebhooksWhatsappRoute
   '/app/projects/$projectId': typeof AppProjectsProjectIdRoute
   '/app/projects/': typeof AppProjectsIndexRoute
@@ -346,6 +353,7 @@ export interface FileRoutesByTo {
   '/api/push/unsubscribe': typeof ApiPushUnsubscribeRoute
   '/api/reminders/complete': typeof ApiRemindersCompleteRoute
   '/api/reminders/snooze': typeof ApiRemindersSnoozeRoute
+  '/api/test/ai': typeof ApiTestAiRoute
   '/api/webhooks/whatsapp': typeof ApiWebhooksWhatsappRoute
   '/app/projects/$projectId': typeof AppProjectsProjectIdRoute
   '/app/projects': typeof AppProjectsIndexRoute
@@ -391,6 +399,7 @@ export interface FileRoutesById {
   '/api/push/unsubscribe': typeof ApiPushUnsubscribeRoute
   '/api/reminders/complete': typeof ApiRemindersCompleteRoute
   '/api/reminders/snooze': typeof ApiRemindersSnoozeRoute
+  '/api/test/ai': typeof ApiTestAiRoute
   '/api/webhooks/whatsapp': typeof ApiWebhooksWhatsappRoute
   '/app/projects/$projectId': typeof AppProjectsProjectIdRoute
   '/app/projects/': typeof AppProjectsIndexRoute
@@ -437,6 +446,7 @@ export interface FileRouteTypes {
     | '/api/push/unsubscribe'
     | '/api/reminders/complete'
     | '/api/reminders/snooze'
+    | '/api/test/ai'
     | '/api/webhooks/whatsapp'
     | '/app/projects/$projectId'
     | '/app/projects/'
@@ -480,6 +490,7 @@ export interface FileRouteTypes {
     | '/api/push/unsubscribe'
     | '/api/reminders/complete'
     | '/api/reminders/snooze'
+    | '/api/test/ai'
     | '/api/webhooks/whatsapp'
     | '/app/projects/$projectId'
     | '/app/projects'
@@ -524,6 +535,7 @@ export interface FileRouteTypes {
     | '/api/push/unsubscribe'
     | '/api/reminders/complete'
     | '/api/reminders/snooze'
+    | '/api/test/ai'
     | '/api/webhooks/whatsapp'
     | '/app/projects/$projectId'
     | '/app/projects/'
@@ -554,6 +566,7 @@ export interface RootRouteChildren {
   ApiPushUnsubscribeRoute: typeof ApiPushUnsubscribeRoute
   ApiRemindersCompleteRoute: typeof ApiRemindersCompleteRoute
   ApiRemindersSnoozeRoute: typeof ApiRemindersSnoozeRoute
+  ApiTestAiRoute: typeof ApiTestAiRoute
   ApiWebhooksWhatsappRoute: typeof ApiWebhooksWhatsappRoute
 }
 
@@ -832,6 +845,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRemindersSnoozeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/test/ai': {
+      id: '/api/test/ai'
+      path: '/api/test/ai'
+      fullPath: '/api/test/ai'
+      preLoaderRoute: typeof ApiTestAiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/webhooks/whatsapp': {
       id: '/api/webhooks/whatsapp'
       path: '/api/webhooks/whatsapp'
@@ -939,6 +959,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPushUnsubscribeRoute: ApiPushUnsubscribeRoute,
   ApiRemindersCompleteRoute: ApiRemindersCompleteRoute,
   ApiRemindersSnoozeRoute: ApiRemindersSnoozeRoute,
+  ApiTestAiRoute: ApiTestAiRoute,
   ApiWebhooksWhatsappRoute: ApiWebhooksWhatsappRoute,
 }
 export const routeTree = rootRouteImport

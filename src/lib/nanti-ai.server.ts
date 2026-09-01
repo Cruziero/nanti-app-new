@@ -49,7 +49,8 @@ async function chat(
     ...(systemInstruction ? { systemInstruction } : {}),
     generationConfig: {
       ...(opts.json ? { responseMimeType: "application/json" } : {}),
-      thinkingConfig: { thinkingBudget: 0 },
+      maxOutputTokens: 8192,
+      temperature: 0.2,
     },
   };
 
