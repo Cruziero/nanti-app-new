@@ -6,19 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-const SETTINGS_KEY = "nanti.settings.v1";
-
-function isOnboarded(): boolean {
-  try {
-    const raw = window.localStorage.getItem(SETTINGS_KEY);
-    if (raw) {
-      const settings = JSON.parse(raw);
-      return settings.onboarded === true;
-    }
-  } catch { /* ignore */ }
-  return false;
-}
-
 export const Route = createFileRoute("/auth/login")({
   component: LoginPage,
 });
@@ -50,11 +37,9 @@ function LoginPage() {
     }
 
     toast.success("Berhasil masuk!");
-    if (isOnboarded()) {
-      navigate({ to: "/app/today" });
-    } else {
-      navigate({ to: "/welcome" });
-    }
+    // Session is now persisted, navigate to app
+    // The auth layout will handle onboarded check
+    navigate({ to: "/welcome" });
   };
 
   const handleGoogleLogin = async () => {

@@ -26,38 +26,45 @@ function AuthLayout() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setUser(user);
-      setLoading(false);
-      if (user) {
-        if (isOnboarded()) {
-          navigate({ to: "/app/today" });
-        } else {
-          navigate({ to: "/welcome" });
+    let mounted = true;
+
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (mounted) {
+        setUser(session?.user ?? null);
+        setLoading(false);
+        if (session?.user) {
+          if (isOnboarded()) {
+            navigate({ to: "/app/today" });
+          } else {
+            navigate({ to: "/welcome" });
+          }
         }
       }
     };
-    getUser();
+
+    init();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-        if (isOnboarded()) {
-          navigate({ to: "/app/today" });
-        } else {
-          navigate({ to: "/welcome" });
+      if (mounted) {
+        setUser(session?.user ?? null);
+        setLoading(false);
+        if (session?.user) {
+          if (isOnboarded()) {
+            navigate({ to: "/app/today" });
+          } else {
+            navigate({ to: "/welcome" });
+          }
         }
-      } else {
-        setUser(null);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   if (loading) {
