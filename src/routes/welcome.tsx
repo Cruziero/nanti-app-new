@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Logo } from "@/components/nanti/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNanti } from "@/lib/nanti-store";
+import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
 import type { ConversationTone, FocusArea, ReminderChannel } from "@/lib/nanti-types";
 import { Check, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -66,8 +67,25 @@ function Welcome() {
   const [selectedTone, setSelectedTone] = useState<ConversationTone>("professional");
   const [selectedFocus, setSelectedFocus] = useState<FocusArea>("everything");
   const [selectedChannels, setSelectedChannels] = useState<ReminderChannel[]>(["in_app", "push"]);
-  const { setSettings } = useNanti();
+  const { setSettings, settings } = useNanti();
+  const { user, loading } = useSupabaseAuth();
   const navigate = useNavigate();
+
+  // Must be logged in to see onboarding
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate({ to: "/auth/login" });
+    }
+  }, [user, loading, navigate]);
+
+  // Already onboarded? Go to app
+  useEffect(() => {
+    if (!loading && user && settings.onboarded) {
+      navigate({ to: "/app/today" });
+    }
+  }, [loading, user, settings.onboarded, navigate]);
+
+  if (loading || !user) return null;
 
   const totalSteps = 5;
 
