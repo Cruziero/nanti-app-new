@@ -63,10 +63,10 @@ export function MarketingNav() {
             Log in
           </Link>
           <Link
-            to="/auth/signup"
+            to="/welcome"
             className="inline-flex items-center rounded-lg bg-[#25D366] px-4 py-2 text-[13.5px] font-semibold text-white transition-all hover:bg-[#1fb85c]"
           >
-            Try NANTI free
+            Get started
           </Link>
         </div>
 
@@ -101,11 +101,11 @@ export function MarketingNav() {
                 Log in
               </Link>
               <Link
-                to="/auth/signup"
+                to="/welcome"
                 onClick={() => setOpen(false)}
                 className="flex-1 rounded-lg bg-[#25D366] px-4 py-2.5 text-center text-[14px] font-semibold text-white"
               >
-                Try NANTI free
+                Get started
               </Link>
             </div>
           </nav>

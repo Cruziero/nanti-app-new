@@ -37,9 +37,7 @@ function LoginPage() {
     }
 
     toast.success("Berhasil masuk!");
-    // Session is now persisted, navigate to app
-    // The auth layout will handle onboarded check
-    navigate({ to: "/welcome" });
+    // Auth layout will detect session and redirect to /welcome or /app/today
   };
 
   const handleGoogleLogin = async () => {

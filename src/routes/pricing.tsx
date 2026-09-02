@@ -20,7 +20,7 @@ const plans = [
     desc: "For trying NANTI with the conversations that matter most.",
     features: ["Up to 50 tracked items", "AI conversation import", "Daily briefing", "1 workspace"],
     cta: "Get started",
-    to: "/auth/signup" as const,
+    to: "/welcome" as const,
     highlight: false,
   },
   {
@@ -37,7 +37,7 @@ const plans = [
       "Priority AI processing",
     ],
     cta: "Get started",
-    to: "/auth/signup" as const,
+    to: "/welcome" as const,
     highlight: true,
   },
   {
@@ -54,7 +54,7 @@ const plans = [
       "Dedicated support",
     ],
     cta: "Contact us",
-    to: "/auth/signup" as const,
+    to: "/welcome" as const,
     highlight: false,
   },
 ];

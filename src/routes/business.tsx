@@ -165,7 +165,7 @@ function Cta() {
             Start tracking commitments from your WhatsApp conversations.
           </p>
           <Link
-            to="/auth/signup"
+            to="/welcome"
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-6 py-3 text-[14px] font-semibold text-white shadow-[0_4px_14px_rgba(37,211,102,0.3)] transition-all hover:bg-[#1fb85c] hover:shadow-[0_6px_20px_rgba(37,211,102,0.4)]"
           >
             Get started
