@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "vite build && node -e \"const fs=require('fs');const p='.vercel/output/functions/__server.func/.vc-config.json';if(fs.existsSync(p)){let c=fs.readFileSync(p,'utf8');c=c.replace(/nodejs24\\.x/g,'nodejs20.x');fs.writeFileSync(p,c);console.log('Patched runtime to nodejs20.x')}\"",
     "build:dev": "vite build --mode development",
+    "postbuild": "node -e \"const fs=require('fs');const p='.vercel/output/functions/__server.func/.vc-config.json';if(fs.existsSync(p)){let c=fs.readFileSync(p,'utf8');c=c.replace(/nodejs24\\.x/g,'nodejs20.x');fs.writeFileSync(p,c);console.log('Patched runtime to nodejs20.x')}\""
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write ."
