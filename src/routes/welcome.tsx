@@ -1,9 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Logo } from "@/components/nanti/logo";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useNanti } from "@/lib/nanti-store";
 import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
+import type { ConversationTone, FocusArea, ReminderChannel } from "@/lib/nanti-types";
+import { Check, ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/welcome")({
   head: () => ({
@@ -22,26 +26,18 @@ function Welcome() {
   const { user, loading } = useSupabaseAuth();
   const navigate = useNavigate();
 
-  // Must be logged in
   useEffect(() => {
-    if (!loading && !user) {
+    if (loading) return;
+    if (!user) {
       navigate({ to: "/auth/login" });
+      return;
     }
-  }, [user, loading, navigate]);
-
-  // Already onboarded? Go to app
-  useEffect(() => {
-    if (!loading && user && settings.onboarded) {
+    if (settings.onboarded) {
       navigate({ to: "/app/today" });
     }
-  }, [loading, user, settings.onboarded, navigate]);
+  }, [user, loading, settings.onboarded, navigate]);
 
-  if (loading || !user) return null;
-
-  const handleStart = () => {
-    setSettings({ onboarded: true });
-    void navigate({ to: "/app/import" });
-  };
+  if (loading || !user || settings.onboarded) return null;
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-5">
@@ -58,7 +54,10 @@ function Welcome() {
         <Button
           className="mt-8 w-full"
           size="lg"
-          onClick={handleStart}
+          onClick={() => {
+            setSettings({ onboarded: true });
+            navigate({ to: "/app/import" });
+          }}
         >
           Start
         </Button>
