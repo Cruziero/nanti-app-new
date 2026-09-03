@@ -6,6 +6,5 @@ export default defineConfig({
   },
   nitro: {
     preset: "vercel",
-    nodeModuleRuntime: false,
   },
 });
