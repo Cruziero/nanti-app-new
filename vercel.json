@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm install --force",
+  "installCommand": "npm install --force && npm ls rolldown",
   "buildCommand": "npm run build",
   "outputDirectory": ".vercel/output",
   "crons": [

@@ -1,4 +1,11 @@
-export function renderErrorPage(): string {
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+export function renderErrorPage(msg?: string, stack?: string): string {
+  const debug = msg
+    ? `<pre style="text-align:left;white-space:pre-wrap;word-break:break-all;font-size:11px;background:#f5f5f5;padding:12px;border-radius:6px;overflow:auto;max-height:300px">${escapeHtml(msg + (stack ? "\n" + stack.slice(0, 2000) : ""))}</pre>`
+    : "";
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -20,6 +27,7 @@ export function renderErrorPage(): string {
     <div class="card">
       <h1>This page didn't load</h1>
       <p>Something went wrong on our end. You can try refreshing or head back home.</p>
+      ${debug}
       <div class="actions">
         <button class="primary" onclick="location.reload()">Try again</button>
         <a class="secondary" href="/">Go home</a>
