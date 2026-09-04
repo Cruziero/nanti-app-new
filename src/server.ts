@@ -1,3 +1,33 @@
+// Polyfill WebSocket for Node.js < 22 (Vercel runs Node 20)
+// Supabase realtime-js requires native WebSocket
+if (typeof globalThis.WebSocket === "undefined") {
+  class NoopWebSocket {
+    static CONNECTING = 0;
+    static OPEN = 1;
+    static CLOSING = 2;
+    static CLOSED = 3;
+    readyState = 3;
+    url = "";
+    onopen: (() => void) | null = null;
+    onclose: (() => void) | null = null;
+    onmessage: ((ev: MessageEvent) => void) | null = null;
+    onerror: ((ev: Event) => void) | null = null;
+    constructor(_url: string | URL, _protocols?: string | string[]) {
+      this.url = String(_url);
+      setTimeout(() => this.onopen?.(), 0);
+    }
+    send() {}
+    close() {
+      this.readyState = 3;
+      this.onclose?.();
+    }
+    addEventListener() {}
+    removeEventListener() {}
+    dispatchEvent() { return true; }
+  }
+  globalThis.WebSocket = NoopWebSocket as unknown as typeof WebSocket;
+}
+
 import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";

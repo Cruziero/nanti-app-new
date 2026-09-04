@@ -70,8 +70,9 @@ let _supabase: ReturnType<typeof createSupabaseClient> | undefined;
  * Use this in UI to show a setup message instead of crashing.
  */
 export function isSupabaseConfigured(): boolean {
-  if (!_supabase) _supabase = createSupabaseClient();
-  return _supabase !== null;
+  const url = import.meta.env["VITE_SUPABASE_URL"] || process.env["SUPABASE_URL"];
+  const key = import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] || process.env["SUPABASE_PUBLISHABLE_KEY"];
+  return !!url && !!key;
 }
 
 // Import the supabase client like this:
