@@ -3,9 +3,9 @@ function escapeHtml(s: string): string {
 }
 
 export function renderErrorPage(msg?: string, stack?: string): string {
-  const debug = msg
-    ? `<pre style="text-align:left;white-space:pre-wrap;word-break:break-all;font-size:11px;background:#f5f5f5;padding:12px;border-radius:6px;overflow:auto;max-height:300px">${escapeHtml(msg + (stack ? "\n" + stack.slice(0, 2000) : ""))}</pre>`
-    : "";
+  const debug = msg || stack
+    ? `<pre style="text-align:left;white-space:pre-wrap;word-break:break-all;font-size:11px;background:#f5f5f5;padding:12px;border-radius:6px;overflow:auto;max-height:300px">${escapeHtml((msg || "no message") + (stack ? "\n" + stack.slice(0, 2000) : ""))}</pre>`
+    : `<pre style="text-align:left;white-space:pre-wrap;word-break:break-all;font-size:11px;background:#f5f5f5;padding:12px;border-radius:6px;overflow:auto;max-height:300px">v42e: renderErrorPage called with no msg or stack. NODE=${typeof process !== "undefined" ? process.version : "unknown"}</pre>`;
   return `<!doctype html>
 <html lang="en">
   <head>

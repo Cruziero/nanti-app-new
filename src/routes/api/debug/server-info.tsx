@@ -7,20 +7,14 @@ export const Route = createFileRoute("/api/debug/server-info")({
         const info: Record<string, unknown> = {
           nodeVersion: process.version,
           platform: process.platform,
-          env: {
-            SUPABASE_URL: !!process.env.SUPABASE_URL,
-            SUPABASE_PUBLISHABLE_KEY: !!process.env.SUPABASE_PUBLISHABLE_KEY,
-            GEMINI_API_KEY: !!process.env.GEMINI_API_KEY,
-          },
+          uptime: process.uptime(),
           timestamp: new Date().toISOString(),
+          env: {
+            HAS_SUPABASE_URL: !!process.env.SUPABASE_URL,
+            HAS_SUPABASE_KEY: !!process.env.SUPABASE_PUBLISHABLE_KEY,
+            HAS_GEMINI_KEY: !!process.env.GEMINI_API_KEY,
+          },
         };
-
-        try {
-          const mod = await import("nitropack/runtime");
-          info.nitroRuntime = "available";
-        } catch (e: unknown) {
-          info.nitroRuntime = String(e);
-        }
 
         return new Response(JSON.stringify(info, null, 2), {
           status: 200,
