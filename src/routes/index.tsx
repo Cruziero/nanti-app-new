@@ -19,8 +19,8 @@ export const Route = createFileRoute("/")({
           "NANTI turns everyday WhatsApp conversations into commitments, reminders and follow-ups — so you can stop carrying everything in your head.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://nanti-aja.vercel.app" },
-      { property: "og:image", content: "https://nanti-aja.vercel.app/og-image.png" },
+      { property: "og:url", content: "https://nanti-app-new.vercel.app" },
+      { property: "og:image", content: "https://nanti-app-new.vercel.app/og-image.png" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "NANTI — You talk. NANTI remembers." },
       {
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/")({
         content:
           "NANTI turns everyday WhatsApp conversations into commitments, reminders and follow-ups.",
       },
-      { name: "twitter:image", content: "https://nanti-aja.vercel.app/og-image.png" },
+      { name: "twitter:image", content: "https://nanti-app-new.vercel.app/og-image.png" },
     ],
   }),
   component: HomePage,

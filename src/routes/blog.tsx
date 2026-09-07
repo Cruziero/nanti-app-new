@@ -38,7 +38,7 @@ function BlogPage() {
             {articles.map((article, i) => (
               <Reveal key={article.slug} delay={i * 80}>
                 <Link
-                  to={`/blog/$article.slug`}
+                  to={`/blog/${article.slug}`}
                   className="group block rounded-2xl border border-[#E7E9E7] bg-white p-6 transition-all hover:border-[#25D366]/30 hover:shadow-[0_4px_14px_rgba(37,211,102,0.1)]"
                 >
                   <div className="flex items-start justify-between gap-4">
