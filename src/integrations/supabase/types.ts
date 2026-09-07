@@ -254,6 +254,50 @@ export type Database = {
           updated_at?: string | null;
         };
       };
+      blog_articles: {
+        Row: {
+          id: string;
+          slug: string;
+          title: string;
+          excerpt: string;
+          content: string;
+          category: string;
+          date: string;
+          read_time: string;
+          ai_generated: boolean | null;
+          published: boolean | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          title: string;
+          excerpt: string;
+          content: string;
+          category: string;
+          date: string;
+          read_time: string;
+          ai_generated?: boolean | null;
+          published?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          slug?: string;
+          title?: string;
+          excerpt?: string;
+          content?: string;
+          category?: string;
+          date?: string;
+          read_time?: string;
+          ai_generated?: boolean | null;
+          published?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+      };
     };
     Views: {
       [_ in never]: never;

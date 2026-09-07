@@ -1,11 +1,13 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, Clock } from "lucide-react";
 import { MarketingLayout, Reveal } from "@/components/nanti/marketing";
-import { articles } from "@/data/articles";
+import { articles as staticArticles } from "@/data/articles";
+import { fetchArticleBySlug, type BlogArticle } from "@/lib/nanti-blog";
 
 export const Route = createFileRoute("/blog/$slug")({
   head: ({ params }) => {
-    const article = articles.find((a) => a.slug === params.slug);
+    const article =
+      staticArticles.find((a) => a.slug === params.slug) ?? null;
     if (!article) return {};
     return {
       meta: [
@@ -19,16 +21,25 @@ export const Route = createFileRoute("/blog/$slug")({
       ],
     };
   },
+  loader: async ({ params }) => {
+    const dbArticle = await fetchArticleBySlug(params.slug);
+    const staticArticle = staticArticles.find((a) => a.slug === params.slug);
+    const article = dbArticle ?? staticArticle ?? null;
+    if (!article) throw notFound();
+    return { article };
+  },
   component: ArticlePage,
 });
 
 function ArticlePage() {
-  const { slug } = Route.useParams();
-  const article = articles.find((a) => a.slug === slug);
+  const { article } = Route.useLoaderData();
 
-  if (!article) {
-    throw notFound();
-  }
+  const title = (article as BlogArticle).title ?? article.title;
+  const category = (article as BlogArticle).category ?? article.category;
+  const readTime = (article as BlogArticle).read_time ?? article.readTime;
+  const date = (article as BlogArticle).date ?? article.date;
+  const content = (article as BlogArticle).content ?? article.content;
+  const excerpt = (article as BlogArticle).excerpt ?? article.excerpt;
 
   return (
     <MarketingLayout>
@@ -47,14 +58,14 @@ function ArticlePage() {
           <Reveal delay={50}>
             <div className="mt-6 flex items-center gap-3">
               <span className="rounded-full bg-[#25D366]/10 px-2.5 py-0.5 text-[10px] font-semibold text-[#25D366]">
-                {article.category}
+                {category}
               </span>
               <span className="flex items-center gap-1 text-[11px] text-[#5F6368]">
                 <Clock className="size-3" />
-                {article.readTime}
+                {readTime}
               </span>
               <span className="text-[11px] text-[#5F6368]">
-                {new Date(article.date).toLocaleDateString("en-US", {
+                {new Date(date).toLocaleDateString("en-US", {
                   month: "long",
                   day: "numeric",
                   year: "numeric",
@@ -65,13 +76,13 @@ function ArticlePage() {
 
           <Reveal delay={100}>
             <h1 className="mt-5 text-[28px] font-bold tracking-tight text-[#111111] sm:text-[32px]">
-              {article.title}
+              {title}
             </h1>
           </Reveal>
 
           <Reveal delay={150}>
             <div className="mt-8 space-y-4 text-[15px] leading-[1.8] text-[#5F6368]">
-              {article.content.split("\n\n").map((block, i) => {
+              {content.split("\n\n").map((block: string, i: number) => {
                 const trimmed = block.trim();
                 if (!trimmed) return null;
 
@@ -84,10 +95,10 @@ function ArticlePage() {
                 }
 
                 if (trimmed.startsWith("- ")) {
-                  const items = trimmed.split("\n").filter((l) => l.startsWith("- "));
+                  const items = trimmed.split("\n").filter((l: string) => l.startsWith("- "));
                   return (
                     <ul key={i} className="mt-3 space-y-2 pl-4">
-                      {items.map((item, j) => (
+                      {items.map((item: string, j: number) => (
                         <li key={j} className="flex items-start gap-2">
                           <span className="mt-2 size-1.5 shrink-0 rounded-full bg-[#25D366]" />
                           <span>{item.replace("- ", "")}</span>
@@ -98,10 +109,10 @@ function ArticlePage() {
                 }
 
                 if (trimmed.startsWith("1. ")) {
-                  const items = trimmed.split("\n").filter((l) => /^\d+\./.test(l.trim()));
+                  const items = trimmed.split("\n").filter((l: string) => /^\d+\./.test(l.trim()));
                   return (
                     <ol key={i} className="mt-3 space-y-2 pl-4">
-                      {items.map((item, j) => (
+                      {items.map((item: string, j: number) => (
                         <li key={j} className="flex items-start gap-2">
                           <span className="mt-0.5 text-[13px] font-semibold text-[#25D366]">
                             {j + 1}.

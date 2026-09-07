@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Clock } from "lucide-react";
 import { MarketingLayout, Reveal } from "@/components/nanti/marketing";
-import { articles } from "@/data/articles";
+import { articles as staticArticles } from "@/data/articles";
+import { fetchPublishedArticles, type BlogArticle } from "@/lib/nanti-blog";
 
 export const Route = createFileRoute("/blog")({
   head: () => ({
@@ -10,10 +11,35 @@ export const Route = createFileRoute("/blog")({
       { name: "description", content: "Updates, tips, and stories from NANTI." },
     ],
   }),
+  loader: async () => {
+    const dbArticles = await fetchPublishedArticles();
+    return { dbArticles };
+  },
   component: BlogPage,
 });
 
 function BlogPage() {
+  const { dbArticles } = Route.useLoaderData();
+
+  const articles: Array<{
+    slug: string;
+    title: string;
+    excerpt: string;
+    category: string;
+    date: string;
+    readTime: string;
+  }> =
+    dbArticles && dbArticles.length > 0
+      ? dbArticles.map((a: BlogArticle) => ({
+          slug: a.slug,
+          title: a.title,
+          excerpt: a.excerpt,
+          category: a.category,
+          date: a.date,
+          readTime: a.read_time,
+        }))
+      : staticArticles;
+
   return (
     <MarketingLayout>
       <section className="bg-white pt-24 pb-16 sm:pt-32 sm:pb-20">
