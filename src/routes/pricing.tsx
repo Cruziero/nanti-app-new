@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check } from "lucide-react";
 import { MarketingLayout, Reveal } from "@/components/nanti/marketing";
+import { loadConfig } from "@/config/site";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -12,54 +13,10 @@ export const Route = createFileRoute("/pricing")({
   component: PricingPage,
 });
 
-const plans = [
-  {
-    name: "Free",
-    price: "Rp 0",
-    period: "forever",
-    desc: "For trying NANTI with the conversations that matter most.",
-    features: ["Up to 50 tracked items", "AI conversation import", "Daily briefing", "1 workspace"],
-    cta: "Get started",
-    to: "/welcome" as const,
-    highlight: false,
-  },
-  {
-    name: "Pro",
-    price: "Rp 149K",
-    period: "/month",
-    desc: "For professionals who live in WhatsApp.",
-    features: [
-      "Unlimited tracked items",
-      "AI conversation import",
-      "Daily briefing & end-of-day sweep",
-      "Ask NANTI AI assistant",
-      "People & project memory",
-      "Priority AI processing",
-    ],
-    cta: "Get started",
-    to: "/welcome" as const,
-    highlight: true,
-  },
-  {
-    name: "Business",
-    price: "Custom",
-    period: "",
-    desc: "For teams that run on WhatsApp.",
-    features: [
-      "Everything in Pro",
-      "Shared workspaces",
-      "Team collaboration",
-      "API access",
-      "Custom AI training",
-      "Dedicated support",
-    ],
-    cta: "Contact us",
-    to: "/welcome" as const,
-    highlight: false,
-  },
-];
-
 function PricingPage() {
+  const config = loadConfig();
+  const { headline, subtitle, plans } = config.pricing;
+
   return (
     <MarketingLayout>
       <section className="bg-white pt-24 pb-16 sm:pt-32 sm:pb-20">
@@ -69,10 +26,10 @@ function PricingPage() {
               <span className="text-[12px] font-semibold text-[#25D366]">Pricing</span>
             </div>
             <h1 className="mt-3 text-[28px] font-bold tracking-tight text-[#111111] sm:text-[36px]">
-              Simple pricing for every kind of work.
+              {headline}
             </h1>
             <p className="mt-3 text-[15px] text-[#5F6368]">
-              Start free. Upgrade when NANTI becomes indispensable.
+              {subtitle}
             </p>
           </Reveal>
         </div>
@@ -110,7 +67,7 @@ function PricingPage() {
                     ))}
                   </ul>
                   <Link
-                    to={plan.to}
+                    to="/welcome"
                     className={`mt-7 inline-flex items-center justify-center rounded-xl px-5 py-3 text-[14px] font-semibold transition-all ${
                       plan.highlight
                         ? "bg-[#25D366] text-white shadow-[0_4px_14px_rgba(37,211,102,0.3)] hover:bg-[#1fb85c]"
