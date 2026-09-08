@@ -275,8 +275,9 @@ export const Route = createFileRoute("/api/cron/generate-article")({
           );
         } catch (error) {
           console.error("Article generation error:", error);
+          const msg = error instanceof Error ? error.message : JSON.stringify(error);
           return new Response(
-            JSON.stringify({ error: "Internal error", message: String(error) }),
+            JSON.stringify({ error: "Internal error", message: msg }),
             { status: 500, headers: { "Content-Type": "application/json" } },
           );
         }
