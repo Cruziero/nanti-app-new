@@ -131,31 +131,22 @@ async function generateArticle(topic: (typeof ARTICLE_TOPICS)[number]) {
   const key = process.env["GEMINI_API_KEY"];
   if (!key) throw new Error("GEMINI_API_KEY not configured");
 
-  const prompt = `You are a blog writer for NANTI, an AI-powered WhatsApp memory app that extracts commitments, reminders, and follow-ups from conversations.
+  const prompt = `Write a blog article for NANTI (AI WhatsApp memory app).
 
-Write a blog article with the following:
-- Title: ${topic.title}
-- Category: ${topic.category}
-- Angle: ${topic.angle}
+Title: ${topic.title}
+Category: ${topic.category}
+Angle: ${topic.angle}
 
-Requirements:
-- Write in English
-- Use markdown formatting (## for headings, ** for bold, - for lists, 1. for numbered lists)
-- 400-600 words
-- SEO-friendly: use the title as H2, include the category keyword naturally
-- Conversational, approachable tone
-- Include a brief introduction that hooks the reader
-- Include a call-to-action at the end mentioning NANTI
-- Do NOT include the title as a markdown heading (it will be added separately)
-- Start directly with content, no preamble
+Rules:
+- English, markdown (## headings, ** bold, - lists)
+- 200-300 words max
+- Conversational tone, SEO-friendly
+- Include CTA mentioning NANTI
+- Do NOT include title as heading
 
-Return ONLY a JSON object with this structure:
-{
-  "title": "the full title",
-  "excerpt": "a 1-2 sentence summary for SEO meta description",
-  "content": "the full markdown content",
-  "category": "${topic.category}"
-}`;
+CRITICAL: Return ONLY valid JSON. Escape all newlines in the "content" field as \\n. No markdown code blocks.
+
+{"title":"...","excerpt":"...","content":"...","category":"${topic.category}"}`;
 
   const res = await fetch(`${GEMINI_API_URL}/${MODEL}:generateContent?key=${key}`, {
     method: "POST",
@@ -164,7 +155,7 @@ Return ONLY a JSON object with this structure:
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 8192,
+        maxOutputTokens: 4096,
       },
     }),
   });
