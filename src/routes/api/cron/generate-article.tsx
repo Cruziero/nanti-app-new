@@ -192,7 +192,8 @@ export const Route = createFileRoute("/api/cron/generate-article")({
       GET: async ({ request }) => {
         try {
           const authHeader = request.headers.get("Authorization");
-          if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+          const cronSecret = process.env.CRON_SECRET;
+          if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
             return new Response(JSON.stringify({ error: "Unauthorized" }), {
               status: 401,
               headers: { "Content-Type": "application/json" },
