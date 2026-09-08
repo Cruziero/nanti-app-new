@@ -176,14 +176,32 @@ Return ONLY a JSON object with this structure:
 
   const data = await res.json();
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error("Failed to parse AI response as JSON");
-  return JSON.parse(jsonMatch[0]) as {
-    title: string;
-    excerpt: string;
-    content: string;
-    category: string;
-  };
+  
+  // Try to extract JSON from the response, handling code blocks
+  let jsonStr = text;
+  const codeBlockMatch = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
+  if (codeBlockMatch) {
+    jsonStr = codeBlockMatch[1];
+  }
+  
+  // Try parsing the cleaned string first, then fall back to regex
+  try {
+    return JSON.parse(jsonStr.trim()) as {
+      title: string;
+      excerpt: string;
+      content: string;
+      category: string;
+    };
+  } catch {
+    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error(`Failed to parse AI response. Raw: ${text.slice(0, 500)}`);
+    return JSON.parse(jsonMatch[0]) as {
+      title: string;
+      excerpt: string;
+      content: string;
+      category: string;
+    };
+  }
 }
 
 export const Route = createFileRoute("/api/cron/generate-article")({
