@@ -22,11 +22,15 @@ export const Route = createFileRoute("/blog/$slug")({
     };
   },
   loader: async ({ params }) => {
-    const dbArticle = await fetchArticleBySlug(params.slug);
+    try {
+      const dbArticle = await fetchArticleBySlug(params.slug);
+      if (dbArticle) return { article: dbArticle };
+    } catch {
+      // fall through to static
+    }
     const staticArticle = staticArticles.find((a) => a.slug === params.slug);
-    const article = dbArticle ?? staticArticle ?? null;
-    if (!article) throw notFound();
-    return { article };
+    if (!staticArticle) throw notFound();
+    return { article: staticArticle };
   },
   component: ArticlePage,
 });

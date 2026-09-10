@@ -12,8 +12,12 @@ export const Route = createFileRoute("/blog")({
     ],
   }),
   loader: async () => {
-    const dbArticles = await fetchPublishedArticles();
-    return { dbArticles };
+    try {
+      const dbArticles = await fetchPublishedArticles();
+      return { dbArticles };
+    } catch {
+      return { dbArticles: null };
+    }
   },
   component: BlogPage,
 });
