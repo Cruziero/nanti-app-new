@@ -7,8 +7,8 @@ export async function sendWhatsAppMessage(
   message: string,
   phoneNumberId?: string,
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
-  const token = process.env.WHATSAPP_ACCESS_TOKEN;
-  const pid = phoneNumberId || process.env.WHATSAPP_PHONE_NUMBER_ID;
+  const token = process.env['WHATSAPP_ACCESS_TOKEN'];
+  const pid = phoneNumberId || process.env['WHATSAPP_PHONE_NUMBER_ID'];
 
   if (!token || !pid) {
     return { success: false, error: "WhatsApp API not configured" };
@@ -60,8 +60,8 @@ export async function sendWhatsAppTemplate(
   components?: unknown[],
   phoneNumberId?: string,
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
-  const token = process.env.WHATSAPP_ACCESS_TOKEN;
-  const pid = phoneNumberId || process.env.WHATSAPP_PHONE_NUMBER_ID;
+  const token = process.env['WHATSAPP_ACCESS_TOKEN'];
+  const pid = phoneNumberId || process.env['WHATSAPP_PHONE_NUMBER_ID'];
 
   if (!token || !pid) {
     return { success: false, error: "WhatsApp API not configured" };
@@ -119,8 +119,8 @@ export async function logOutboundMessage(
   status: "sent" | "delivered" | "read" | "failed",
 ): Promise<void> {
   const supabase = createClient(
-    process.env.VITE_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+    process.env['VITE_SUPABASE_URL'] || "",
+    process.env['SUPABASE_SERVICE_ROLE_KEY'] || "",
   );
 
   await supabase.from("whatsapp_messages").insert({
@@ -139,8 +139,8 @@ export async function updateMessageStatus(
   status: "sent" | "delivered" | "read" | "failed",
 ): Promise<void> {
   const supabase = createClient(
-    process.env.VITE_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+    process.env['VITE_SUPABASE_URL'] || "",
+    process.env['SUPABASE_SERVICE_ROLE_KEY'] || "",
   );
 
   await supabase

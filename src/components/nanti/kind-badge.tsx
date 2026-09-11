@@ -8,6 +8,7 @@ const styles: Record<ItemKind, string> = {
   deadline: "bg-warning/15 text-warning-foreground",
   waiting: "bg-primary/10 text-primary",
   followup: "bg-secondary text-muted-foreground",
+  invoice: "bg-secondary text-muted-foreground",
 };
 
 export function KindBadge({ kind, className }: { kind: ItemKind; className?: string }) {

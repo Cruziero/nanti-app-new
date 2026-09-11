@@ -1,17 +1,17 @@
 import { createClient } from "@supabase/supabase-js";
 
-const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || "";
-const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || "";
+const VAPID_PUBLIC_KEY = process.env['VAPID_PUBLIC_KEY'] || "";
+const VAPID_PRIVATE_KEY = process.env['VAPID_PRIVATE_KEY'] || "";
 
 export async function subscribeToPushNotifications(userId: string, subscription: PushSubscription) {
   const supabase = createClient(
-    process.env.VITE_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+    process.env['VITE_SUPABASE_URL'] || "",
+    process.env['SUPABASE_SERVICE_ROLE_KEY'] || "",
   );
 
   const subscriptionData = subscription.toJSON();
-  const p256dh = subscriptionData.keys?.p256dh || "";
-  const auth = subscriptionData.keys?.auth || "";
+  const p256dh = subscriptionData.keys?.['p256dh'] || "";
+  const auth = subscriptionData.keys?.['auth'] || "";
 
   await supabase.from("push_subscriptions").upsert({
     user_id: userId,
@@ -29,8 +29,8 @@ export async function sendPushNotification(
   data?: Record<string, unknown>,
 ) {
   const supabase = createClient(
-    process.env.VITE_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+    process.env['VITE_SUPABASE_URL'] || "",
+    process.env['SUPABASE_SERVICE_ROLE_KEY'] || "",
   );
 
   const { data: subscriptions } = await supabase
@@ -47,14 +47,14 @@ export async function sendPushNotification(
   const payload = JSON.stringify({
     title,
     body,
-    tag: data?.tag || "nanti-notification",
-    requireInteraction: data?.requireInteraction || false,
+    tag: data?.['tag'] || "nanti-notification",
+    requireInteraction: data?.['requireInteraction'] || false,
     data: {
-      url: data?.url || "/app",
-      itemId: data?.itemId,
+      url: data?.['url'] || "/app",
+      itemId: data?.['itemId'],
       ...data,
     },
-    actions: data?.actions || [
+    actions: data?.['actions'] || [
       { action: "open", title: "Buka" },
       { action: "snooze", title: "Tunda" },
       { action: "done", title: "Selesai" },

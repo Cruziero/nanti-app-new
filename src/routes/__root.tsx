@@ -9,6 +9,8 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode, useState } from "react";
 
+import { LocaleProvider } from '@/lib/locale';
+import launchCss from '../launch.css?url';
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { isSupabaseConfigured } from "@/integrations/supabase/client";
@@ -85,23 +87,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Forward or paste your WhatsApp conversations into NANTI. AI turns them into tracked commitments, reminders and follow-ups.",
+          "Paste text or upload a screenshot to NANTI. AI turns them into tracked commitments, reminders and follow-ups.",
       },
       { name: "author", content: "NANTI" },
       { property: "og:title", content: "NANTI · AI memory for WhatsApp" },
       {
         property: "og:description",
         content:
-          "Forward or paste your WhatsApp conversations into NANTI. AI turns them into tracked commitments, reminders and follow-ups.",
+          "Paste text or upload a screenshot to NANTI. AI turns them into tracked commitments, reminders and follow-ups.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "NANTI · AI memory for WhatsApp" },
       {
         name: "twitter:description",
         content:
-          "Forward or paste your WhatsApp conversations into NANTI. AI turns them into tracked commitments, reminders and follow-ups.",
+          "Paste text or upload a screenshot to NANTI. AI turns them into tracked commitments, reminders and follow-ups.",
       },
       {
         property: "og:image",
@@ -119,6 +120,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "stylesheet", href: launchCss },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -136,7 +139,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="id">
       <head>
         <HeadContent />
       </head>
@@ -152,49 +155,18 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const [supabaseOk] = useState(() => isSupabaseConfigured());
 
-  useEffect(() => {
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker
-        .register("/sw.js")
-        .then((reg) => console.log("SW registered:", reg.scope))
-        .catch((err) => console.error("SW registration failed:", err));
-    }
-  }, []);
 
-  if (!supabaseOk) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-4">
-        <div className="max-w-md text-center">
-          <h1 className="text-2xl font-bold text-foreground">NANTI</h1>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Supabase is not configured. Please set the following environment variables in your
-            hosting dashboard:
-          </p>
-          <ul className="mt-3 space-y-1 text-left text-xs text-muted-foreground">
-            <li className="rounded bg-surface px-3 py-1.5 font-mono">VITE_SUPABASE_URL</li>
-            <li className="rounded bg-surface px-3 py-1.5 font-mono">
-              VITE_SUPABASE_PUBLISHABLE_KEY
-            </li>
-          </ul>
-          <p className="mt-4 text-xs text-muted-foreground">
-            For server-side features also set: <code>SUPABASE_URL</code>,{" "}
-            <code>SUPABASE_SERVICE_ROLE_KEY</code>, <code>SUPABASE_PUBLISHABLE_KEY</code>,
-            <code>GEMINI_API_KEY</code>, <code>CRON_SECRET</code>
-          </p>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <QueryClientProvider client={queryClient}>
-      <NantiProvider>
+      <LocaleProvider><NantiProvider>
         <ItemDetailProvider>
           {/* Required: nested routes render here. */}
           <Outlet />
           <Toaster position="top-center" />
         </ItemDetailProvider>
-      </NantiProvider>
+      </NantiProvider></LocaleProvider>
     </QueryClientProvider>
   );
 }

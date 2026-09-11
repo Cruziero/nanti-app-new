@@ -18,6 +18,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as BusinessRouteImport } from './routes/business'
 import { Route as CareersRouteImport } from './routes/careers'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as PersonalRouteImport } from './routes/personal'
@@ -25,6 +26,7 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppFollowUpsRouteImport } from './routes/app.follow-ups'
+import { Route as AppFollowupsRouteImport } from './routes/app.followups'
 import { Route as AppImportRouteImport } from './routes/app.import'
 import { Route as AppInboxRouteImport } from './routes/app.inbox'
 import { Route as AppInvoicesRouteImport } from './routes/app.invoices'
@@ -41,6 +43,7 @@ import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as LegalPrivacyRouteImport } from './routes/legal.privacy'
 import { Route as LegalTermsRouteImport } from './routes/legal.terms'
 import { Route as ApiAuthGoogleRouteImport } from './routes/api/auth/google'
+import { Route as ApiBillingMidtransRouteImport } from './routes/api/billing/midtrans'
 import { Route as ApiCronCheckRemindersRouteImport } from './routes/api/cron/check-reminders'
 import { Route as ApiCronGenerateArticleRouteImport } from './routes/api/cron/generate-article'
 import { Route as ApiCronSyncCalendarRouteImport } from './routes/api/cron/sync-calendar'
@@ -100,6 +103,11 @@ const CareersRoute = CareersRouteImport.update({
   path: '/careers',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HelpRoute = HelpRouteImport.update({
   id: '/help',
   path: '/help',
@@ -133,6 +141,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppFollowUpsRoute = AppFollowUpsRouteImport.update({
   id: '/follow-ups',
   path: '/follow-ups',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFollowupsRoute = AppFollowupsRouteImport.update({
+  id: '/followups',
+  path: '/followups',
   getParentRoute: () => AppRoute,
 } as any)
 const AppImportRoute = AppImportRouteImport.update({
@@ -215,6 +228,11 @@ const ApiAuthGoogleRoute = ApiAuthGoogleRouteImport.update({
   path: '/api/auth/google',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiBillingMidtransRoute = ApiBillingMidtransRouteImport.update({
+  id: '/api/billing/midtrans',
+  path: '/api/billing/midtrans',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCronCheckRemindersRoute = ApiCronCheckRemindersRouteImport.update({
   id: '/api/cron/check-reminders',
   path: '/api/cron/check-reminders',
@@ -291,12 +309,14 @@ export interface FileRoutesByFullPath {
   '/blog': typeof BlogRouteWithChildren
   '/business': typeof BusinessRoute
   '/careers': typeof CareersRoute
+  '/contact': typeof ContactRoute
   '/help': typeof HelpRoute
   '/how-it-works': typeof HowItWorksRoute
   '/personal': typeof PersonalRoute
   '/pricing': typeof PricingRoute
   '/welcome': typeof WelcomeRoute
   '/app/follow-ups': typeof AppFollowUpsRoute
+  '/app/followups': typeof AppFollowupsRoute
   '/app/import': typeof AppImportRoute
   '/app/inbox': typeof AppInboxRoute
   '/app/invoices': typeof AppInvoicesRoute
@@ -314,6 +334,7 @@ export interface FileRoutesByFullPath {
   '/legal/terms': typeof LegalTermsRoute
   '/app/': typeof AppIndexRoute
   '/api/auth/google': typeof ApiAuthGoogleRoute
+  '/api/billing/midtrans': typeof ApiBillingMidtransRoute
   '/api/cron/check-reminders': typeof ApiCronCheckRemindersRoute
   '/api/cron/generate-article': typeof ApiCronGenerateArticleRoute
   '/api/cron/sync-calendar': typeof ApiCronSyncCalendarRoute
@@ -337,12 +358,14 @@ export interface FileRoutesByTo {
   '/blog': typeof BlogRouteWithChildren
   '/business': typeof BusinessRoute
   '/careers': typeof CareersRoute
+  '/contact': typeof ContactRoute
   '/help': typeof HelpRoute
   '/how-it-works': typeof HowItWorksRoute
   '/personal': typeof PersonalRoute
   '/pricing': typeof PricingRoute
   '/welcome': typeof WelcomeRoute
   '/app/follow-ups': typeof AppFollowUpsRoute
+  '/app/followups': typeof AppFollowupsRoute
   '/app/import': typeof AppImportRoute
   '/app/inbox': typeof AppInboxRoute
   '/app/invoices': typeof AppInvoicesRoute
@@ -360,6 +383,7 @@ export interface FileRoutesByTo {
   '/legal/terms': typeof LegalTermsRoute
   '/app': typeof AppIndexRoute
   '/api/auth/google': typeof ApiAuthGoogleRoute
+  '/api/billing/midtrans': typeof ApiBillingMidtransRoute
   '/api/cron/check-reminders': typeof ApiCronCheckRemindersRoute
   '/api/cron/generate-article': typeof ApiCronGenerateArticleRoute
   '/api/cron/sync-calendar': typeof ApiCronSyncCalendarRoute
@@ -385,12 +409,14 @@ export interface FileRoutesById {
   '/blog': typeof BlogRouteWithChildren
   '/business': typeof BusinessRoute
   '/careers': typeof CareersRoute
+  '/contact': typeof ContactRoute
   '/help': typeof HelpRoute
   '/how-it-works': typeof HowItWorksRoute
   '/personal': typeof PersonalRoute
   '/pricing': typeof PricingRoute
   '/welcome': typeof WelcomeRoute
   '/app/follow-ups': typeof AppFollowUpsRoute
+  '/app/followups': typeof AppFollowupsRoute
   '/app/import': typeof AppImportRoute
   '/app/inbox': typeof AppInboxRoute
   '/app/invoices': typeof AppInvoicesRoute
@@ -408,6 +434,7 @@ export interface FileRoutesById {
   '/legal/terms': typeof LegalTermsRoute
   '/app/': typeof AppIndexRoute
   '/api/auth/google': typeof ApiAuthGoogleRoute
+  '/api/billing/midtrans': typeof ApiBillingMidtransRoute
   '/api/cron/check-reminders': typeof ApiCronCheckRemindersRoute
   '/api/cron/generate-article': typeof ApiCronGenerateArticleRoute
   '/api/cron/sync-calendar': typeof ApiCronSyncCalendarRoute
@@ -434,12 +461,14 @@ export interface FileRouteTypes {
     | '/blog'
     | '/business'
     | '/careers'
+    | '/contact'
     | '/help'
     | '/how-it-works'
     | '/personal'
     | '/pricing'
     | '/welcome'
     | '/app/follow-ups'
+    | '/app/followups'
     | '/app/import'
     | '/app/inbox'
     | '/app/invoices'
@@ -457,6 +486,7 @@ export interface FileRouteTypes {
     | '/legal/terms'
     | '/app/'
     | '/api/auth/google'
+    | '/api/billing/midtrans'
     | '/api/cron/check-reminders'
     | '/api/cron/generate-article'
     | '/api/cron/sync-calendar'
@@ -480,12 +510,14 @@ export interface FileRouteTypes {
     | '/blog'
     | '/business'
     | '/careers'
+    | '/contact'
     | '/help'
     | '/how-it-works'
     | '/personal'
     | '/pricing'
     | '/welcome'
     | '/app/follow-ups'
+    | '/app/followups'
     | '/app/import'
     | '/app/inbox'
     | '/app/invoices'
@@ -503,6 +535,7 @@ export interface FileRouteTypes {
     | '/legal/terms'
     | '/app'
     | '/api/auth/google'
+    | '/api/billing/midtrans'
     | '/api/cron/check-reminders'
     | '/api/cron/generate-article'
     | '/api/cron/sync-calendar'
@@ -527,12 +560,14 @@ export interface FileRouteTypes {
     | '/blog'
     | '/business'
     | '/careers'
+    | '/contact'
     | '/help'
     | '/how-it-works'
     | '/personal'
     | '/pricing'
     | '/welcome'
     | '/app/follow-ups'
+    | '/app/followups'
     | '/app/import'
     | '/app/inbox'
     | '/app/invoices'
@@ -550,6 +585,7 @@ export interface FileRouteTypes {
     | '/legal/terms'
     | '/app/'
     | '/api/auth/google'
+    | '/api/billing/midtrans'
     | '/api/cron/check-reminders'
     | '/api/cron/generate-article'
     | '/api/cron/sync-calendar'
@@ -575,6 +611,7 @@ export interface RootRouteChildren {
   BlogRoute: typeof BlogRouteWithChildren
   BusinessRoute: typeof BusinessRoute
   CareersRoute: typeof CareersRoute
+  ContactRoute: typeof ContactRoute
   HelpRoute: typeof HelpRoute
   HowItWorksRoute: typeof HowItWorksRoute
   PersonalRoute: typeof PersonalRoute
@@ -583,6 +620,7 @@ export interface RootRouteChildren {
   LegalPrivacyRoute: typeof LegalPrivacyRoute
   LegalTermsRoute: typeof LegalTermsRoute
   ApiAuthGoogleRoute: typeof ApiAuthGoogleRoute
+  ApiBillingMidtransRoute: typeof ApiBillingMidtransRoute
   ApiCronCheckRemindersRoute: typeof ApiCronCheckRemindersRoute
   ApiCronGenerateArticleRoute: typeof ApiCronGenerateArticleRoute
   ApiCronSyncCalendarRoute: typeof ApiCronSyncCalendarRoute
@@ -661,6 +699,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CareersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/help': {
       id: '/help'
       path: '/help'
@@ -708,6 +753,13 @@ declare module '@tanstack/react-router' {
       path: '/follow-ups'
       fullPath: '/app/follow-ups'
       preLoaderRoute: typeof AppFollowUpsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/followups': {
+      id: '/app/followups'
+      path: '/followups'
+      fullPath: '/app/followups'
+      preLoaderRoute: typeof AppFollowupsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/import': {
@@ -822,6 +874,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthGoogleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/billing/midtrans': {
+      id: '/api/billing/midtrans'
+      path: '/api/billing/midtrans'
+      fullPath: '/api/billing/midtrans'
+      preLoaderRoute: typeof ApiBillingMidtransRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/cron/check-reminders': {
       id: '/api/cron/check-reminders'
       path: '/api/cron/check-reminders'
@@ -918,6 +977,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppFollowUpsRoute: typeof AppFollowUpsRoute
+  AppFollowupsRoute: typeof AppFollowupsRoute
   AppImportRoute: typeof AppImportRoute
   AppInboxRoute: typeof AppInboxRoute
   AppInvoicesRoute: typeof AppInvoicesRoute
@@ -933,6 +993,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppFollowUpsRoute: AppFollowUpsRoute,
+  AppFollowupsRoute: AppFollowupsRoute,
   AppImportRoute: AppImportRoute,
   AppInboxRoute: AppInboxRoute,
   AppInvoicesRoute: AppInvoicesRoute,
@@ -984,6 +1045,7 @@ const rootRouteChildren: RootRouteChildren = {
   BlogRoute: BlogRouteWithChildren,
   BusinessRoute: BusinessRoute,
   CareersRoute: CareersRoute,
+  ContactRoute: ContactRoute,
   HelpRoute: HelpRoute,
   HowItWorksRoute: HowItWorksRoute,
   PersonalRoute: PersonalRoute,
@@ -992,6 +1054,7 @@ const rootRouteChildren: RootRouteChildren = {
   LegalPrivacyRoute: LegalPrivacyRoute,
   LegalTermsRoute: LegalTermsRoute,
   ApiAuthGoogleRoute: ApiAuthGoogleRoute,
+  ApiBillingMidtransRoute: ApiBillingMidtransRoute,
   ApiCronCheckRemindersRoute: ApiCronCheckRemindersRoute,
   ApiCronGenerateArticleRoute: ApiCronGenerateArticleRoute,
   ApiCronSyncCalendarRoute: ApiCronSyncCalendarRoute,

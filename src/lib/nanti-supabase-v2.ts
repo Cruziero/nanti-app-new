@@ -1,25 +1,16 @@
+import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
-
-const SUPABASE_URL = process.env["SUPABASE_URL"];
-const SUPABASE_SERVICE_ROLE_KEY = process.env["SUPABASE_SERVICE_ROLE_KEY"];
-
-function getAdminClient() {
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error("Supabase credentials not configured");
-  }
-  return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-}
 
 // ============================================================
 // User Preferences
 // ============================================================
-export const fetchUserPreferences = createServerFn({ method: "GET" }).handler(
+export const fetchUserPreferences = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(
   async ({ context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { data, error } = await supabase
       .from("user_preferences")
       .select("*")
@@ -30,7 +21,7 @@ export const fetchUserPreferences = createServerFn({ method: "GET" }).handler(
   },
 );
 
-export const upsertUserPreferences = createServerFn({ method: "POST" })
+export const upsertUserPreferences = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
@@ -58,7 +49,7 @@ export const upsertUserPreferences = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { data: existing } = await supabase
       .from("user_preferences")
       .select("id")
@@ -81,10 +72,10 @@ export const upsertUserPreferences = createServerFn({ method: "POST" })
 // ============================================================
 // Reminder Preferences
 // ============================================================
-export const fetchReminderPreferences = createServerFn({ method: "GET" }).handler(
+export const fetchReminderPreferences = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(
   async ({ context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { data, error } = await supabase
       .from("reminder_preferences")
       .select("*")
@@ -95,7 +86,7 @@ export const fetchReminderPreferences = createServerFn({ method: "GET" }).handle
   },
 );
 
-export const upsertReminderPreferences = createServerFn({ method: "POST" })
+export const upsertReminderPreferences = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
@@ -115,7 +106,7 @@ export const upsertReminderPreferences = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { data: existing } = await supabase
       .from("reminder_preferences")
       .select("id")
@@ -138,9 +129,9 @@ export const upsertReminderPreferences = createServerFn({ method: "POST" })
 // ============================================================
 // Reminders
 // ============================================================
-export const fetchReminders = createServerFn({ method: "GET" }).handler(async ({ context }) => {
+export const fetchReminders = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { userId } = context as { userId: string };
-  const supabase = getAdminClient();
+  const supabase = context.supabase as unknown as SupabaseClient<any>;
   const { data, error } = await supabase
     .from("reminders")
     .select("*")
@@ -150,7 +141,7 @@ export const fetchReminders = createServerFn({ method: "GET" }).handler(async ({
   return data;
 });
 
-export const createReminder = createServerFn({ method: "POST" })
+export const createReminder = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
@@ -164,7 +155,7 @@ export const createReminder = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { data: reminder, error } = await supabase
       .from("reminders")
       .insert({ ...data, user_id: userId })
@@ -174,7 +165,7 @@ export const createReminder = createServerFn({ method: "POST" })
     return reminder;
   });
 
-export const updateReminder = createServerFn({ method: "POST" })
+export const updateReminder = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
@@ -190,7 +181,7 @@ export const updateReminder = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { id, ...updates } = data;
     const { error } = await supabase
       .from("reminders")
@@ -200,8 +191,8 @@ export const updateReminder = createServerFn({ method: "POST" })
     if (error) throw error;
   });
 
-export const fetchPendingReminders = createServerFn({ method: "GET" }).handler(async () => {
-  const supabase = getAdminClient();
+export const fetchPendingReminders = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
+  const supabase = context.supabase as unknown as SupabaseClient<any>;
   const now = new Date().toISOString();
   const { data, error } = await supabase
     .from("reminders")
@@ -216,9 +207,9 @@ export const fetchPendingReminders = createServerFn({ method: "GET" }).handler(a
 // ============================================================
 // Notifications
 // ============================================================
-export const fetchNotifications = createServerFn({ method: "GET" }).handler(async ({ context }) => {
+export const fetchNotifications = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { userId } = context as { userId: string };
-  const supabase = getAdminClient();
+  const supabase = context.supabase as unknown as SupabaseClient<any>;
   const { data, error } = await supabase
     .from("notifications")
     .select("*")
@@ -229,7 +220,7 @@ export const fetchNotifications = createServerFn({ method: "GET" }).handler(asyn
   return data;
 });
 
-export const createNotification = createServerFn({ method: "POST" })
+export const createNotification = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
@@ -255,7 +246,7 @@ export const createNotification = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { data: notification, error } = await supabase
       .from("notifications")
       .insert({ ...data, user_id: userId })
@@ -265,11 +256,11 @@ export const createNotification = createServerFn({ method: "POST" })
     return notification;
   });
 
-export const markNotificationRead = createServerFn({ method: "POST" })
+export const markNotificationRead = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { error } = await supabase
       .from("notifications")
       .update({ read_at: new Date().toISOString(), status: "read" })
@@ -281,9 +272,9 @@ export const markNotificationRead = createServerFn({ method: "POST" })
 // ============================================================
 // Invoices
 // ============================================================
-export const fetchInvoices = createServerFn({ method: "GET" }).handler(async ({ context }) => {
+export const fetchInvoices = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { userId } = context as { userId: string };
-  const supabase = getAdminClient();
+  const supabase = context.supabase as unknown as SupabaseClient<any>;
   const { data, error } = await supabase
     .from("invoices")
     .select("*")
@@ -293,7 +284,7 @@ export const fetchInvoices = createServerFn({ method: "GET" }).handler(async ({ 
   return data;
 });
 
-export const createInvoiceRow = createServerFn({ method: "POST" })
+export const createInvoiceRow = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
@@ -341,7 +332,7 @@ export const createInvoiceRow = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { data: invoice, error } = await supabase
       .from("invoices")
       .insert({ ...data, user_id: userId, items: data.items as never })
@@ -351,7 +342,7 @@ export const createInvoiceRow = createServerFn({ method: "POST" })
     return invoice;
   });
 
-export const updateInvoiceRow = createServerFn({ method: "POST" })
+export const updateInvoiceRow = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
@@ -376,7 +367,7 @@ export const updateInvoiceRow = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { id, ...updates } = data;
     const { error } = await supabase
       .from("invoices")
@@ -386,11 +377,11 @@ export const updateInvoiceRow = createServerFn({ method: "POST" })
     if (error) throw error;
   });
 
-export const deleteInvoice = createServerFn({ method: "POST" })
+export const deleteInvoice = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { error } = await supabase
       .from("invoices")
       .delete()
@@ -402,10 +393,10 @@ export const deleteInvoice = createServerFn({ method: "POST" })
 // ============================================================
 // Calendar Connections
 // ============================================================
-export const fetchCalendarConnections = createServerFn({ method: "GET" }).handler(
+export const fetchCalendarConnections = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(
   async ({ context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { data, error } = await supabase
       .from("calendar_connections")
       .select("*")
@@ -418,10 +409,10 @@ export const fetchCalendarConnections = createServerFn({ method: "GET" }).handle
 // ============================================================
 // WhatsApp Connections
 // ============================================================
-export const fetchWhatsAppConnections = createServerFn({ method: "GET" }).handler(
+export const fetchWhatsAppConnections = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(
   async ({ context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { data, error } = await supabase
       .from("whatsapp_connections")
       .select("*")
@@ -434,11 +425,11 @@ export const fetchWhatsAppConnections = createServerFn({ method: "GET" }).handle
 // ============================================================
 // Daily Briefings
 // ============================================================
-export const fetchDailyBriefing = createServerFn({ method: "GET" })
+export const fetchDailyBriefing = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ date: z.string() }).parse(data))
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { data: briefing, error } = await supabase
       .from("daily_briefings")
       .select("*")
@@ -449,7 +440,7 @@ export const fetchDailyBriefing = createServerFn({ method: "GET" })
     return briefing;
   });
 
-export const upsertDailyBriefing = createServerFn({ method: "POST" })
+export const upsertDailyBriefing = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
@@ -460,7 +451,7 @@ export const upsertDailyBriefing = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { data: existing } = await supabase
       .from("daily_briefings")
       .select("id")

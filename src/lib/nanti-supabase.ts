@@ -1,22 +1,13 @@
+import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
-const SUPABASE_URL = process.env["SUPABASE_URL"];
-const SUPABASE_SERVICE_ROLE_KEY = process.env["SUPABASE_SERVICE_ROLE_KEY"];
-
-function getAdminClient() {
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error("Supabase credentials not configured");
-  }
-  return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-}
-
 // Projects
-export const fetchProjects = createServerFn({ method: "GET" }).handler(async ({ context }) => {
+export const fetchProjects = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { userId } = context as { userId: string };
-  const supabase = getAdminClient();
+  const supabase = context.supabase as unknown as SupabaseClient<any>;
   const { data, error } = await supabase
     .from("projects")
     .select("*")
@@ -26,7 +17,7 @@ export const fetchProjects = createServerFn({ method: "GET" }).handler(async ({ 
   return data;
 });
 
-export const createProject = createServerFn({ method: "POST" })
+export const createProject = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
@@ -38,7 +29,7 @@ export const createProject = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { data: project, error } = await supabase
       .from("projects")
       .insert({ ...data, user_id: userId })
@@ -48,7 +39,7 @@ export const createProject = createServerFn({ method: "POST" })
     return project;
   });
 
-export const updateProject = createServerFn({ method: "POST" })
+export const updateProject = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
@@ -61,7 +52,7 @@ export const updateProject = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { id, ...updates } = data;
     const { error } = await supabase
       .from("projects")
@@ -71,11 +62,11 @@ export const updateProject = createServerFn({ method: "POST" })
     if (error) throw error;
   });
 
-export const deleteProject = createServerFn({ method: "POST" })
+export const deleteProject = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { error } = await supabase
       .from("projects")
       .delete()
@@ -85,9 +76,9 @@ export const deleteProject = createServerFn({ method: "POST" })
   });
 
 // People
-export const fetchPeople = createServerFn({ method: "GET" }).handler(async ({ context }) => {
+export const fetchPeople = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { userId } = context as { userId: string };
-  const supabase = getAdminClient();
+  const supabase = context.supabase as unknown as SupabaseClient<any>;
   const { data, error } = await supabase
     .from("people")
     .select("*")
@@ -97,7 +88,7 @@ export const fetchPeople = createServerFn({ method: "GET" }).handler(async ({ co
   return data;
 });
 
-export const createPerson = createServerFn({ method: "POST" })
+export const createPerson = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
@@ -109,7 +100,7 @@ export const createPerson = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { data: person, error } = await supabase
       .from("people")
       .insert({ ...data, user_id: userId })
@@ -119,7 +110,7 @@ export const createPerson = createServerFn({ method: "POST" })
     return person;
   });
 
-export const updatePerson = createServerFn({ method: "POST" })
+export const updatePerson = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
@@ -133,7 +124,7 @@ export const updatePerson = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { id, ...updates } = data;
     const { error } = await supabase
       .from("people")
@@ -143,11 +134,11 @@ export const updatePerson = createServerFn({ method: "POST" })
     if (error) throw error;
   });
 
-export const deletePerson = createServerFn({ method: "POST" })
+export const deletePerson = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { error } = await supabase
       .from("people")
       .delete()
@@ -157,9 +148,9 @@ export const deletePerson = createServerFn({ method: "POST" })
   });
 
 // Tasks
-export const fetchTasks = createServerFn({ method: "GET" }).handler(async ({ context }) => {
+export const fetchTasks = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { userId } = context as { userId: string };
-  const supabase = getAdminClient();
+  const supabase = context.supabase as unknown as SupabaseClient<any>;
   const { data, error } = await supabase
     .from("tasks")
     .select("*")
@@ -169,7 +160,7 @@ export const fetchTasks = createServerFn({ method: "GET" }).handler(async ({ con
   return data;
 });
 
-export const createTask = createServerFn({ method: "POST" })
+export const createTask = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
@@ -193,7 +184,7 @@ export const createTask = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { data: task, error } = await supabase
       .from("tasks")
       .insert({ ...data, user_id: userId })
@@ -203,7 +194,7 @@ export const createTask = createServerFn({ method: "POST" })
     return task;
   });
 
-export const updateTask = createServerFn({ method: "POST" })
+export const updateTask = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
@@ -221,7 +212,7 @@ export const updateTask = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { id, ...updates } = data;
     const { error } = await supabase
       .from("tasks")
@@ -231,19 +222,19 @@ export const updateTask = createServerFn({ method: "POST" })
     if (error) throw error;
   });
 
-export const deleteTask = createServerFn({ method: "POST" })
+export const deleteTask = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { error } = await supabase.from("tasks").delete().eq("id", data.id).eq("user_id", userId);
     if (error) throw error;
   });
 
 // Waiting Items
-export const fetchWaitingItems = createServerFn({ method: "GET" }).handler(async ({ context }) => {
+export const fetchWaitingItems = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { userId } = context as { userId: string };
-  const supabase = getAdminClient();
+  const supabase = context.supabase as unknown as SupabaseClient<any>;
   const { data, error } = await supabase
     .from("waiting_items")
     .select("*")
@@ -253,7 +244,7 @@ export const fetchWaitingItems = createServerFn({ method: "GET" }).handler(async
   return data;
 });
 
-export const createWaitingItem = createServerFn({ method: "POST" })
+export const createWaitingItem = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
@@ -268,7 +259,7 @@ export const createWaitingItem = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { data: item, error } = await supabase
       .from("waiting_items")
       .insert({ ...data, user_id: userId })
@@ -278,7 +269,7 @@ export const createWaitingItem = createServerFn({ method: "POST" })
     return item;
   });
 
-export const updateWaitingItem = createServerFn({ method: "POST" })
+export const updateWaitingItem = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
@@ -292,7 +283,7 @@ export const updateWaitingItem = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { id, ...updates } = data;
     const { error } = await supabase
       .from("waiting_items")
@@ -302,11 +293,11 @@ export const updateWaitingItem = createServerFn({ method: "POST" })
     if (error) throw error;
   });
 
-export const deleteWaitingItem = createServerFn({ method: "POST" })
+export const deleteWaitingItem = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { error } = await supabase
       .from("waiting_items")
       .delete()
@@ -316,9 +307,9 @@ export const deleteWaitingItem = createServerFn({ method: "POST" })
   });
 
 // Inbox Items
-export const fetchInboxItems = createServerFn({ method: "GET" }).handler(async ({ context }) => {
+export const fetchInboxItems = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { userId } = context as { userId: string };
-  const supabase = getAdminClient();
+  const supabase = context.supabase as unknown as SupabaseClient<any>;
   const { data, error } = await supabase
     .from("inbox_items")
     .select("*")
@@ -328,7 +319,7 @@ export const fetchInboxItems = createServerFn({ method: "GET" }).handler(async (
   return data;
 });
 
-export const createInboxItem = createServerFn({ method: "POST" })
+export const createInboxItem = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
@@ -344,7 +335,7 @@ export const createInboxItem = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { data: item, error } = await supabase
       .from("inbox_items")
       .insert({ ...data, user_id: userId })
@@ -354,7 +345,7 @@ export const createInboxItem = createServerFn({ method: "POST" })
     return item;
   });
 
-export const updateInboxItem = createServerFn({ method: "POST" })
+export const updateInboxItem = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
@@ -366,7 +357,7 @@ export const updateInboxItem = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { id, ...updates } = data;
     const { error } = await supabase
       .from("inbox_items")
@@ -377,7 +368,7 @@ export const updateInboxItem = createServerFn({ method: "POST" })
   });
 
 // Conversations
-export const createConversation = createServerFn({ method: "POST" })
+export const createConversation = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
@@ -389,7 +380,7 @@ export const createConversation = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { data: conv, error } = await supabase
       .from("conversations")
       .insert({ ...data, user_id: userId })
@@ -400,9 +391,9 @@ export const createConversation = createServerFn({ method: "POST" })
   });
 
 // AI Messages
-export const fetchAiMessages = createServerFn({ method: "GET" }).handler(async ({ context }) => {
+export const fetchAiMessages = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { userId } = context as { userId: string };
-  const supabase = getAdminClient();
+  const supabase = context.supabase as unknown as SupabaseClient<any>;
   const { data, error } = await supabase
     .from("ai_messages")
     .select("*")
@@ -413,7 +404,7 @@ export const fetchAiMessages = createServerFn({ method: "GET" }).handler(async (
   return data;
 });
 
-export const createAiMessage = createServerFn({ method: "POST" })
+export const createAiMessage = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
@@ -425,7 +416,7 @@ export const createAiMessage = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    const supabase = getAdminClient();
+    const supabase = context.supabase as unknown as SupabaseClient<any>;
     const { data: msg, error } = await supabase
       .from("ai_messages")
       .insert({ ...data, user_id: userId })
@@ -436,9 +427,9 @@ export const createAiMessage = createServerFn({ method: "POST" })
   });
 
 // Seed demo data for new users
-export const seedDemoData = createServerFn({ method: "POST" }).handler(async ({ context }) => {
+export const seedDemoData = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { userId } = context as { userId: string };
-  const supabase = getAdminClient();
+  const supabase = context.supabase as unknown as SupabaseClient<any>;
 
   // Create projects
   const { data: projects } = await supabase

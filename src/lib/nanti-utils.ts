@@ -143,9 +143,11 @@ export const kindLabel: Record<ItemKind, string> = {
   deadline: "Tenggat",
   waiting: "Menunggu",
   followup: "Follow-up",
+  invoice: "Invoice",
 };
 
 export const priorityLabel: Record<Priority, string> = {
+  critical: "Kritis",
   high: "Tinggi",
   medium: "Sedang",
   low: "Rendah",

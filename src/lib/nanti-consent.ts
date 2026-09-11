@@ -14,8 +14,8 @@ export interface WhatsAppConsent {
 
 export async function getConsent(userId: string): Promise<WhatsAppConsent | null> {
   const supabase = createClient(
-    process.env.VITE_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+    process.env['VITE_SUPABASE_URL'] || "",
+    process.env['SUPABASE_SERVICE_ROLE_KEY'] || "",
   );
 
   const { data } = await supabase
@@ -44,8 +44,8 @@ export async function updateConsent(
   updates: Partial<Omit<WhatsAppConsent, "userId" | "lastUpdated">>,
 ): Promise<WhatsAppConsent> {
   const supabase = createClient(
-    process.env.VITE_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+    process.env['VITE_SUPABASE_URL'] || "",
+    process.env['SUPABASE_SERVICE_ROLE_KEY'] || "",
   );
 
   const { data: existing } = await supabase
@@ -86,8 +86,8 @@ export async function updateConsent(
 
 export async function revokeConsent(userId: string): Promise<void> {
   const supabase = createClient(
-    process.env.VITE_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+    process.env['VITE_SUPABASE_URL'] || "",
+    process.env['SUPABASE_SERVICE_ROLE_KEY'] || "",
   );
 
   await supabase.from("whatsapp_consent").upsert(

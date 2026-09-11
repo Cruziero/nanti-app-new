@@ -10,7 +10,7 @@ export const Route = createFileRoute("/app")({
 
 function WorkspaceLayout() {
   const { user, loading } = useSupabaseAuth();
-  const { settings, hydrated } = useNanti();
+  const { settings, hydrated, error } = useNanti();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,10 +20,10 @@ function WorkspaceLayout() {
   }, [user, loading, navigate]);
 
   useEffect(() => {
-    if (hydrated && user && !settings.onboarded) {
+    if (hydrated && user && !error && !settings.onboarded) {
       navigate({ to: "/welcome" });
     }
-  }, [hydrated, user, settings.onboarded, navigate]);
+  }, [hydrated, user, settings.onboarded, error, navigate]);
 
   if (loading || !hydrated) {
     return (
@@ -34,7 +34,7 @@ function WorkspaceLayout() {
   }
 
   if (!user) return null;
-  if (!settings.onboarded) return null;
+  if (!settings.onboarded && !error) return null;
 
   return (
     <AppShell>
