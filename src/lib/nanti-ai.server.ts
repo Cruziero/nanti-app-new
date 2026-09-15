@@ -220,12 +220,24 @@ const EMPTY: ExtractResult = {
 };
 
 export async function extractItems(text: string, sourceHint?: string): Promise<ExtractResult> {
+  const now = new Date();
+  const jakartaTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Jakarta" }));
+  const datetime = jakartaTime.toISOString().slice(0, 16);
+  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const dayOfWeek = dayNames[jakartaTime.getDay()];
+
   const raw = await chat(
     [
       { role: "system", content: EXTRACT_SYSTEM },
       {
         role: "user",
-        content: `Nama grup/chat (jika tahu): ${sourceHint || "tidak diketahui"}\n\nPercakapan:\n${text}`,
+        content: `Current datetime: ${datetime} (WIB, Asia/Jakarta)
+Current day: ${dayOfWeek}
+Timezone: Asia/Jakarta (UTC+7)
+
+Nama grup/chat (jika tahu): ${sourceHint || "tidak diketahui"}
+
+Percakapan:\n${text}`,
       },
     ],
     { json: true },
@@ -238,6 +250,12 @@ export async function extractFromImage(
   dataUrl: string,
   sourceHint?: string,
 ): Promise<ExtractResult> {
+  const now = new Date();
+  const jakartaTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Jakarta" }));
+  const datetime = jakartaTime.toISOString().slice(0, 16);
+  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const dayOfWeek = dayNames[jakartaTime.getDay()];
+
   const raw = await chat(
     [
       { role: "system", content: EXTRACT_SYSTEM },
@@ -246,7 +264,7 @@ export async function extractFromImage(
         content: [
           {
             type: "text",
-            text: `Ini screenshot percakapan WhatsApp. Baca semua teksnya (termasuk nama pengirim), lalu ekstrak sesuai instruksi. Nama grup/chat (jika tahu): ${sourceHint || "dari screenshot"}. Balas hanya JSON.`,
+            text: `Ini screenshot percakapan WhatsApp. Baca semua teksnya (termasuk nama pengirim), lalu ekstrak sesuai instruksi. Current datetime: ${datetime} (WIB, Asia/Jakarta). Current day: ${dayOfWeek}. Nama grup/chat (jika tahu): ${sourceHint || "dari screenshot"}. Balas hanya JSON.`,
           },
           { type: "image_url", image_url: { url: dataUrl } },
         ],

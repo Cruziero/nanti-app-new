@@ -56,8 +56,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 hidden w-[220px] flex-col border-r border-border bg-sidebar lg:flex">
-        <div className="flex items-center gap-2 px-5 py-5">
+      <aside className="fixed inset-y-0 left-0 hidden w-[200px] flex-col border-r border-border bg-sidebar lg:flex">
+        <div className="flex items-center gap-2 px-4 py-4">
           <Logo />
         </div>
 
@@ -76,7 +76,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                       key={n.to}
                       to={n.to}
                       className={cn(
-                        "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors",
+                        "flex items-center gap-2 rounded-md px-2 py-1.5 text-[12.5px] font-medium transition-colors",
                         active
                           ? "bg-sidebar-accent text-foreground"
                           : "text-muted-foreground hover:bg-secondary hover:text-foreground",
@@ -139,7 +139,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
 
       {/* Main content */}
-      <main className="pb-24 lg:pb-8 lg:pl-[220px]">
+      <main className="pb-24 lg:pb-8 lg:pl-[200px]">
         <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-8">{children}</div>
       </main>
 
@@ -187,10 +187,10 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-8 flex items-start justify-between gap-4">
+    <div className="mb-6 flex items-start justify-between gap-4">
       <div>
-        <h1 className="text-[24px] font-semibold tracking-tight sm:text-[28px]">{title}</h1>
-        {subtitle && <p className="mt-1 text-[13px] text-muted-foreground">{subtitle}</p>}
+        <h1 className="text-[20px] font-semibold tracking-tight sm:text-[24px]">{title}</h1>
+        {subtitle && <p className="mt-0.5 text-[12.5px] text-muted-foreground">{subtitle}</p>}
       </div>
       {action}
     </div>
@@ -207,13 +207,13 @@ export function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="mb-8">
-      <div className="mb-1.5 flex items-center gap-2 px-1">
-        <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
+    <section className="mb-6">
+      <div className="mb-1 flex items-center gap-1.5 px-1">
+        <h2 className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/60">
           {title}
         </h2>
         {count !== undefined && (
-          <span className="text-[11px] text-muted-foreground/50">{count}</span>
+          <span className="text-[10.5px] text-muted-foreground/40">{count}</span>
         )}
       </div>
       <div className="divide-y divide-border">{children}</div>
@@ -223,9 +223,9 @@ export function Section({
 
 export function EmptyState({ title, hint }: { title: string; hint?: string }) {
   return (
-    <div className="px-1 py-12 text-center">
-      <p className="text-[14px] font-medium text-foreground">{title}</p>
-      {hint && <p className="mt-1 text-[13px] text-muted-foreground">{hint}</p>}
+    <div className="px-1 py-10 text-center">
+      <p className="text-[13px] font-medium text-foreground">{title}</p>
+      {hint && <p className="mt-0.5 text-[12px] text-muted-foreground">{hint}</p>}
     </div>
   );
 }
