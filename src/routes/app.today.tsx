@@ -1,7 +1,7 @@
 ﻿import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ArrowRight, Hourglass, Clock, AlertTriangle } from "lucide-react";
+import { ArrowRight, Hourglass, Clock, AlertTriangle, Plus } from "lucide-react";
 import { EmptyState, Section } from "@/components/nanti/app-shell";
 import { useNanti } from "@/lib/nanti-store";
 import {
@@ -57,6 +57,7 @@ function Today() {
   );
 
   const needsAttention = overdue.length + dueToday.filter((i) => i.kind === "commitment").length;
+  const hasAnyItems = overdue.length + dueToday.length + upcoming.length + waiting.length > 0;
 
   return (
     <div>
@@ -67,13 +68,28 @@ function Today() {
         <h1 className="mt-1 text-[26px] font-semibold tracking-tight sm:text-[30px]">
           {hydrated ? greeting(settings.name) : "Hello."}
         </h1>
-        <p className="mt-1 text-[14px] text-muted-foreground">Here&apos;s what matters today.</p>
+        <p className="mt-1 text-[14px] text-muted-foreground">Here&apos;s what matters.</p>
       </div>
 
+      {!hasAnyItems && (
+        <div className="py-16 text-center">
+          <p className="text-[15px] font-medium text-foreground">Nothing to remember yet.</p>
+          <p className="mt-1 text-[13px] text-muted-foreground">
+            Bring your first conversation to NANTI.
+          </p>
+          <Link
+            to="/app/import"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-[13px] font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            <Plus className="size-4" /> Bring to NANTI
+          </Link>
+        </div>
+      )}
+
       {needsAttention > 0 && (
-        <div className="mb-6 flex items-center gap-2 rounded-lg border border-border px-4 py-3">
+        <div className="mb-6 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-950/30">
           <AlertTriangle className="size-4 shrink-0 text-amber-600" />
-          <p className="text-[13.5px] font-medium">
+          <p className="text-[13.5px] font-medium text-amber-800 dark:text-amber-200">
             {needsAttention} thing{needsAttention !== 1 && "s"} need
             {needsAttention === 1 && "s"} your attention
           </p>
@@ -81,14 +97,14 @@ function Today() {
       )}
 
       {overdue.length > 0 && (
-        <Section title="Overdue" count={overdue.length}>
+        <Section title="NEEDS YOUR ATTENTION" count={overdue.length}>
           {overdue.map((item) => (
             <div key={item.id} className="flex items-center gap-3 px-1 py-3">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[14px] font-medium">{item.title}</p>
                 <p className="mt-0.5 text-[12px] text-muted-foreground">
                   {personOf(item.personId)?.name ?? item.source}
-                  {item.due && ` - Due ${item.due}`}
+                  {item.due && ` · Due ${item.due}`}
                 </p>
               </div>
               <div className="flex items-center gap-1.5">
@@ -108,7 +124,7 @@ function Today() {
                   }}
                   className="rounded-md px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground/60 transition-colors hover:text-muted-foreground"
                 >
-                  Remind later
+                  Later
                 </button>
               </div>
             </div>
@@ -116,15 +132,15 @@ function Today() {
         </Section>
       )}
 
-      <Section title="Today" count={dueToday.length}>
-        {dueToday.length ? (
-          dueToday.map((item) => (
+      {dueToday.length > 0 && (
+        <Section title="TODAY" count={dueToday.length}>
+          {dueToday.map((item) => (
             <div key={item.id} className="flex items-center gap-3 px-1 py-3">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[14px] font-medium">{item.title}</p>
                 <p className="mt-0.5 text-[12px] text-muted-foreground">
                   {personOf(item.personId)?.name ?? item.source}
-                  {item.time && ` - ${item.time}`}
+                  {item.time && ` · ${item.time}`}
                 </p>
               </div>
               <div className="flex items-center gap-1.5">
@@ -144,45 +160,17 @@ function Today() {
                   }}
                   className="rounded-md px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground/60 transition-colors hover:text-muted-foreground"
                 >
-                  Remind later
+                  Later
                 </button>
               </div>
             </div>
-          ))
-        ) : (
-          <EmptyState title="Nothing due today." hint="Enjoy the breathing room." />
-        )}
-      </Section>
-
-      {upcoming.length > 0 && (
-        <Section title="Upcoming" count={upcoming.length}>
-          {upcoming.slice(0, 5).map((item) => (
-            <div key={item.id} className="flex items-center gap-3 px-1 py-3">
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[14px] font-medium">{item.title}</p>
-                <p className="mt-0.5 text-[12px] text-muted-foreground">
-                  {personOf(item.personId)?.name ?? item.source}
-                  {item.due && ` - ${item.due}`}
-                </p>
-              </div>
-            </div>
           ))}
-          {upcoming.length > 5 && (
-            <div className="px-1 py-3">
-              <Link
-                to="/app/reminders"
-                className="inline-flex items-center gap-1 text-[12.5px] font-medium text-muted-foreground hover:text-foreground"
-              >
-                See all upcoming <ArrowRight className="size-3" />
-              </Link>
-            </div>
-          )}
         </Section>
       )}
 
       {waiting.length > 0 && (
-        <Section title="Waiting" count={waiting.length}>
-          {waiting.slice(0, 4).map((item) => {
+        <Section title="WAITING" count={waiting.length}>
+          {waiting.slice(0, 5).map((item) => {
             const person = personOf(item.personId);
             return (
               <div key={item.id} className="flex items-center gap-3 px-1 py-3">
@@ -192,14 +180,14 @@ function Today() {
                     {person?.name ?? item.source}
                   </p>
                   <p className="mt-0.5 text-[12px] text-muted-foreground">
-                    {item.title} - Waiting {waitingDays(item)} days
+                    {item.title} · Waiting {waitingDays(item)} days
                   </p>
                 </div>
                 <span className="text-[11px] text-muted-foreground/50">{waitingDays(item)}d</span>
               </div>
             );
           })}
-          {waiting.length > 4 && (
+          {waiting.length > 5 && (
             <div className="px-1 py-3">
               <Link
                 to="/app/waiting"
@@ -212,8 +200,24 @@ function Today() {
         </Section>
       )}
 
+      {upcoming.length > 0 && (
+        <Section title="UPCOMING" count={upcoming.length}>
+          {upcoming.slice(0, 5).map((item) => (
+            <div key={item.id} className="flex items-center gap-3 px-1 py-3">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[14px] font-medium">{item.title}</p>
+                <p className="mt-0.5 text-[12px] text-muted-foreground">
+                  {personOf(item.personId)?.name ?? item.source}
+                  {item.due && ` · ${item.due}`}
+                </p>
+              </div>
+            </div>
+          ))}
+        </Section>
+      )}
+
       {potentiallyForgotten.length > 0 && !dismissed && (
-        <Section title="Potentially forgotten" count={potentiallyForgotten.length}>
+        <Section title="POSSIBLY UNFINISHED" count={potentiallyForgotten.length}>
           {potentiallyForgotten.slice(0, 3).map((item) => (
             <div key={item.id} className="flex items-center gap-3 px-1 py-3">
               <Clock className="size-3.5 shrink-0 text-muted-foreground/60" />
@@ -242,32 +246,6 @@ function Today() {
             </button>
           </div>
         </Section>
-      )}
-
-      {(upcoming.length > 0 || waiting.length > 0) && (
-        <div className="mt-6 grid grid-cols-3 gap-3">
-          <div className="rounded-lg border border-border px-3 py-2.5">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60">
-              This week
-            </p>
-            <p className="mt-1 text-[18px] font-semibold">{upcoming.length + dueToday.length}</p>
-            <p className="text-[11px] text-muted-foreground">commitments</p>
-          </div>
-          <div className="rounded-lg border border-border px-3 py-2.5">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60">
-              Waiting
-            </p>
-            <p className="mt-1 text-[18px] font-semibold">{waiting.length}</p>
-            <p className="text-[11px] text-muted-foreground">items</p>
-          </div>
-          <div className="rounded-lg border border-border px-3 py-2.5">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60">
-              Total
-            </p>
-            <p className="mt-1 text-[18px] font-semibold">{openItems(items).length}</p>
-            <p className="text-[11px] text-muted-foreground">open</p>
-          </div>
-        </div>
       )}
     </div>
   );

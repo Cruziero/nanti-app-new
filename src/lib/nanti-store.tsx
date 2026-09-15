@@ -301,35 +301,12 @@ export function NantiProvider({ children }: { children: ReactNode }) {
             }
           } catch { /* ignore */ }
 
-          // If no data exists, seed demo data
-          if (projectsData.length === 0 && tasksData.length === 0) {
-            await seedDemoData();
-            // Reload after seeding
-            const [p2, pe2, t2, w2, i2] = await Promise.all([
-              fetchProjects(),
-              fetchPeople(),
-              fetchTasks(),
-              fetchWaitingItems(),
-              fetchInboxItems(),
-            ]);
-            setState({
-              projects: p2.map(projectToProject),
-              people: pe2.map(personToPerson),
-              items: [...t2.map(taskToItem), ...w2.map(waitingToItem), ...i2.map(inboxToItem)],
-              settings: savedSettings,
-            });
-          } else {
-            setState({
-              projects: projectsData.map(projectToProject),
-              people: peopleData.map(personToPerson),
-              items: [
-                ...tasksData.map(taskToItem),
-                ...waitingData.map(waitingToItem),
-                ...inboxData.map(inboxToItem),
-              ],
-              settings: savedSettings,
-            });
-          }
+          setState({
+            projects: projectsData.map(projectToProject),
+            people: peopleData.map(personToPerson),
+            items: [...tasksData.map(taskToItem), ...waitingData.map(waitingToItem), ...inboxData.map(inboxToItem)],
+            settings: savedSettings,
+          });
         } catch (err) {
           console.error("Failed to load from Supabase:", err);
           // Fall back to localStorage

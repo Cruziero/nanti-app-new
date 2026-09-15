@@ -5,16 +5,8 @@ import {
   Sun,
   Inbox,
   Hourglass,
-  FolderKanban,
-  Users,
   Settings as Cog,
   LogOut,
-  Bell,
-  FileText,
-  Calendar,
-  Clock,
-  Bookmark,
-  Search,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -26,34 +18,12 @@ import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
 
 const navGroups = [
   {
-    label: "Personal",
+    label: "NANTI",
     items: [
       { to: "/app/today", label: "Today", icon: Sun },
-      { to: "/app/inbox", label: "Inbox", icon: Inbox, countKey: "/app/inbox" },
       { to: "/app", label: "Ask NANTI", icon: Sparkles, exact: true },
-    ],
-  },
-  {
-    label: "Work",
-    items: [
-      { to: "/app/people", label: "People", icon: Users },
-      { to: "/app/projects", label: "Projects", icon: FolderKanban },
-      { to: "/app/follow-ups", label: "Follow-ups", icon: Clock },
+      { to: "/app/inbox", label: "Inbox", icon: Inbox, countKey: "/app/inbox" },
       { to: "/app/waiting", label: "Waiting", icon: Hourglass, countKey: "/app/waiting" },
-    ],
-  },
-  {
-    label: "Tools",
-    items: [
-      { to: "/app/calendar", label: "Calendar", icon: Calendar },
-      { to: "/app/invoices", label: "Invoices", icon: FileText },
-    ],
-  },
-  {
-    label: "Memory",
-    items: [
-      { to: "/app/recent", label: "Recent", icon: Clock },
-      { to: "/app/saved", label: "Saved", icon: Bookmark },
     ],
   },
 ] as const;
@@ -62,8 +32,8 @@ const mobileNav = [
   { to: "/app/today", label: "Today", icon: Sun },
   { to: "/app", label: "Ask", icon: Sparkles, exact: true },
   { to: "__plus__", label: "", icon: Plus },
-  { to: "/app/reminders", label: "Reminders", icon: Bell },
-  { to: "/app/more", label: "More", icon: Inbox },
+  { to: "/app/waiting", label: "Waiting", icon: Hourglass },
+  { to: "/app/inbox", label: "Inbox", icon: Inbox },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -127,9 +97,15 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         <div className="border-t border-border px-3 py-3">
           <Link
+            to="/app/import"
+            className="flex items-center gap-2.5 rounded-md bg-primary/10 px-2.5 py-2 text-[13px] font-medium text-primary transition-colors hover:bg-primary/20"
+          >
+            <Plus className="size-4" /> Bring to NANTI
+          </Link>
+          <Link
             to="/app/settings"
             className={cn(
-              "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors",
+              "mt-1 flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors",
               path.startsWith("/app/settings")
                 ? "bg-sidebar-accent text-foreground"
                 : "text-muted-foreground hover:bg-secondary hover:text-foreground",
@@ -159,12 +135,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Mobile header */}
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/90 px-4 py-2.5 backdrop-blur-sm lg:hidden">
         <Logo />
-        <div className="flex items-center gap-1.5">
-          <button className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary">
-            <Search className="size-4" />
-          </button>
-          <NotificationCenter notifications={[]} onMarkRead={() => {}} />
-        </div>
+        <NotificationCenter notifications={[]} onMarkRead={() => {}} />
       </header>
 
       {/* Main content */}
