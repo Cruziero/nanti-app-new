@@ -1,6 +1,5 @@
 ﻿import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
-import { MessageSquareText, Shield, Lock, Eye, ChevronRight } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { MarketingLayout, Reveal } from "@/components/nanti/marketing";
 
 export const Route = createFileRoute("/")({
@@ -10,13 +9,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "NANTI turns everyday WhatsApp conversations into commitments, reminders and follow-ups — so you can stop carrying everything in your head.",
+          "NANTI turns everyday WhatsApp conversations into commitments, reminders and follow-ups so you stop carrying everything in your head.",
       },
       { property: "og:title", content: "NANTI — You talk. NANTI remembers." },
       {
         property: "og:description",
         content:
-          "NANTI turns everyday WhatsApp conversations into commitments, reminders and follow-ups — so you can stop carrying everything in your head.",
+          "NANTI turns everyday WhatsApp conversations into commitments, reminders and follow-ups.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://nanti-app-new.vercel.app" },
@@ -38,11 +37,11 @@ function HomePage() {
   return (
     <MarketingLayout>
       <Hero />
-      <Insight />
-      <CoreLoop />
-      <Testimonial />
-      <Integrations />
-      <Privacy />
+      <ProblemSection />
+      <HowItWorks />
+      <TestimonialSection />
+      <IntegrationsSection />
+      <PrivacySection />
       <FinalCta />
     </MarketingLayout>
   );
@@ -51,227 +50,486 @@ function HomePage() {
 /* ─── HERO ─── */
 
 function Hero() {
-  const [step, setStep] = useState(0);
-  useEffect(() => {
-    const timers = [
-      setTimeout(() => setStep(1), 1000),
-      setTimeout(() => setStep(2), 2400),
-      setTimeout(() => setStep(3), 3800),
-      setTimeout(() => setStep(0), 5200),
-    ];
-    return () => timers.forEach(clearTimeout);
-  }, [step]);
+  const [tracked, setTracked] = useState(false);
+  const [query, setQuery] = useState("What did I promise Pak Tom?");
+  const [activeStep, setActiveStep] = useState(0);
+
+  const responses: Record<string, string> = {
+    "What did I promise Pak Tom?":
+      'Pak Tom: Send invoice by <strong className="text-[#128C7E]">28 August, 10:00 AM</strong> detected from WhatsApp forwarded message.',
+    "Follow-up supplier deadline":
+      'PT Maju Supplier: Follow-up raw materials shipment promised by <strong className="text-[#128C7E]">Friday 15:00</strong>.',
+    "When is invoice due?":
+      'Invoice Dispatch: 28 August, 10:00 AM for Pak Tom. Reminder set for 09:00 AM.',
+  };
+
+  const runQuery = (q: string) => {
+    setQuery(q);
+  };
+
+  const getResponse = () => {
+    const key = Object.keys(responses).find(
+      (k) =>
+        k.toLowerCase().includes(query.toLowerCase()) ||
+        query.toLowerCase().includes(k.toLowerCase()),
+    );
+    return key
+      ? responses[key]
+      : `Result for "${query}": 1 active commitment found in WhatsApp archive. Scheduled for review.`;
+  };
 
   return (
-    <section className="relative overflow-hidden bg-white">
-      <div className="relative mx-auto max-w-[1200px] px-5 pt-24 pb-16 sm:px-8 sm:pt-32 sm:pb-20">
-        <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.1fr]">
-          <div>
-            <Reveal>
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#25D366]/10 px-4 py-1.5">
-                <span className="text-[12px] font-semibold text-[#25D366]">AI Memory for WhatsApp</span>
-              </div>
-            </Reveal>
-            <Reveal delay={50}>
-              <h1 className="display-hero text-[#111111]">
-                You talk.
-                <br />
-                <span className="text-[#25D366]">NANTI</span> remembers.
-              </h1>
-            </Reveal>
-            <Reveal delay={150}>
-              <p className="mt-5 max-w-[480px] text-[16px] leading-[1.7] text-[#5F6368]">
-                Forward a WhatsApp message. NANTI extracts the commitment, tracks the deadline, and reminds you when it&apos;s time.
-              </p>
-            </Reveal>
-            <Reveal delay={250}>
-              <div className="mt-7 flex flex-col items-start gap-3 sm:flex-row">
-                <Link
-                  to="/welcome"
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-6 py-3 text-[14px] font-semibold text-white shadow-[0_4px_14px_rgba(37,211,102,0.3)] transition-all hover:bg-[#1fb85c] hover:shadow-[0_6px_20px_rgba(37,211,102,0.4)]"
-                >
-                  Try NANTI for free
-                </Link>
-                <Link
-                  to="/how-it-works"
-                  className="inline-flex items-center gap-2 rounded-xl border border-[#E7E9E7] px-6 py-3 text-[14px] font-medium text-[#111111] transition-all hover:bg-[#F7F8F6] hover:border-[#25D366]/30"
-                >
-                  See how it works
-                </Link>
-              </div>
-            </Reveal>
-            <Reveal delay={350}>
-              <p className="mt-3 text-[12px] text-[#5F6368]">No credit card required. Free forever.</p>
-            </Reveal>
-          </div>
+    <section className="relative w-full overflow-hidden bg-[#f9f9ff] pt-24 pb-20 lg:pt-28 lg:pb-28">
+      {/* Ambient background accents */}
+      <div className="pointer-events-none absolute left-1/2 top-1/4 -z-10 h-[360px] w-[620px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-100/40 blur-[140px]" />
+      <div className="pointer-events-none absolute right-10 top-1/3 -z-10 h-[300px] w-[300px] rounded-full bg-[#ffb199]/20 blur-[120px]" />
 
-          {/* Desktop demo */}
-          <div className="relative hidden lg:block">
-            <DemoCard step={step} />
-          </div>
-
-          {/* Mobile demo - simplified */}
-          <div className="relative lg:hidden">
-            <DemoCard step={step} />
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function DemoCard({ step }: { step: number }) {
-  return (
-    <div className="relative mx-auto w-full max-w-[380px]">
-      {/* WhatsApp bubble */}
-      <div
-        className={`rounded-2xl border border-[#E7E9E7] bg-white p-5 shadow-[0_2px_12px_rgba(0,0,0,0.06)] transition-all duration-500 ${step >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}`}
-      >
-        <div className="mb-3 flex items-center gap-2.5">
-          <div className="flex size-7 items-center justify-center rounded-full bg-[#25D366]/10">
-            <MessageSquareText className="size-3.5 text-[#128C7E]" />
-          </div>
-          <div>
-            <p className="text-[12px] font-semibold text-[#111111]">Pak Tom</p>
-            <p className="text-[10px] text-[#5F6368]">14:32</p>
-          </div>
-        </div>
-        <div className="rounded-2xl rounded-tl-sm bg-[#dcf8c6] px-4 py-2.5 text-[13px] text-[#303030]">
-          nanti saya kirim invoice tgl 28 agustus ya pak Tom
-        </div>
-      </div>
-
-      {/* Forwarded pill */}
-      <div
-        className={`absolute -right-3 top-6 z-10 rounded-full border border-[#E7E9E7] bg-white/90 px-3 py-1.5 text-[11px] font-medium text-[#5F6368] shadow-sm backdrop-blur-sm transition-all duration-500 ${step >= 1 ? "opacity-100 translate-x-0" : "opacity-0 translate-x-3"}`}
-      >
-        Forwarded to NANTI
-      </div>
-
-      {/* Extraction result */}
-      <div
-        className={`mt-3 rounded-2xl border border-[#E7E9E7] bg-[#111111] p-4 text-white shadow-[0_4px_20px_rgba(0,0,0,0.12)] transition-all duration-500 ${step >= 2 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
-      >
-        <div className="mb-3 flex items-center gap-2">
-          <div className="flex size-5 items-center justify-center rounded-md bg-[#25D366]">
-            <span className="text-[10px] font-bold text-white">N</span>
-          </div>
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-white/50">
-            Commitment detected
-          </span>
-        </div>
-        <div className="space-y-1.5">
-          {[
-            { label: "WHO", value: "Pak Tom", delay: "0ms" },
-            { label: "WHAT", value: "Send invoice", delay: "80ms" },
-            { label: "WHEN", value: "28 August", delay: "160ms" },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className={`flex items-center gap-3 ${step >= 2 ? "animate-extract-slide" : ""}`}
-              style={{ animationDelay: item.delay }}
-            >
-              <span className="text-[10px] font-bold text-[#25D366]">{item.label}</span>
-              <span className="text-[13px] text-white/90">{item.value}</span>
+      <div className="mx-auto max-w-[1240px] px-6">
+        {/* Centered hero text */}
+        <div className="mx-auto mb-16 max-w-4xl text-center">
+          <Reveal>
+            <div className="mb-6 inline-flex items-center gap-2.5 rounded-full border border-[#128C7E]/25 bg-[#e7f7ef] px-4 py-1.5 text-[#075E54] shadow-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#25D366] opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#128C7E]" />
+              </span>
+              <span className="text-[13px] font-medium tracking-wide">AI Memory for WhatsApp</span>
+              <span className="rounded-full bg-white/70 px-1.5 py-0.5 text-[10px] font-semibold text-[#128C7E]">
+                Live 2.4
+              </span>
             </div>
-          ))}
-        </div>
-        <div
-          className={`mt-3 flex gap-2 ${step >= 3 ? "opacity-100" : "opacity-0"} transition-opacity duration-300`}
-        >
-          <span className="rounded-lg bg-[#25D366] px-3 py-1 text-[11px] font-semibold text-white">
-            Track
-          </span>
-          <span className="rounded-lg border border-white/20 px-3 py-1 text-[11px] font-medium text-white/60">
-            Dismiss
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
+          </Reveal>
 
-/* ─── INSIGHT ─── */
+          <Reveal delay={50}>
+            <h1 className="font-serif text-[56px] font-normal leading-[1.08] tracking-[-0.03em] text-[#171c24] max-sm:text-[38px] max-sm:leading-[44px] max-sm:tracking-[-0.025em]">
+              You talk.{" "}
+              <span className="italic text-[#075E54] drop-shadow-sm">NANTI remembers.</span>
+            </h1>
+          </Reveal>
 
-function Insight() {
-  return (
-    <section className="bg-[#F7F8F6] py-16 sm:py-20">
-      <div className="mx-auto max-w-[700px] px-5 text-center sm:px-8">
-        <Reveal>
-          <h2 className="text-[28px] font-bold tracking-tight text-[#111111] sm:text-[36px]">
-            Most of your commitments never become tasks.
-          </h2>
-        </Reveal>
-        <Reveal delay={100}>
-          <p className="mt-4 text-[15px] text-[#5F6368]">
-            They live inside conversations. NANTI remembers them.
-          </p>
-        </Reveal>
-        <Reveal delay={200}>
-          <div className="mx-auto mt-8 flex max-w-[480px] flex-col gap-2">
-            {[
-              { text: '"Besok saya kirim revisinya ya Pak."' },
-              { text: '"Nanti saya follow up suppliernya."' },
-              { text: '"Saya kirim invoice tanggal 28."' },
-            ].map((q, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 rounded-xl border border-[#E7E9E7] bg-white px-4 py-2.5"
+          <Reveal delay={100}>
+            <p className="mx-auto mt-6 max-w-xl text-[16px] leading-[1.65] text-[#45474a]">
+              Forward a WhatsApp message. NANTI extracts the commitment, tracks the deadline, and
+              reminds you when it&apos;s time.
+            </p>
+          </Reveal>
+
+          <Reveal delay={200}>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+              <Link
+                to="/welcome"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#128C7E] px-8 py-3.5 text-[15px] font-semibold text-white shadow-lg shadow-[#128C7E]/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#0b5e54] hover:shadow-xl hover:shadow-[#128C7E]/40 active:translate-y-0"
               >
-                <span className="text-[13px] text-[#111111]/70">{q.text}</span>
+                Try NANTI for free
+                <span className="text-[18px]">&#8594;</span>
+              </Link>
+              <Link
+                to="/how-it-works"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-[#c6c6ca] bg-transparent px-7 py-3.5 text-[15px] font-semibold text-[#171c24] shadow-sm transition-all duration-200 hover:border-[#128C7E]/50 hover:bg-[#f0f3ff] hover:text-[#075E54]"
+              >
+                See how it works
+                <span className="text-[16px] text-[#128C7E]">&#9654;</span>
+              </Link>
+            </div>
+          </Reveal>
+
+          <Reveal delay={300}>
+            <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.04em] text-[#76777b]">
+              No credit card required. Free forever.
+            </p>
+          </Reveal>
+        </div>
+
+        {/* Floating product artifacts */}
+        <div className="relative mx-auto max-w-5xl min-h-[480px] lg:h-[510px]">
+          {/* Card 1: WhatsApp Forwarded Message */}
+          <div className="animate-editorial-float-slow mb-6 w-full rounded-2xl border border-[#e5e8f4]/80 bg-white p-6 shadow-xl transition-all duration-300 hover:shadow-2xl sm:w-[360px] lg:absolute lg:left-2 lg:top-4 lg:mb-0 z-20">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#128C7E]/20 bg-[#e7f7ef] text-[14px] font-semibold text-[#075E54]">
+                  PT
+                </div>
+                <div className="text-left">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[15px] font-semibold text-[#171c24]">Pak Tom</span>
+                    <span className="text-[14px] text-[#25D366]">&#10003;</span>
+                  </div>
+                  <span className="text-[12px] text-[#76777b]">WhatsApp Business</span>
+                </div>
               </div>
-            ))}
+              <span className="text-[11px] font-semibold text-[#76777b]">14:32</span>
+            </div>
+            <div className="mb-3 rounded-r-lg border-l-4 border-[#128C7E] bg-[#f0f9f4] p-3.5 text-left">
+              <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-[#075E54]">
+                <span className="text-[14px] text-[#128C7E]">&#8618;</span>
+                <span>Forwarded message</span>
+              </div>
+              <p className="text-[14px] leading-snug text-[#171c24]">
+                &ldquo;nanti saya kirim invoice tgl 28 agustus ya pak Tom&rdquo;
+              </p>
+            </div>
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#075E54]">
+                <span className="h-2 w-2 rounded-full bg-[#25D366]" />
+                <span>Forwarded to NANTI</span>
+              </div>
+              <span className="text-[16px] text-[#128C7E]">&#10003;&#10003;</span>
+            </div>
           </div>
-        </Reveal>
-        <Reveal delay={300}>
-          <p className="mt-6 text-[16px] font-semibold text-[#111111]">
-            You said it. <span className="text-[#25D366]">NANTI remembers it.</span>
-          </p>
-        </Reveal>
+
+          {/* Card 2: Commitment Detected */}
+          <div className="animate-editorial-float-delayed mb-6 w-full rounded-lg border border-[#e5e8f4] bg-white p-7 shadow-2xl transition-all duration-300 hover:shadow-2xl sm:w-[410px] lg:absolute lg:left-1/2 lg:top-8 lg:-translate-x-1/4 lg:mb-0 z-30">
+            <div className="mb-5 flex items-center justify-between">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#128C7E]/20 bg-[#e8f8f2] px-3.5 py-1 text-[11px] font-semibold text-[#0f5132]">
+                <span className="h-2 w-2 rounded-full bg-[#25D366]" />
+                <span id="commitment-status">{tracked ? "Saved to Ledger" : "Commitment detected"}</span>
+              </div>
+              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#128C7E] shadow-sm">
+                <span className="text-[13px] font-bold tracking-tighter text-white">N</span>
+              </div>
+            </div>
+            <div className="mb-6 space-y-3.5 text-left">
+              {[
+                { label: "WHO", value: "Pak Tom" },
+                { label: "WHAT", value: "Send invoice" },
+                { label: "WHEN", value: "28 August, 10:00 AM", accent: true },
+              ].map((row) => (
+                <div
+                  key={row.label}
+                  className="flex items-baseline justify-between rounded bg-[#f0f3ff] px-3.5 py-2.5 transition-colors hover:bg-[#e5e8f4]"
+                >
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#76777b]">
+                    {row.label}
+                  </span>
+                  <span
+                    className={`text-[15px] font-semibold ${row.accent ? "flex items-center gap-1 text-[#075E54]" : "text-[#171c24]"}`}
+                  >
+                    {row.accent && <span className="text-[16px]">&#128197;</span>}
+                    {row.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center justify-between gap-3 pt-1">
+              <button
+                onClick={() => setTracked(!tracked)}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-full px-5 py-2.5 text-[15px] font-semibold transition-all duration-200 active:scale-95 ${
+                  tracked
+                    ? "bg-[#075E54] text-[#25D366] shadow-sm"
+                    : "bg-[#128C7E] text-white shadow-sm hover:bg-[#075E54] hover:shadow-md"
+                }`}
+              >
+                <span className="text-[18px]">{tracked ? "&#10003;" : "&#128278;"}</span>
+                <span>{tracked ? "Tracked in WhatsApp" : "Track commitment"}</span>
+              </button>
+              <button className="rounded-full px-4 py-2 text-[13px] font-medium text-[#76777b] transition-colors hover:bg-[#f0f3ff] hover:text-[#171c24]">
+                Dismiss
+              </button>
+            </div>
+          </div>
+
+          {/* Card 3: Stat pill */}
+          <div className="mb-6 w-full rotate-1 rounded-2xl border border-[#e5e8f4]/80 bg-white p-5 shadow-xl transition-transform duration-300 hover:rotate-0 sm:w-[340px] lg:absolute lg:bottom-4 lg:right-6 lg:mb-0 z-20">
+            <div className="mb-3 flex items-center justify-between text-left">
+              <div>
+                <div className="font-serif text-[28px] leading-[36px] tracking-[-0.02em] text-[#171c24]">
+                  1,842
+                </div>
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-[#76777b]">
+                  Commitments preserved
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="inline-flex items-center gap-1 rounded-full border border-[#128C7E]/20 bg-[#e7f7ef] px-2.5 py-1 text-[11px] font-medium text-[#075E54]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#25D366]" />
+                  0 missed
+                </span>
+              </div>
+            </div>
+            <svg className="h-8 w-full text-[#128C7E]" fill="none" viewBox="0 0 280 40">
+              <path
+                d="M0 32C40 28 60 14 100 20C140 26 170 8 210 12C240 15 260 4 280 2"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2.5"
+              />
+            </svg>
+          </div>
+
+          {/* Card 4: AI Search Bar */}
+          <div className="z-30 w-full lg:absolute lg:bottom-1 lg:left-8 sm:w-[440px]">
+            <div className="flex items-center justify-between rounded-full border border-[#128C7E]/30 bg-white p-2 pl-4 shadow-xl transition-all focus-within:border-transparent focus-within:ring-2 focus-within:ring-[#128C7E]">
+              <div className="flex flex-1 items-center gap-2.5 overflow-hidden">
+                <span className="text-[20px] text-[#128C7E]">&#128269;</span>
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && runQuery(query)}
+                  placeholder="Ask NANTI anything from your chats..."
+                  className="w-full border-0 bg-transparent p-0 text-[14px] text-[#171c24] placeholder-[#76777b] focus:outline-none"
+                />
+              </div>
+              <button
+                onClick={() => runQuery(query)}
+                className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#128C7E] text-white shadow-sm transition-all hover:scale-105 hover:bg-[#075E54] active:scale-95"
+              >
+                <span className="text-[16px]">&#8593;</span>
+              </button>
+            </div>
+            <div className="no-scrollbar mt-2.5 flex items-center gap-1.5 overflow-x-auto px-2 text-left">
+              <span className="shrink-0 text-[11px] font-semibold text-[#76777b]">Try:</span>
+              {['"Promise Pak Tom?"', '"Supplier follow-up"', '"Invoice deadline"'].map(
+                (chip, i) => (
+                  <button
+                    key={i}
+                    onClick={() =>
+                      runQuery(
+                        i === 0
+                          ? "What did I promise Pak Tom?"
+                          : i === 1
+                            ? "Follow-up supplier deadline"
+                            : "When is invoice due?",
+                      )
+                    }
+                    className="shrink-0 rounded-full border border-[#c6c6ca]/40 bg-[#f0f3ff] px-2.5 py-0.5 text-[11px] font-medium text-[#171c24] transition-colors hover:bg-[#e7f7ef] hover:text-[#075E54]"
+                  >
+                    {chip}
+                  </button>
+                ),
+              )}
+            </div>
+            <div className="mt-2 rounded-xl border border-[#128C7E]/25 bg-[#f0f9f4] p-3 shadow-md text-left transition-all duration-200">
+              <div className="mb-1 flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-[12px] font-semibold text-[#075E54]">
+                  <span className="text-[15px] text-[#128C7E]">&#129302;</span>
+                  <span>NANTI Answer</span>
+                </div>
+                <span className="text-[10px] text-[#76777b]">WhatsApp Memory</span>
+              </div>
+              <p
+                className="text-[12px] leading-relaxed text-[#171c24]"
+                dangerouslySetInnerHTML={{ __html: getResponse() }}
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
 }
 
-/* ─── CORE LOOP ─── */
+/* ─── PROBLEM SECTION ─── */
 
-function CoreLoop() {
-  const steps = [
-    { num: "01", label: "TALK", desc: "Your conversations already contain what needs to get done." },
-    { num: "02", label: "UNDERSTAND", desc: "NANTI finds the commitments hidden inside them." },
-    { num: "03", label: "REMEMBER", desc: "NANTI keeps track of what you promised and who you're waiting for." },
-    { num: "04", label: "FOLLOW UP", desc: "When the time comes, NANTI brings it back to you." },
+function ProblemSection() {
+  const quotes = [
+    { text: "\u201cBesok saya kirim revisinya ya Pak.\u201d", detected: "Due tomorrow, 09:00" },
+    { text: "\u201cNanti saya follow up suppliernya.\u201d", detected: "Supplier follow-up" },
+    { text: "\u201cSaya kirim invoice tanggal 28.\u201d", detected: "Invoice dispatch, 28th" },
   ];
 
   return (
-    <section className="bg-white py-16 sm:py-20">
-      <div className="mx-auto max-w-[1200px] px-5 sm:px-8">
-        <Reveal>
-          <div className="mx-auto max-w-[500px] text-center">
-            <h2 className="text-[24px] font-bold tracking-tight text-[#111111] sm:text-[28px]">
-              From conversation to action.
+    <section className="w-full bg-[#eaedfa] py-20 lg:py-28" id="problem-section">
+      <div className="mx-auto max-w-[1240px] px-6">
+        <div className="mb-14 max-w-2xl text-left">
+          <Reveal>
+            <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.18em] text-[#075E54]">
+              The Unwritten Ledger
+            </span>
+          </Reveal>
+          <Reveal delay={50}>
+            <h2 className="font-serif text-[40px] leading-[48px] tracking-[-0.025em] text-[#171c24] max-sm:text-[30px] max-sm:leading-[36px] max-sm:tracking-[-0.02em]">
+              Most of your commitments{" "}
+              <span className="italic text-[#075E54]">never become tasks.</span>
             </h2>
-            <p className="mt-2 text-[14px] text-[#5F6368]">
-              You don&apos;t create tasks. You just talk.
+          </Reveal>
+          <Reveal delay={100}>
+            <p className="mt-4 text-[16px] leading-[1.65] text-[#45474a]">
+              They live scattered across chaotic conversation threads. You say it in passing; you
+              promise in good faith. NANTI listens quietly, cataloging your word.
             </p>
-          </div>
-        </Reveal>
+          </Reveal>
+        </div>
 
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {steps.map((s, i) => (
-            <Reveal key={s.num} delay={i * 80}>
-              <div className="group rounded-2xl border border-[#E7E9E7] bg-[#F7F8F6] p-5 text-center transition-all hover:border-[#25D366]/30 hover:shadow-[0_4px_14px_rgba(37,211,102,0.1)]">
-                <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[#25D366]">
-                  Step {s.num}
-                </span>
-                <span className="mt-1 block text-[14px] font-bold text-[#111111]">
-                  {s.label}
-                </span>
-                <p className="mt-1.5 text-[13px] leading-[1.6] text-[#5F6368]">{s.desc}</p>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          {quotes.map((q, i) => (
+            <Reveal key={i} delay={i * 100}>
+              <div className="group flex min-h-[220px] flex-col justify-between rounded-lg border border-[#e5e8f4]/60 bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+                <div>
+                  <div className="mb-6 font-serif text-[22px] leading-[28px] tracking-[-0.015em] text-[#171c24] transition-colors group-hover:text-[#075E54]">
+                    {q.text}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between rounded-full border border-[#128C7E]/20 bg-[#e8f8f2] px-4 py-2.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#0f5132]">
+                    Detected
+                  </span>
+                  <span className="text-[15px] font-semibold text-[#075E54]">{q.detected}</span>
+                </div>
               </div>
             </Reveal>
           ))}
         </div>
+
+        <Reveal delay={400}>
+          <p className="mt-12 text-center font-serif text-[22px] italic text-[#075E54]">
+            You said it. NANTI remembers it.
+          </p>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* ─── HOW IT WORKS ─── */
+
+function HowItWorks() {
+  const [active, setActive] = useState(0);
+
+  const steps = [
+    {
+      num: "01",
+      label: "TALK",
+      title: "Converse naturally",
+      desc: "Your conversations already hold what needs to get done. WhatsApp remains your natural interface.",
+      footer: "Forward or tag",
+      icon: "&#128172;",
+      inspector: {
+        badge: "Step 1 Preview",
+        title: "Forwarding into WhatsApp Bot",
+        desc: 'You simply swipe right on any message with a promise and forward to NANTI contact: \u201cNanti kirim invoice tgl 28 ya pak Tom.\u201d',
+        icon: "&#128172;",
+      },
+    },
+    {
+      num: "02",
+      label: "UNDERSTAND",
+      title: "Extract intent",
+      desc: "NANTI isolates commitments, counterparty obligations, and implied deadlines without clutter.",
+      footer: "Pattern synthesis",
+      icon: "&#10024;",
+      inspector: {
+        badge: "Step 2 Preview",
+        title: "Natural Language Entity Extraction",
+        desc: "Our neural model isolates counterparty (Pak Tom), action item (Send invoice), and strict temporal boundary (28 August 10:00 AM).",
+        icon: "&#10024;",
+      },
+    },
+    {
+      num: "03",
+      label: "REMEMBER",
+      title: "Maintain ledger",
+      desc: "Keep precise track of what you pledged and what deliverables you are currently anticipating.",
+      footer: "Silent preservation",
+      icon: "&#128220;",
+      inspector: {
+        badge: "Step 3 Preview",
+        title: "Encrypted Ledger Maintenance",
+        desc: "Recorded silently into your encrypted timeline. No complicated boards, kanbans, or cluttering task lists to manage.",
+        icon: "&#128220;",
+      },
+    },
+    {
+      num: "04",
+      label: "FOLLOW UP",
+      title: "Gentle surfacing",
+      desc: "When the hour approaches, NANTI resurfaces context right back in WhatsApp. No forgotten vows.",
+      footer: "Contextual reminder",
+      icon: "&#128276;",
+      inspector: {
+        badge: "Step 4 Preview",
+        title: "Proactive WhatsApp Ping",
+        desc: 'Two hours before the deadline, NANTI sends a polite brief message: \u201cReminder: invoice for Pak Tom is due at 10:00 AM today.\u201d',
+        icon: "&#128276;",
+      },
+    },
+  ];
+
+  return (
+    <section className="w-full bg-[#f9f9ff] py-20 lg:py-28" id="how-it-works-section">
+      <div className="mx-auto max-w-[1240px] px-6">
+        <div className="mx-auto mb-14 max-w-2xl text-center">
+          <Reveal>
+            <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.18em] text-[#075E54]">
+              Quiet Methodology
+            </span>
+          </Reveal>
+          <Reveal delay={50}>
+            <h2 className="font-serif text-[40px] leading-[48px] tracking-[-0.025em] text-[#171c24] max-sm:text-[30px] max-sm:leading-[36px]">
+              From conversation{" "}
+              <span className="italic text-[#075E54]">to action.</span>
+            </h2>
+          </Reveal>
+          <Reveal delay={100}>
+            <p className="mt-4 text-[16px] text-[#45474a]">
+              You do not create project boards or categorize tickets. You simply converse.
+            </p>
+          </Reveal>
+        </div>
+
+        <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {steps.map((s, i) => (
+            <Reveal key={s.num} delay={i * 80}>
+              <button
+                onClick={() => setActive(i)}
+                className={`cursor-pointer flex h-full flex-col justify-between rounded-lg border-2 p-8 text-left shadow-sm transition-all duration-300 ${
+                  active === i
+                    ? "border-[#128C7E] bg-[#f0f9f4] shadow-md"
+                    : "border-transparent bg-[#f0f3ff] hover:border-[#128C7E]/40 hover:shadow-md"
+                }`}
+              >
+                <div>
+                  <div className="mb-8 flex items-center justify-between">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#76777b]">
+                      STEP {s.num}
+                    </span>
+                    <span className="text-[15px] font-bold text-[#128C7E]">{s.label}</span>
+                  </div>
+                  <h3 className="font-serif text-[22px] leading-[28px] text-[#171c24] mb-3">
+                    {s.title}
+                  </h3>
+                  <p className="text-[14px] leading-relaxed text-[#45474a]">{s.desc}</p>
+                </div>
+                <div
+                  className={`mt-8 flex items-center gap-2 pt-4 ${active === i ? "text-[#075E54]" : "text-[#76777b]"}`}
+                >
+                  <span
+                    className="text-[20px] text-[#128C7E]"
+                    dangerouslySetInnerHTML={{ __html: s.icon }}
+                  />
+                  <span className="text-[11px] font-medium">{s.footer}</span>
+                </div>
+              </button>
+            </Reveal>
+          ))}
+        </div>
+
+        <Reveal delay={400}>
+          <div className="mx-auto flex max-w-3xl flex-col items-center gap-5 rounded-xl border border-[#e5e8f4]/80 bg-[#f0f3ff] p-5 sm:flex-row sm:p-6">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#128C7E]/30 bg-[#e7f7ef] text-[#075E54]">
+              <span
+                className="text-[24px]"
+                dangerouslySetInnerHTML={{ __html: steps[active].inspector.icon }}
+              />
+            </div>
+            <div className="flex-1 text-left">
+              <div className="mb-1 flex items-center gap-2">
+                <span className="rounded-full bg-[#128C7E] px-2 py-0.5 text-[11px] font-semibold text-white">
+                  {steps[active].inspector.badge}
+                </span>
+                <span className="text-[15px] font-semibold text-[#171c24]">
+                  {steps[active].inspector.title}
+                </span>
+              </div>
+              <p className="text-[12px] text-[#45474a]">{steps[active].inspector.desc}</p>
+            </div>
+            <span className="flex shrink-0 items-center gap-1 text-[11px] text-[#76777b]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#25D366]" /> Click cards above to
+              view steps
+            </span>
+          </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -279,21 +537,37 @@ function CoreLoop() {
 
 /* ─── TESTIMONIAL ─── */
 
-function Testimonial() {
+function TestimonialSection() {
   return (
-    <section className="bg-[#F7F8F6] py-16 sm:py-20">
-      <div className="mx-auto max-w-[640px] px-5 text-center sm:px-8">
+    <section className="w-full py-8 lg:py-12">
+      <div className="mx-auto max-w-[1240px] px-6">
         <Reveal>
-          <blockquote className="text-[18px] font-semibold leading-[1.5] text-[#111111] sm:text-[20px]">
-            &ldquo;NANTI helped me stop losing promises in WhatsApp.&rdquo;
-          </blockquote>
-          <div className="mt-4 flex items-center justify-center gap-3">
-            <div className="flex size-9 items-center justify-center rounded-full bg-[#25D366]/10 text-[14px] font-bold text-[#25D366]">
-              T
+          <div className="mx-auto max-w-4xl rounded-xl border border-[#8b4e3c]/15 bg-[#ffdbd0] p-8 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-12 lg:p-16">
+            <div className="mb-8 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
+              <span className="font-serif text-[40px] opacity-30">&ldquo;</span>
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#8b4e3c]/10 px-3.5 py-1.5 text-[11px] font-semibold text-[#5d2a1a]">
+                <span className="text-[16px] text-emerald-800">&#10003;</span>
+                <span>Verified Operator Case</span>
+              </div>
             </div>
-            <div className="text-left">
-              <p className="text-[13px] font-semibold text-[#111111]">Tom</p>
-              <p className="text-[12px] text-[#5F6368]">Owner, PT Maju Jaya</p>
+            <blockquote className="font-serif text-[28px] leading-[36px] text-[#26190f] tracking-[-0.02em] mb-8 max-sm:text-[22px] max-sm:leading-[28px]">
+              &ldquo;NANTI helped me stop losing promises in WhatsApp. In logistics, missed timings
+              break trust immediately.&rdquo;
+            </blockquote>
+            <div className="flex flex-col gap-4 rounded-lg bg-[#8b4e3c]/5 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#26190f] text-[15px] font-bold text-[#ffdbd0]">
+                  T
+                </div>
+                <div>
+                  <div className="text-[15px] font-semibold text-[#26190f]">Tom</div>
+                  <div className="text-[12px] text-[#26190f]/80">Owner, PT Maju Jaya</div>
+                </div>
+              </div>
+              <div className="text-left sm:text-right">
+                <div className="font-serif text-[22px] text-[#26190f] font-medium">~4.5 hrs</div>
+                <div className="text-[11px] text-[#26190f]/80">Weekly recovery time saved</div>
+              </div>
             </div>
           </div>
         </Reveal>
@@ -304,50 +578,38 @@ function Testimonial() {
 
 /* ─── INTEGRATIONS ─── */
 
-function Integrations() {
+function IntegrationsSection() {
   return (
-    <section className="bg-white py-16 sm:py-20">
-      <div className="mx-auto max-w-[640px] px-5 text-center sm:px-8">
+    <section className="w-full bg-[#eaedfa] py-16">
+      <div className="mx-auto max-w-[1240px] px-6 text-center">
         <Reveal>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#5F6368]">
-            Integrations
-          </p>
-          <p className="mt-3 text-[14px] text-[#5F6368]">
-            Works with the tools you already use.
-          </p>
+          <span className="mb-3 block text-[11px] font-bold uppercase tracking-[0.18em] text-[#075E54]">
+            Ecosystem Synergy
+          </span>
+          <h3 className="font-serif text-[22px] leading-[28px] text-[#171c24] mb-8">
+            Works with the tools you already use
+          </h3>
         </Reveal>
-        <Reveal delay={150}>
-          <div className="mt-8 flex justify-center gap-8">
-            {/* WhatsApp */}
-            <div className="flex flex-col items-center gap-2.5">
-              <div className="flex size-14 items-center justify-center rounded-2xl bg-[#F7F8F6]">
-                <svg className="size-7" viewBox="0 0 24 24" fill="#25D366">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                </svg>
+        <Reveal delay={100}>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <div className="inline-flex cursor-pointer items-center gap-3 rounded-full border-2 border-[#128C7E] bg-[#e7f7ef] px-5 py-3 shadow-md shadow-[#128C7E]/10 transition-all hover:scale-105 hover:shadow-lg">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#128C7E]">
+                <span className="text-[16px] text-white">&#128172;</span>
               </div>
-              <span className="text-[12px] font-medium text-[#5F6368]">WhatsApp</span>
+              <span className="text-[15px] font-bold text-[#075E54]">WhatsApp Native</span>
+              <span className="rounded-full bg-[#128C7E] px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                Primary
+              </span>
             </div>
-            {/* Google Calendar */}
-            <div className="flex flex-col items-center gap-2.5">
-              <div className="flex size-14 items-center justify-center rounded-2xl bg-[#F7F8F6]">
-                <svg className="size-7" viewBox="0 0 24 24">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-              </div>
-              <span className="text-[12px] font-medium text-[#5F6368]">Google Calendar</span>
+            <div className="inline-flex cursor-pointer items-center gap-3 rounded-full border border-[#c6c6ca]/50 bg-white px-5 py-3 shadow-sm transition-all hover:border-[#128C7E]/40 hover:shadow-md hover:scale-105">
+              <span className="text-[20px] text-[#128C7E]">&#128197;</span>
+              <span className="text-[15px] font-semibold text-[#171c24]">Google Calendar</span>
             </div>
-            {/* Phone Widget */}
-            <div className="flex flex-col items-center gap-2.5">
-              <div className="flex size-14 items-center justify-center rounded-2xl bg-[#F7F8F6]">
-                <svg className="size-7" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-                  <line x1="12" y1="18" x2="12.01" y2="18"/>
-                </svg>
-              </div>
-              <span className="text-[12px] font-medium text-[#5F6368]">Phone Widget</span>
+            <div className="inline-flex cursor-pointer items-center gap-3 rounded-full border border-[#c6c6ca]/50 bg-white px-5 py-3 shadow-sm transition-all hover:border-[#128C7E]/40 hover:shadow-md hover:scale-105">
+              <span className="text-[20px] text-[#128C7E]">&#128225;</span>
+              <span className="text-[15px] font-semibold text-[#171c24]">
+                Lockscreen &amp; Home Widget
+              </span>
             </div>
           </div>
         </Reveal>
@@ -358,47 +620,67 @@ function Integrations() {
 
 /* ─── PRIVACY ─── */
 
-function Privacy() {
+function PrivacySection() {
   const items = [
     {
-      icon: Shield,
+      icon: "&#128274;",
       title: "End-to-end encrypted",
-      desc: "Your messages are encrypted in transit and at rest. We never store raw conversation data.",
+      desc: "Your messages are encrypted in transit and at rest. We never preserve raw conversation archives or chat history logs.",
+      footer: "Zero retention on transcripts",
     },
     {
-      icon: Lock,
+      icon: "&#128273;",
       title: "You control your data",
-      desc: "Delete your data anytime. We never sell or share your information with third parties.",
+      desc: "Purge your data anytime with one keystroke. We never sell, lease, or syndicate your operational graph to third parties.",
+      footer: "Single-click export & purge",
     },
     {
-      icon: Eye,
+      icon: "&#128065;",
       title: "AI reads patterns, not people",
-      desc: "NANTI extracts commitments and deadlines. It never reads your messages for advertising or profiling.",
+      desc: "NANTI extracts semantic commitments and timeframes. It never models your personality for behavioral monetization.",
+      footer: "Semantic-only extraction",
     },
   ];
 
   return (
-    <section className="bg-[#F7F8F6] py-16 sm:py-20">
-      <div className="mx-auto max-w-[900px] px-5 sm:px-8">
-        <Reveal>
-          <div className="text-center">
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#5F6368]">
-              Privacy & Security
-            </p>
-            <h2 className="mt-3 text-[24px] font-bold tracking-tight text-[#111111] sm:text-[28px]">
-              Your conversations are safe with us.
+    <section className="w-full bg-[#f9f9ff] py-20 lg:py-28" id="privacy-section">
+      <div className="mx-auto max-w-[1240px] px-6">
+        <div className="mb-16 max-w-2xl text-left">
+          <Reveal>
+            <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.18em] text-[#075E54]">
+              Sovereign Privacy
+            </span>
+          </Reveal>
+          <Reveal delay={50}>
+            <h2 className="font-serif text-[40px] leading-[48px] tracking-[-0.025em] text-[#171c24] max-sm:text-[30px] max-sm:leading-[36px]">
+              Your conversations{" "}
+              <span className="italic text-[#075E54]">are safe with us.</span>
             </h2>
-          </div>
-        </Reveal>
-        <div className="mt-10 grid gap-6 sm:grid-cols-3">
+          </Reveal>
+          <Reveal delay={100}>
+            <p className="mt-4 text-[16px] text-[#45474a]">
+              We treat professional communication with solemn confidentiality. No eavesdropping, no
+              corporate advertising.
+            </p>
+          </Reveal>
+        </div>
+
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           {items.map((item, i) => (
             <Reveal key={item.title} delay={i * 100}>
-              <div className="rounded-2xl border border-[#E7E9E7] bg-white p-6">
-                <div className="flex size-10 items-center justify-center rounded-xl bg-[#25D366]/10">
-                  <item.icon className="size-5 text-[#25D366]" />
+              <div className="flex flex-col justify-between rounded-lg bg-[#f0f3ff] p-8 transition-shadow hover:shadow-md">
+                <div>
+                  <div className="mb-6 flex h-10 w-10 items-center justify-center rounded-full border border-[#128C7E]/20 bg-[#e7f7ef] text-[#075E54]">
+                    <span className="text-[20px] text-[#128C7E]" dangerouslySetInnerHTML={{ __html: item.icon }} />
+                  </div>
+                  <h3 className="font-serif text-[22px] leading-[28px] text-[#171c24] mb-3">
+                    {item.title}
+                  </h3>
+                  <p className="text-[14px] leading-relaxed text-[#45474a]">{item.desc}</p>
                 </div>
-                <h3 className="mt-4 text-[15px] font-semibold text-[#111111]">{item.title}</h3>
-                <p className="mt-2 text-[13px] leading-[1.6] text-[#5F6368]">{item.desc}</p>
+                <span className="mt-8 text-[11px] font-semibold uppercase tracking-wider text-[#075E54]">
+                  {item.footer}
+                </span>
               </div>
             </Reveal>
           ))}
@@ -412,26 +694,48 @@ function Privacy() {
 
 function FinalCta() {
   return (
-    <section className="bg-white py-16 sm:py-20">
-      <div className="mx-auto max-w-[500px] px-5 text-center sm:px-8">
+    <section className="w-full border-t border-[#128C7E]/15 bg-[#eef7f3] py-24 lg:py-32">
+      <div className="mx-auto max-w-[800px] px-6 text-center">
         <Reveal>
-          <h2 className="text-[28px] font-bold tracking-tight text-[#111111] sm:text-[36px]">
+          <span className="mb-4 block text-[11px] font-bold uppercase tracking-[0.18em] text-[#075E54]">
+            Return to Clarity
+          </span>
+        </Reveal>
+        <Reveal delay={50}>
+          <h2 className="font-serif text-[56px] leading-[1.12] tracking-[-0.03em] text-[#171c24] max-sm:text-[38px] max-sm:leading-[44px]">
             Stop remembering everything.
+            <br className="hidden sm:inline" />
+            <span className="italic text-[#075E54]">
+              {" "}
+              Let NANTI remember what matters.
+            </span>
           </h2>
-          <p className="mt-3 text-[15px] text-[#5F6368]">
-            Let NANTI remember what matters.
+        </Reveal>
+        <Reveal delay={100}>
+          <p className="mx-auto mt-6 max-w-lg text-[16px] text-[#45474a]">
+            Reclaim peace of mind during negotiation, planning, and day-to-day conversation.
           </p>
-          <Link
-            to="/welcome"
-            className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-7 py-3.5 text-[15px] font-semibold text-white shadow-[0_4px_14px_rgba(37,211,102,0.3)] transition-all hover:bg-[#1fb85c] hover:shadow-[0_6px_20px_rgba(37,211,102,0.4)]"
-          >
-            Try NANTI for free
-          </Link>
-          <p className="mt-3 text-[12px] text-[#5F6368]">No credit card required. Free forever.</p>
-          <div className="mt-6 flex items-center justify-center gap-4 text-[12px] text-[#5F6368]">
-            <span className="flex items-center gap-1"><Shield className="size-3" /> Encrypted</span>
-            <span className="flex items-center gap-1"><Lock className="size-3" /> Private</span>
-            <span className="flex items-center gap-1"><Eye className="size-3" /> No tracking</span>
+        </Reveal>
+        <Reveal delay={200}>
+          <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+            <Link
+              to="/welcome"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#128C7E] px-9 py-4 text-[15px] font-semibold text-white shadow-lg shadow-[#128C7E]/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#0b5e54] hover:shadow-xl hover:shadow-[#128C7E]/40 active:translate-y-0"
+            >
+              Try NANTI for free
+              <span className="text-[20px]">&#8594;</span>
+            </Link>
+          </div>
+        </Reveal>
+        <Reveal delay={300}>
+          <div className="mt-6 flex items-center justify-center gap-4 text-[11px] font-semibold text-[#76777b]">
+            <span className="flex items-center gap-1.5 text-[#075E54]">
+              <span className="text-[15px] text-[#128C7E]">&#128737;</span> Encrypted
+            </span>
+            <span>&middot;</span>
+            <span>Private</span>
+            <span>&middot;</span>
+            <span>No tracking</span>
           </div>
         </Reveal>
       </div>
