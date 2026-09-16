@@ -1,110 +1,237 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
+import { AlertCircle, CheckCircle, HelpCircle } from "lucide-react";
 import { EmptyState, PageHeader, Section } from "@/components/nanti/app-shell";
 import { KindBadge } from "@/components/nanti/kind-badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useNanti } from "@/lib/nanti-store";
 import { dueLabel } from "@/lib/nanti-utils";
-import type { ItemKind } from "@/lib/nanti-types";
+import type { Item, ItemKind } from "@/lib/nanti-types";
 
 export const Route = createFileRoute("/app/inbox")({
   head: () => ({
     meta: [
       { title: "Inbox - NANTI" },
-      { name: "description", content: "Things NANTI found in your conversations." },
+      { name: "description", content: "Review what NANTI found in your conversations." },
     ],
   }),
   component: InboxPage,
 });
 
-const tabs: { id: "all" | ItemKind; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "commitment", label: "Commitments" },
-  { id: "task", label: "Tasks" },
-  { id: "followup", label: "Follow-ups" },
-  { id: "deadline", label: "Deadlines" },
-];
+function ConfidenceBadge({ value }: { value: number }) {
+  const pct = Math.round(value * 100);
+  if (value >= 0.8) {
+    return (
+      <span className="flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-medium text-green-600">
+        <CheckCircle className="size-3" />
+        {pct}% confident
+      </span>
+    );
+  }
+  if (value >= 0.5) {
+    return (
+      <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-600">
+        <AlertCircle className="size-3" />
+        {pct}% — review
+      </span>
+    );
+  }
+  return (
+    <span className="flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-600">
+      <HelpCircle className="size-3" />
+      {pct}% — needs info
+    </span>
+  );
+}
+
+function InboxItem({
+  item,
+  onTrack,
+  onIgnore,
+  onClarify,
+}: {
+  item: Item;
+  onTrack: () => void;
+  onIgnore: () => void;
+  onClarify: () => void;
+}) {
+  const person = item.personName || "";
+  const project = item.projectName || "";
+
+  return (
+    <div className="flex items-start gap-3 px-1 py-3">
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <KindBadge kind={item.kind} />
+          <p className="truncate text-[14px] font-medium">{item.title}</p>
+          <ConfidenceBadge value={item.confidence} />
+        </div>
+        {item.quote && (
+          <p className="mt-1.5 text-[12.5px] italic text-muted-foreground">
+            "{item.quote}"
+          </p>
+        )}
+        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-[11.5px] text-muted-foreground">
+          {person && <span>{person}</span>}
+          {project && <span>{project}</span>}
+          {item.kind !== "waiting" && item.due && <span>{dueLabel(item)}</span>}
+        </div>
+        {item.aiNote && (
+          <p className="mt-1.5 text-[12px] text-muted-foreground/70">
+            Why NANTI knows: {item.aiNote}
+          </p>
+        )}
+      </div>
+      <div className="flex items-center gap-1.5">
+        {item.confidence >= 0.8 ? (
+          <Button size="sm" onClick={onTrack}>
+            Remember
+          </Button>
+        ) : item.confidence >= 0.5 ? (
+          <>
+            <Button size="sm" onClick={onTrack}>
+              Yes
+            </Button>
+            <Button size="sm" variant="ghost" onClick={onIgnore}>
+              No
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button size="sm" variant="outline" onClick={onClarify}>
+              Clarify
+            </Button>
+            <Button size="sm" variant="ghost" onClick={onIgnore}>
+              Skip
+            </Button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ClarifyDialog({
+  item,
+  onSave,
+  onCancel,
+}: {
+  item: Item;
+  onSave: (person?: string, due?: string) => void;
+  onCancel: () => void;
+}) {
+  const [person, setPerson] = useState(item.personName || "");
+  const [due, setDue] = useState("");
+
+  return (
+    <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-4">
+      <p className="mb-3 text-[13px] font-medium text-amber-800">
+        Missing info for: {item.title}
+      </p>
+      <div className="space-y-2">
+        {!item.personName && (
+          <div>
+            <label className="text-[11px] text-amber-700">Who is involved?</label>
+            <Input
+              className="mt-1 border-amber-200 bg-white"
+              placeholder="Person name"
+              value={person}
+              onChange={(e) => setPerson(e.target.value)}
+            />
+          </div>
+        )}
+        {item.kind !== "waiting" && !item.due && (
+          <div>
+            <label className="text-[11px] text-amber-700">When?</label>
+            <div className="mt-1 flex gap-1.5">
+              {["Today", "Tomorrow", "Next week"].map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => setDue(opt)}
+                  className={`rounded-md border px-2 py-1 text-[11px] ${
+                    due === opt
+                      ? "border-amber-400 bg-amber-100 text-amber-800"
+                      : "border-amber-200 bg-white text-amber-700 hover:bg-amber-100"
+                  }`}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="mt-3 flex gap-2">
+        <Button size="sm" onClick={() => onSave(person || undefined, due || undefined)}>
+          Save & Track
+        </Button>
+        <Button size="sm" variant="ghost" onClick={onCancel}>
+          Cancel
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 function InboxPage() {
-  const { items, personOf, projectOf, track, ignore } = useNanti();
-  const [tab, setTab] = useState<"all" | ItemKind>("all");
-  const list = items.filter((i) => i.status === "inbox" && (tab === "all" || i.kind === tab));
+  const { items, track, ignore } = useNanti();
+  const [clarifyingId, setClarifyingId] = useState<string | null>(null);
+  const list = items.filter((i) => i.status === "inbox");
+
+  const handleTrack = (id: string) => {
+    track(id);
+    toast.success("Remembered");
+  };
+
+  const handleIgnore = (id: string) => {
+    ignore(id);
+    toast("Skipped");
+  };
+
+  const handleClarifySave = (person?: string, due?: string) => {
+    if (!clarifyingId) return;
+    const item = items.find((i) => i.id === clarifyingId);
+    if (!item) return;
+    // Update the item with clarified info and track it
+    track(clarifyingId);
+    toast.success("Remembered with details");
+    setClarifyingId(null);
+  };
 
   return (
     <div>
-      <PageHeader title="Inbox" subtitle="Things NANTI found in your conversations" />
-
-      <div className="mb-6 flex gap-1 border-b border-border">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`border-b-2 px-3 py-2 text-[13px] font-medium transition-colors ${
-              tab === t.id
-                ? "border-primary text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <PageHeader
+        title="Inbox"
+        subtitle="Review what NANTI found — confirm, skip, or clarify"
+      />
 
       {list.length === 0 ? (
         <EmptyState
           title="Inbox is clean."
-          hint="Import a new conversation and NANTI will read it for you."
+          hint="Import a conversation and NANTI will find things to remember."
         />
       ) : (
         <Section count={list.length}>
-          {list.map((item) => {
-            const person = personOf(item.personId);
-            const project = projectOf(item.projectId);
-            return (
-              <div key={item.id} className="flex items-start gap-3 px-1 py-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <KindBadge kind={item.kind} />
-                    <p className="truncate text-[14px] font-medium">{item.title}</p>
-                  </div>
-                  {item.quote && (
-                    <p className="mt-1.5 text-[12.5px] italic text-muted-foreground">
-                      "{item.quote}"
-                    </p>
-                  )}
-                  <div className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-[11.5px] text-muted-foreground">
-                    {person && (
-                      <span>
-                        {person.name} - {person.org}
-                      </span>
-                    )}
-                    {project && <span>{project.name}</span>}
-                    {item.kind !== "waiting" && item.due && <span>{dueLabel(item)}</span>}
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => {
-                      track(item.id);
-                      toast.success("Tracked");
-                    }}
-                    className="rounded-md border border-border px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground transition-colors hover:bg-secondary"
-                  >
-                    Track
-                  </button>
-                  <button
-                    onClick={() => {
-                      ignore(item.id);
-                      toast("Ignored");
-                    }}
-                    className="rounded-md px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground"
-                  >
-                    Ignore
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+          {list.map((item) =>
+            clarifyingId === item.id ? (
+              <ClarifyDialog
+                key={item.id}
+                item={item}
+                onSave={handleClarifySave}
+                onCancel={() => setClarifyingId(null)}
+              />
+            ) : (
+              <InboxItem
+                key={item.id}
+                item={item}
+                onTrack={() => handleTrack(item.id)}
+                onIgnore={() => handleIgnore(item.id)}
+                onClarify={() => setClarifyingId(item.id)}
+              />
+            ),
+          )}
         </Section>
       )}
     </div>

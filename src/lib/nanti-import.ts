@@ -68,6 +68,7 @@ export function draftToItem(
     quote: draft.quote,
     aiNote: draft.aiNote,
     confidence: draft.confidence,
+    memoryStrength: draft.needsClarification ? 0.5 : 1.0,
     createdBy: "ai",
     createdAt: new Date().toISOString(),
     reminderEnabled: draft.reminderRequired,

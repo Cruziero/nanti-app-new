@@ -36,6 +36,8 @@ import {
   updateInboxItem as updateInboxItemFn,
   createConversation as createConversationFn,
   seedDemoData,
+  fetchUserSettings,
+  upsertUserSettings,
 } from "./nanti-supabase";
 
 const KEY = "nanti.state.v1";
@@ -176,6 +178,7 @@ function taskToItem(task: Record<string, unknown>): Item {
     quote: (task.quote as string) || "",
     aiNote: (task.ai_note as string) || "",
     confidence: typeof task.confidence === "number" ? task.confidence : 0.8,
+    memoryStrength: 1.0,
     createdBy: "ai",
     createdAt: task.created_at as string,
     reminderEnabled: (task.reminder_enabled as boolean) || false,
@@ -202,6 +205,7 @@ function waitingToItem(item: Record<string, unknown>): Item {
     quote: "",
     aiNote: "",
     confidence: 0.8,
+    memoryStrength: 1.0,
     createdBy: "ai",
     createdAt: item.created_at as string,
   };
@@ -222,6 +226,7 @@ function inboxToItem(item: Record<string, unknown>): Item {
     quote: (item.conversation_text as string) || "",
     aiNote: "",
     confidence: 0.8,
+    memoryStrength: 0.5,
     createdBy: "ai",
     createdAt: item.created_at as string,
   };
@@ -292,12 +297,18 @@ export function NantiProvider({ children }: { children: ReactNode }) {
             fetchInboxItems(),
           ]);
 
-          // Load settings from localStorage (onboarding preferences)
+          // Load settings from Supabase
           let savedSettings = defaultSettings;
           try {
-            const raw = window.localStorage.getItem(SETTINGS_KEY);
-            if (raw) {
-              savedSettings = { ...defaultSettings, ...JSON.parse(raw) };
+            const remoteSettings = await fetchUserSettings();
+            if (remoteSettings) {
+              savedSettings = { ...defaultSettings, ...remoteSettings };
+            } else {
+              // Fall back to localStorage
+              const raw = window.localStorage.getItem(SETTINGS_KEY);
+              if (raw) {
+                savedSettings = { ...defaultSettings, ...JSON.parse(raw) };
+              }
             }
           } catch { /* ignore */ }
 
@@ -523,7 +534,11 @@ export function NantiProvider({ children }: { children: ReactNode }) {
         }
         mutate((s) => ({
           ...s,
-          items: s.items.map((i) => (i.id === id ? { ...i, status: "open" } : i)),
+          items: s.items.map((i) =>
+            i.id === id
+              ? { ...i, status: "open" as const, memoryStrength: Math.min((i.memoryStrength || 1) + 0.2, 2) }
+              : i,
+          ),
         }));
       },
       ignore: (id) => {
@@ -532,7 +547,11 @@ export function NantiProvider({ children }: { children: ReactNode }) {
         }
         mutate((s) => ({
           ...s,
-          items: s.items.map((i) => (i.id === id ? { ...i, status: "ignored" } : i)),
+          items: s.items.map((i) =>
+            i.id === id
+              ? { ...i, status: "ignored" as const, memoryStrength: Math.max((i.memoryStrength || 1) - 0.3, 0) }
+              : i,
+          ),
         }));
       },
       remove: (id) => {
@@ -549,10 +568,14 @@ export function NantiProvider({ children }: { children: ReactNode }) {
       setSettings: (patch) => {
         mutate((s) => {
           const newSettings = { ...s.settings, ...patch };
-          // Always save settings to localStorage
+          // Save to localStorage
           try {
             window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(newSettings));
           } catch { /* ignore */ }
+          // Save to Supabase if available
+          if (useSupabase) {
+            upsertUserSettings({ data: { settings: newSettings } }).catch(console.error);
+          }
           return { ...s, settings: newSettings };
         });
       },

@@ -634,3 +634,29 @@ export const seedDemoData = createServerFn({ method: "POST" }).handler(async ({ 
     },
   ]);
 });
+
+// User Settings
+export const fetchUserSettings = createServerFn({ method: "GET" }).handler(
+  async ({ context }) => {
+    const { userId } = context as { userId: string };
+    const supabase = getAdminClient();
+    const { data, error } = await supabase
+      .from("user_settings")
+      .select("settings")
+      .eq("user_id", userId)
+      .single();
+    if (error && error.code !== "PGRST116") throw error;
+    return (data?.settings as Record<string, unknown>) ?? null;
+  },
+);
+
+export const upsertUserSettings = createServerFn({ method: "POST" })
+  .validator((data: unknown) => data as { settings: Record<string, unknown> })
+  .handler(async ({ context, data }) => {
+    const { userId } = context as { userId: string };
+    const supabase = getAdminClient();
+    const { error } = await supabase
+      .from("user_settings")
+      .upsert({ user_id: userId, settings: data.settings, updated_at: new Date().toISOString() });
+    if (error) throw error;
+  });

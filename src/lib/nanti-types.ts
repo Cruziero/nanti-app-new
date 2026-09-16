@@ -59,6 +59,7 @@ export interface Item {
   quote: string;
   aiNote: string;
   confidence: number; // 0..1
+  memoryStrength: number; // 0..2, 1.0 = normal, 2.0 = very strong, 0 = forgotten
   createdBy: "ai" | "user";
   createdAt?: string | undefined; // ISO timestamp
   // Reminder fields
