@@ -1,6 +1,6 @@
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
-const TEXT_MODEL = "gemini-3.5-flash";
-const VISION_MODEL = "gemini-3.5-flash";
+const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
+const TEXT_MODEL = "gpt-4o-mini";
+const VISION_MODEL = "gpt-4o-mini";
 
 type Content = string | Array<Record<string, unknown>>;
 
@@ -8,71 +8,66 @@ async function chat(
   messages: { role: string; content: Content }[],
   opts: { json?: boolean; model?: string } = {},
 ) {
-  const key = process.env["GEMINI_API_KEY"];
+  const key = process.env["OPENAI_API_KEY"];
   if (!key) throw new Error("AI belum dikonfigurasi.");
   const model = opts.model ?? TEXT_MODEL;
 
-  // Convert messages to Gemini format
-  const contents = messages
-    .filter((m) => m.role !== "system")
-    .map((m) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts:
-        typeof m.content === "string"
-          ? [{ text: m.content }]
-          : Array.isArray(m.content)
-            ? m.content.map((part) => {
-                if (part.type === "image_url") {
-                  const url = (part.image_url as { url?: string })?.url ?? "";
-                  // Extract base64 data from data URL
-                  const match = url.match(/^data:image\/\w+;base64,(.+)$/);
-                  return {
-                    inlineData: {
-                      mimeType: url.match(/^data:(image\/\w+)/)?.[1] ?? "image/png",
-                      data: match?.[1] ?? "",
-                    },
-                  };
-                }
-                return { text: (part as { text?: string }).text ?? "" };
-              })
-            : [{ text: String(m.content) }],
-    }));
+  // Convert messages to OpenAI format
+  const formattedMessages = messages.map((m) => {
+    const role = m.role === "assistant" ? "assistant" : "user";
+    if (typeof m.content === "string") {
+      return { role, content: m.content };
+    }
+    // Array content (for vision/multimodal)
+    const parts = m.content.map((part) => {
+      if (part.type === "image_url") {
+        return { type: "image_url", image_url: { url: (part.image_url as { url?: string })?.url ?? "" } };
+      }
+      return { type: "text", text: (part as { text?: string }).text ?? "" };
+    });
+    return { role, content: parts };
+  });
 
-  // Extract system instruction if present
+  // Inject system message at the beginning
   const systemMsg = messages.find((m) => m.role === "system");
-  const systemInstruction = systemMsg
-    ? { parts: [{ text: typeof systemMsg.content === "string" ? systemMsg.content : "" }] }
-    : undefined;
+  if (systemMsg) {
+    formattedMessages.unshift({
+      role: "user",
+      content: typeof systemMsg.content === "string" ? systemMsg.content : "",
+    });
+  }
 
   const requestBody: Record<string, unknown> = {
-    contents,
-    ...(systemInstruction ? { systemInstruction } : {}),
-    generationConfig: {
-      ...(opts.json ? { responseMimeType: "application/json" } : {}),
-      maxOutputTokens: 8192,
-      temperature: 0.2,
-    },
+    model,
+    messages: formattedMessages,
+    temperature: 0.2,
+    max_tokens: 8192,
+    ...(opts.json
+      ? { response_format: { type: "json_object" } }
+      : {}),
   };
 
-  const res = await fetch(`${GEMINI_API_URL}/${model}:generateContent?key=${key}`, {
+  const res = await fetch(OPENAI_URL, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${key}`,
+    },
     body: JSON.stringify(requestBody),
   });
 
   if (res.status === 429) throw new Error("Terlalu banyak permintaan. Coba lagi sebentar lagi.");
-  if (res.status === 402) throw new Error("Kredit AI habis. Tambahkan kredit di workspace Anda.");
+  if (res.status === 402) throw new Error("Kredit AI habis. Tambahkan kredit di OpenAI.");
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    console.error("Gemini API error", res.status, detail.slice(0, 400));
+    console.error("OpenAI API error", res.status, detail.slice(0, 400));
     throw new Error(`AI sedang bermasalah (${res.status}). Coba lagi.`);
   }
 
   const data = (await res.json()) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
+    choices?: { message?: { content?: string } }[];
   };
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-  return text;
+  return data.choices?.[0]?.message?.content ?? "";
 }
 
 /** Models sometimes wrap JSON in prose or code fences. */
@@ -94,13 +89,6 @@ function parseJson<T>(raw: string): T | null {
 const EXTRACT_SYSTEM = `Kamu adalah NANTI, asisten kerja AI untuk pengguna Indonesia yang bekerja lewat WhatsApp.
 Tugasmu: membaca potongan percakapan WhatsApp dan mengekstrak HANYA hal yang benar-benar perlu diingat.
 
-ATURAN PENTING:
-- JANGAN mengubah setiap kalimat menjadi tugas. Sebagian besar pesan adalah "information".
-- Item bertipe "information" TIDAK boleh dimasukkan ke daftar items; ringkas saja di field "context".
-- Buat "commitment" hanya bila keyakinan tinggi (confidence >= 0.8). Bila ragu, gunakan tipe lain atau abaikan.
-- confidence adalah angka 0..1 yang jujur. Item dengan confidence < 0.5 jangan dikeluarkan.
-- Deteksi juga proyek/klien yang dibahas (mis. "ABC Export") bila jelas disebut.
-
 Klasifikasi setiap pesan penting ke salah satu tipe:
 - "commitment": janji yang dibuat seseorang ("Besok saya kirim revisi quotation")
 - "task": permintaan pekerjaan kepada pengguna ("Tolong cek stok besok")
@@ -109,36 +97,19 @@ Klasifikasi setiap pesan penting ke salah satu tipe:
 - "followup": perlu ditindaklanjuti nanti tanpa tenggat jelas ("Nanti kabarin lagi ya")
 - "information": konteks, basa-basi, pengumuman, atau info biasa
 
-SETIAP ITEM HARUS MENGANDUNG FIELD STRUKTUR:
-- "what": APA yang perlu dilakukan (ringkas, jelas)
-- "who": SIAPA yang terlibat (nama orang, bisa null)
-- "when": KAPAN harus dilakukan (ISO date YYYY-MM-DD, atau null jika tidak jelas)
-- "whenParsed": hasil parsing "when" ke YYYY-MM-DD (null jika tidak bisa diparse)
-- "action": aksi spesifik yang harus dilakukan
-- "owner": "me" jika pengguna yang harus melakukan, "other" jika orang lain, "unknown"
-- "needsClarification": true jika info penting kurang (tanggal/horang/tindakan tidak jelas)
-- "missingFields": array field yang kurang (misal: ["when"], ["who", "when"])
+ATURAN PENTING:
+- JANGAN mengubah setiap kalimat menjadi tugas. Sebagian besar pesan adalah "information".
+- Item bertipe "information" TIDAK boleh dimasukkan ke daftar items; ringkas saja di field "context".
+- Buat "commitment" hanya bila keyakinan tinggi (confidence >= 0.8). Bila ragu, gunakan tipe lain atau abaikan.
+- confidence adalah angka 0..1 yang jujur. Item dengan confidence < 0.5 jangan dikeluarkan.
+- Deteksi juga proyek/klien yang dibahas (mis. "ABC Export") bila jelas disebut.
 
 Balas HANYA JSON valid dengan bentuk:
-{"summary":"kalimat ringkas Bahasa Indonesia","context":["poin informasi non-actionable"],"projects":["nama proyek/klien"],"items":[{"title":"ringkasan aksi","what":"APA yang perlu dilakukan","who":"nama orang atau null","when":"YYYY-MM-DD atau null","whenParsed":"YYYY-MM-DD atau null","action":"aksi spesifik","owner":"me|other|unknown","kind":"commitment|task|deadline|waiting|followup","priority":"high|medium|low","person":"nama atau null","org":"nama perusahaan atau null","project":"nama proyek atau null","source":"nama grup/chat atau null","quote":"kutipan asli persis dari percakapan","aiNote":"kenapa NANTI mendeteksi ini, 1-2 kalimat Bahasa Indonesia","confidence":0.0,"needsClarification":false,"missingFields":[],"reminderRequired":true}]}
-
-UNTUK "when":
-- Hari ini = hari ini
-- Besok = besok  
-- Lusa = 2 hari lagi
-- "Jumat" = Jumat terdekat
-- "tanggal 28 agustus" = 28 Agustus tahun ini
-- "minggu depan" = 7 hari lagi
-- Jika tidak ada tanggal, set null dan needsClarification=true, missingFields=["when"]`;
+{"summary":"kalimat ringkas Bahasa Indonesia","context":["poin informasi non-actionable"],"projects":["nama proyek/klien"],"items":[{"title":"","kind":"commitment|task|deadline|waiting|followup","priority":"high|medium|low","dueOffsetDays":0,"person":"nama atau null","org":"nama perusahaan atau null","project":"nama proyek atau null","source":"nama grup/chat atau null","quote":"kutipan asli persis dari percakapan","aiNote":"kenapa NANTI mendeteksi ini, 1-2 kalimat Bahasa Indonesia","confidence":0.0}]}
+dueOffsetDays: 0 = hari ini, 1 = besok, dst. null jika tidak ada tenggat. Untuk "waiting" selalu null.`;
 
 export interface ExtractedItem {
   title: string;
-  what: string;
-  who: string | null;
-  when: string | null;
-  whenParsed: string | null;
-  action: string;
-  owner: "me" | "other" | "unknown";
   kind: "task" | "commitment" | "deadline" | "waiting" | "followup";
   priority: "high" | "medium" | "low";
   dueOffsetDays: number | null;
@@ -149,12 +120,6 @@ export interface ExtractedItem {
   quote: string;
   aiNote: string;
   confidence: number;
-  needsClarification: boolean;
-  missingFields: string[];
-  reminderRequired: boolean;
-  dueTime?: string | undefined;
-  amount?: number | undefined;
-  currency?: string | undefined;
 }
 
 export interface ExtractResult {
@@ -162,8 +127,6 @@ export interface ExtractResult {
   context: string[];
   projects: string[];
   items: ExtractedItem[];
-  clarificationNeeded?: boolean;
-  clarificationQuestion?: string;
 }
 
 const KINDS = ["task", "commitment", "deadline", "waiting", "followup"] as const;
@@ -178,36 +141,21 @@ function clean(parsed: Partial<ExtractResult> | null): ExtractResult {
     projects: Array.isArray(parsed?.projects)
       ? parsed.projects.filter((p) => typeof p === "string")
       : [],
-    clarificationNeeded: parsed?.clarificationNeeded ?? false,
-    clarificationQuestion: parsed?.clarificationQuestion,
     items: items
       .filter((i) => i && typeof i.title === "string" && i.title.trim())
       .map((i) => ({
         ...i,
-        what: i.what || i.title || "",
-        who: i.who ?? i.person ?? null,
-        when: i.when ?? null,
-        whenParsed: i.whenParsed ?? null,
-        action: i.action || i.what || i.title || "",
-        owner: (i.owner as "me" | "other" | "unknown") || "unknown",
         kind: (KINDS as readonly string[]).includes(i.kind) ? i.kind : "task",
         priority: ["high", "medium", "low"].includes(i.priority) ? i.priority : "medium",
         confidence: typeof i.confidence === "number" ? Math.min(1, Math.max(0, i.confidence)) : 0.7,
         quote: typeof i.quote === "string" ? i.quote : "",
         aiNote: typeof i.aiNote === "string" ? i.aiNote : "",
-        person: i.person ?? i.who ?? null,
+        person: i.person ?? null,
         org: i.org ?? null,
         project: i.project ?? null,
         source: i.source ?? null,
         dueOffsetDays: typeof i.dueOffsetDays === "number" ? i.dueOffsetDays : null,
-        needsClarification: i.needsClarification ?? false,
-        missingFields: Array.isArray(i.missingFields) ? i.missingFields : [],
-        reminderRequired: i.reminderRequired ?? true,
-        dueTime: i.dueTime,
-        amount: i.amount,
-        currency: i.currency,
       }))
-      // Only keep confident detections; commitments need a higher bar.
       .filter((i) => i.confidence >= (i.kind === "commitment" ? 0.8 : 0.5)),
   };
 }
@@ -220,24 +168,12 @@ const EMPTY: ExtractResult = {
 };
 
 export async function extractItems(text: string, sourceHint?: string): Promise<ExtractResult> {
-  const now = new Date();
-  const jakartaTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Jakarta" }));
-  const datetime = jakartaTime.toISOString().slice(0, 16);
-  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  const dayOfWeek = dayNames[jakartaTime.getDay()];
-
   const raw = await chat(
     [
       { role: "system", content: EXTRACT_SYSTEM },
       {
         role: "user",
-        content: `Current datetime: ${datetime} (WIB, Asia/Jakarta)
-Current day: ${dayOfWeek}
-Timezone: Asia/Jakarta (UTC+7)
-
-Nama grup/chat (jika tahu): ${sourceHint || "tidak diketahui"}
-
-Percakapan:\n${text}`,
+        content: `Nama grup/chat (jika tahu): ${sourceHint || "tidak diketahui"}\n\nPercakapan:\n${text}`,
       },
     ],
     { json: true },
@@ -250,12 +186,6 @@ export async function extractFromImage(
   dataUrl: string,
   sourceHint?: string,
 ): Promise<ExtractResult> {
-  const now = new Date();
-  const jakartaTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Jakarta" }));
-  const datetime = jakartaTime.toISOString().slice(0, 16);
-  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  const dayOfWeek = dayNames[jakartaTime.getDay()];
-
   const raw = await chat(
     [
       { role: "system", content: EXTRACT_SYSTEM },
@@ -264,7 +194,7 @@ export async function extractFromImage(
         content: [
           {
             type: "text",
-            text: `Ini screenshot percakapan WhatsApp. Baca semua teksnya (termasuk nama pengirim), lalu ekstrak sesuai instruksi. Current datetime: ${datetime} (WIB, Asia/Jakarta). Current day: ${dayOfWeek}. Nama grup/chat (jika tahu): ${sourceHint || "dari screenshot"}. Balas hanya JSON.`,
+            text: `Ini screenshot percakapan WhatsApp. Baca semua teksnya (termasuk nama pengirim), lalu ekstrak sesuai instruksi. Nama grup/chat (jika tahu): ${sourceHint || "dari screenshot"}. Balas hanya JSON.`,
           },
           { type: "image_url", image_url: { url: dataUrl } },
         ],

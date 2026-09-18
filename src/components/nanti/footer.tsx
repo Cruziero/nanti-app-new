@@ -6,7 +6,6 @@ const columns = [
     title: "Product",
     links: [
       { label: "How it works", to: "/how-it-works" },
-      { label: "Features", to: "/how-it-works" },
       { label: "Pricing", to: "/pricing" },
       { label: "For Business", to: "/business" },
       { label: "For Personal", to: "/personal" },
@@ -39,24 +38,6 @@ export function SiteFooter() {
             <p className="mt-4 max-w-[240px] text-[14px] leading-relaxed text-[#5F6368]">
               Your AI memory for the conversations that matter.
             </p>
-            <div className="mt-5 flex gap-4">
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[13px] text-[#5F6368] hover:text-foreground"
-              >
-                Instagram
-              </a>
-              <a
-                href="https://linkedin.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[13px] text-[#5F6368] hover:text-foreground"
-              >
-                LinkedIn
-              </a>
-            </div>
           </div>
           {columns.map((col) => (
             <div key={col.title}>

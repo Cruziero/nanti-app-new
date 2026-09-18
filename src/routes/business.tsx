@@ -40,8 +40,8 @@ function Hero() {
             Your business runs through WhatsApp.
           </h1>
           <p className="mt-4 max-w-[540px] text-[16px] leading-[1.7] text-[#5F6368]">
-            NANTI keeps every promise moving — the quotation you owe a client, the sample a supplier
-            promised, the approval you&apos;re still waiting on.
+            NANTI keeps every promise moving. The quotation you owe a client, the sample a supplier
+            promised, the approval you are still waiting on.
           </p>
         </Reveal>
       </div>
@@ -83,7 +83,7 @@ function Features() {
             Features
           </p>
           <h2 className="mt-3 text-[24px] font-bold tracking-tight text-[#111111]">
-            Everything you need to track commitments.
+            Track what matters in your business.
           </h2>
         </Reveal>
 
@@ -129,7 +129,7 @@ function UseCases() {
             Use cases
           </p>
           <h2 className="mt-3 text-[24px] font-bold tracking-tight text-[#111111]">
-            Real situations. Real tracking.
+            Follow-ups that happen on time.
           </h2>
         </Reveal>
 
@@ -168,7 +168,7 @@ function Cta() {
             to="/welcome"
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-6 py-3 text-[14px] font-semibold text-white shadow-[0_4px_14px_rgba(37,211,102,0.3)] transition-all hover:bg-[#1fb85c] hover:shadow-[0_6px_20px_rgba(37,211,102,0.4)]"
           >
-            Get started
+            Try NANTI for free
           </Link>
           <p className="mt-3 text-[12px] text-[#5F6368]">No credit card required. Free forever.</p>
         </Reveal>

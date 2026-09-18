@@ -43,15 +43,10 @@ function PricingPage() {
                 <div
                   className={`relative flex h-full flex-col rounded-2xl border p-6 transition-all ${
                     plan.highlight
-                      ? "border-[#25D366] bg-white shadow-[0_4px_20px_rgba(37,211,102,0.15)]"
+                      ? "border-[#128C7E] bg-white shadow-md"
                       : "border-[#E7E9E7] bg-white"
                   }`}
                 >
-                  {plan.highlight && (
-                    <span className="absolute -top-3 left-6 rounded-full bg-[#25D366] px-3 py-1 text-[11px] font-semibold text-white">
-                      Most popular
-                    </span>
-                  )}
                   <h3 className="text-[18px] font-semibold text-[#111111]">{plan.name}</h3>
                   <p className="mt-1.5 text-[13px] text-[#5F6368]">{plan.desc}</p>
                   <div className="mt-5 flex items-baseline gap-1">
@@ -70,7 +65,7 @@ function PricingPage() {
                     to="/welcome"
                     className={`mt-7 inline-flex items-center justify-center rounded-xl px-5 py-3 text-[14px] font-semibold transition-all ${
                       plan.highlight
-                        ? "bg-[#25D366] text-white shadow-[0_4px_14px_rgba(37,211,102,0.3)] hover:bg-[#1fb85c]"
+                        ? "bg-[#128C7E] text-white hover:bg-[#0b5e54]"
                         : "border border-[#E7E9E7] text-[#111111] hover:bg-[#F7F8F6]"
                     }`}
                   >
@@ -87,7 +82,7 @@ function PricingPage() {
         <div className="mx-auto max-w-[500px] px-5 text-center sm:px-8">
           <Reveal>
             <p className="text-[14px] text-[#5F6368]">
-              All plans include AI-powered extraction, daily briefings, and WhatsApp integration.
+              All plans include conversation import, daily briefings, and WhatsApp integration.
             </p>
             <p className="mt-2 text-[12px] text-[#5F6368]">
               No credit card required. Cancel anytime.

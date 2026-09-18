@@ -37,8 +37,8 @@ function Hero() {
             Work isn&apos;t the only place you make promises.
           </h1>
           <p className="mt-4 max-w-[540px] text-[16px] leading-[1.7] text-[#5F6368]">
-            NANTI isn&apos;t just for work. The birthday you almost forgot, the thing you promised your
-            kid, the appointment your mom mentioned once — if it&apos;s in a conversation, NANTI remembers
+            NANTI is not just for work. The birthday you almost forgot, the thing you promised your
+            kid, the appointment your mom mentioned once. If it is in a conversation, NANTI remembers
             it.
           </p>
         </Reveal>
@@ -54,7 +54,7 @@ function Features() {
     {
       icon: Home,
       title: "Family commitments",
-      desc: "Promises to your partner, your kids, your parents. NANTI catches them all.",
+      desc: "Promises to your partner, your kids, your parents. NANTI remembers them.",
     },
     {
       icon: Heart,
@@ -157,16 +157,16 @@ function Cta() {
       <div className="mx-auto max-w-[500px] px-5 text-center sm:px-8">
         <Reveal>
           <h2 className="text-[24px] font-bold tracking-tight text-[#111111]">
-            Never forget a promise again.
+            Try NANTI for your personal life.
           </h2>
           <p className="mt-2 text-[14px] text-[#5F6368]">
             Start remembering what matters from your conversations.
           </p>
           <Link
             to="/welcome"
-            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-6 py-3 text-[14px] font-semibold text-white shadow-[0_4px_14px_rgba(37,211,102,0.3)] transition-all hover:bg-[#1fb85c] hover:shadow-[0_6px_20px_rgba(37,211,102,0.4)]"
+            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#128C7E] px-6 py-3 text-[14px] font-semibold text-white shadow-sm transition-all hover:bg-[#0b5e54]"
           >
-            Get started
+            Try NANTI for free
           </Link>
           <p className="mt-3 text-[12px] text-[#5F6368]">No credit card required. Free forever.</p>
         </Reveal>

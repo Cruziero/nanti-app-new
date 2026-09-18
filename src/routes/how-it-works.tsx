@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { MessageSquareText, Brain, Bell, Camera, Clipboard, Send } from "lucide-react";
 import { MarketingLayout, Reveal } from "@/components/nanti/marketing";
 
 export const Route = createFileRoute("/how-it-works")({
@@ -19,120 +18,102 @@ export const Route = createFileRoute("/how-it-works")({
 function HowItWorksPage() {
   return (
     <MarketingLayout>
-      <Steps />
-      <Context />
+      <Hero />
+      <Workflow />
       <BringAnything />
       <Cta />
     </MarketingLayout>
   );
 }
 
-/* ─── 3 STEPS ─── */
+/* ─── HERO ─── */
 
-function Steps() {
-  const steps = [
-    {
-      num: "01",
-      icon: MessageSquareText,
-      title: "Bring a conversation",
-      desc: "Forward, paste or upload a screenshot.",
-    },
-    {
-      num: "02",
-      icon: Brain,
-      title: "NANTI understands it",
-      desc: "It finds the people, commitments, dates and context.",
-    },
-    {
-      num: "03",
-      icon: Bell,
-      title: "NANTI reminds you",
-      desc: "When something matters, NANTI brings it back.",
-    },
-  ];
-
+function Hero() {
   return (
     <section className="relative overflow-hidden bg-white pt-24 pb-16 sm:pt-32 sm:pb-20">
       <div className="relative mx-auto max-w-[800px] px-5 sm:px-8">
         <Reveal>
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#25D366]/10 px-4 py-1.5">
-            <span className="text-[12px] font-semibold text-[#25D366]">How it works</span>
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#e7f7ef] px-4 py-1.5">
+            <span className="text-[12px] font-semibold text-[#075E54]">How it works</span>
           </div>
-          <h1 className="mt-3 text-[28px] font-bold tracking-tight text-[#111111] sm:text-[36px]">
-            You don&apos;t create tasks. You just talk.
+          <h1 className="mt-3 text-[28px] font-bold tracking-tight text-[#171c24] sm:text-[36px]">
+            You do not create tasks. You just talk.
           </h1>
-          <p className="mt-3 max-w-[480px] text-[15px] leading-[1.7] text-[#5F6368]">
+          <p className="mt-3 max-w-[480px] text-[15px] leading-[1.7] text-[#45474a]">
             Forward the message, or paste the conversation. NANTI reads it, and remembers what
             needs remembering.
           </p>
         </Reveal>
-
-        <div className="mt-12 grid gap-6 sm:grid-cols-3">
-          {steps.map((s, i) => (
-            <Reveal key={s.num} delay={i * 100}>
-              <div className="group rounded-2xl border border-[#E7E9E7] bg-[#F7F8F6] p-6 text-center transition-all hover:border-[#25D366]/30 hover:shadow-[0_4px_14px_rgba(37,211,102,0.1)]">
-                <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-[#25D366]/10">
-                  <s.icon className="size-6 text-[#25D366]" />
-                </div>
-                <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#25D366]">
-                  Step {s.num}
-                </p>
-                <h3 className="mt-1.5 text-[16px] font-semibold text-[#111111]">{s.title}</h3>
-                <p className="mt-1.5 text-[13px] text-[#5F6368]">{s.desc}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-
-        <div className="mt-6 hidden justify-center gap-4 text-[20px] text-[#E7E9E7] sm:flex">
-          <span>→</span><span>→</span>
-        </div>
       </div>
     </section>
   );
 }
 
-/* ─── CONTEXT ─── */
+/* ─── WORKFLOW ─── */
 
-function Context() {
+function Workflow() {
   return (
     <section className="bg-[#F7F8F6] py-16 sm:py-20">
       <div className="mx-auto max-w-[800px] px-5 sm:px-8">
-        <div className="grid items-center gap-10 lg:grid-cols-2">
-          <Reveal>
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#25D366]">
-                Context
-              </p>
-              <h2 className="mt-3 text-[24px] font-bold tracking-tight text-[#111111]">
-                It&apos;s not just a reminder.
-              </h2>
-              <p className="mt-3 text-[16px] font-semibold text-[#111111]">
-                NANTI understands why.
-              </p>
-              <p className="mt-3 text-[14px] text-[#5F6368]">
-                That&apos;s the difference between a reminder and memory.
-              </p>
+        <Reveal>
+          <div className="mb-10">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#075E54]">
+              The process
+            </p>
+            <h2 className="mt-3 text-[24px] font-bold tracking-tight text-[#171c24]">
+              From WhatsApp to memory.
+            </h2>
+          </div>
+        </Reveal>
+
+        <div className="space-y-6">
+          <Reveal delay={100}>
+            <div className="flex gap-4">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#128C7E] text-[13px] font-bold text-white">
+                1
+              </div>
+              <div>
+                <h3 className="text-[16px] font-semibold text-[#171c24]">
+                  Forward, paste, or upload
+                </h3>
+                <p className="mt-1 text-[14px] text-[#45474a]">
+                  Forward a WhatsApp message to NANTI. Paste a conversation. Upload a screenshot of
+                  a chat. NANTI accepts all of them.
+                </p>
+              </div>
             </div>
           </Reveal>
 
-          <Reveal delay={150}>
-            <div className="rounded-2xl border border-[#E7E9E7] bg-white p-5 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
-              <div className="mb-3 rounded-xl bg-[#F7F8F6] px-4 py-2.5 text-[13px] text-[#5F6368]">
-                &quot;Pak Tom, nanti saya kirim invoice tanggal 28 ya.&quot;
+          <Reveal delay={200}>
+            <div className="flex gap-4">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#128C7E] text-[13px] font-bold text-white">
+                2
               </div>
-              <div className="space-y-2">
-                {[
-                  { label: "WHO", value: "Pak Tom" },
-                  { label: "WHAT", value: "Invoice" },
-                  { label: "WHEN", value: "28 August" },
-                  { label: "WHY", value: "You promised to send it." },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-center gap-3 rounded-lg bg-[#F7F8F6] px-3 py-2">
-                    <span className="w-10 text-[10px] font-bold text-[#25D366]">{item.label}</span>
-                    <span className="text-[13px] font-medium text-[#111111]">{item.value}</span>
-                  </div>
-                ))}
+              <div>
+                <h3 className="text-[16px] font-semibold text-[#171c24]">
+                  NANTI finds what matters
+                </h3>
+                <p className="mt-1 text-[14px] text-[#45474a]">
+                  NANTI reads the conversation and pulls out the commitments, who made them, and
+                  when they are due. It does not read your messages for any other purpose.
+                </p>
+              </div>
+            </div>
+          </Reveal>
+
+          <Reveal delay={300}>
+            <div className="flex gap-4">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#128C7E] text-[13px] font-bold text-white">
+                3
+              </div>
+              <div>
+                <h3 className="text-[16px] font-semibold text-[#171c24]">
+                  NANTI reminds you when it matters
+                </h3>
+                <p className="mt-1 text-[14px] text-[#45474a]">
+                  When a deadline approaches, NANTI sends a reminder. You do not have to remember
+                  anything. NANTI does it for you.
+                </p>
               </div>
             </div>
           </Reveal>
@@ -146,20 +127,20 @@ function Context() {
 
 function BringAnything() {
   const options = [
-    { icon: Send, label: "WHATSAPP", desc: "Forward the conversation." },
-    { icon: Camera, label: "SCREENSHOT", desc: "Upload what you captured." },
-    { icon: Clipboard, label: "TEXT", desc: "Paste anything you want NANTI to remember." },
+    { label: "WhatsApp", desc: "Forward the conversation to NANTI's WhatsApp contact." },
+    { label: "Screenshot", desc: "Upload a photo of a chat. NANTI reads the text from the image." },
+    { label: "Paste text", desc: "Copy and paste any conversation. NANTI handles the rest." },
   ];
 
   return (
     <section className="bg-white py-16 sm:py-20">
       <div className="mx-auto max-w-[700px] px-5 text-center sm:px-8">
         <Reveal>
-          <h2 className="text-[24px] font-bold tracking-tight text-[#111111]">
-            Just bring it to NANTI.
+          <h2 className="text-[24px] font-bold tracking-tight text-[#171c24]">
+            Three ways to bring it in.
           </h2>
-          <p className="mt-2 text-[14px] text-[#5F6368]">
-            Forward a conversation. Paste a message. Upload a screenshot.
+          <p className="mt-2 text-[14px] text-[#45474a]">
+            Pick the one that fits your situation.
           </p>
         </Reveal>
 
@@ -168,15 +149,10 @@ function BringAnything() {
             {options.map((opt) => (
               <div
                 key={opt.label}
-                className="group rounded-2xl border border-[#E7E9E7] bg-[#F7F8F6] p-5 text-center transition-all hover:border-[#25D366]/30 hover:shadow-[0_4px_14px_rgba(37,211,102,0.1)]"
+                className="rounded-lg border border-[#E7E9E7] bg-[#F7F8F6] p-5 text-left"
               >
-                <div className="mx-auto flex size-10 items-center justify-center rounded-xl bg-[#25D366]/10">
-                  <opt.icon className="size-5 text-[#25D366]" />
-                </div>
-                <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#5F6368]">
-                  {opt.label}
-                </p>
-                <p className="mt-1.5 text-[13px] text-[#5F6368]">{opt.desc}</p>
+                <p className="text-[14px] font-semibold text-[#171c24]">{opt.label}</p>
+                <p className="mt-1.5 text-[13px] text-[#45474a]">{opt.desc}</p>
               </div>
             ))}
           </div>
@@ -193,19 +169,19 @@ function Cta() {
     <section className="bg-[#F7F8F6] py-16 sm:py-20">
       <div className="relative mx-auto max-w-[500px] px-5 text-center sm:px-8">
         <Reveal>
-          <h2 className="text-[24px] font-bold tracking-tight text-[#111111]">
+          <h2 className="text-[24px] font-bold tracking-tight text-[#171c24]">
             Ready to try it?
           </h2>
-          <p className="mt-2 text-[14px] text-[#5F6368]">
-            Paste your first conversation. See what NANTI catches.
+          <p className="mt-2 text-[14px] text-[#45474a]">
+            Paste your first conversation. See what NANTI finds.
           </p>
           <Link
             to="/welcome"
-            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-6 py-3 text-[14px] font-semibold text-white shadow-[0_4px_14px_rgba(37,211,102,0.3)] transition-all hover:bg-[#1fb85c] hover:shadow-[0_6px_20px_rgba(37,211,102,0.4)]"
+            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#128C7E] px-6 py-3 text-[14px] font-semibold text-white shadow-sm transition-all hover:bg-[#0b5e54]"
           >
-            Get started
+            Try NANTI for free
           </Link>
-          <p className="mt-3 text-[12px] text-[#5F6368]">No credit card required. Free forever.</p>
+          <p className="mt-3 text-[12px] text-[#76777b]">No credit card required. Free forever.</p>
         </Reveal>
       </div>
     </section>

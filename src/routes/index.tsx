@@ -39,7 +39,7 @@ function HomePage() {
       <Hero />
       <ProblemSection />
       <HowItWorks />
-      <TestimonialSection />
+      <CompactHowItWorks />
       <IntegrationsSection />
       <PrivacySection />
       <FinalCta />
@@ -94,9 +94,6 @@ function Hero() {
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-[#128C7E]" />
               </span>
               <span className="text-[13px] font-medium tracking-wide">AI Memory for WhatsApp</span>
-              <span className="rounded-full bg-white/70 px-1.5 py-0.5 text-[10px] font-semibold text-[#128C7E]">
-                Live 2.4
-              </span>
             </div>
           </Reveal>
 
@@ -121,14 +118,12 @@ function Hero() {
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-[#128C7E] px-8 py-3.5 text-[15px] font-semibold text-white shadow-lg shadow-[#128C7E]/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#0b5e54] hover:shadow-xl hover:shadow-[#128C7E]/40 active:translate-y-0"
               >
                 Try NANTI for free
-                <span className="text-[18px]">&#8594;</span>
               </Link>
               <Link
                 to="/how-it-works"
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-[#c6c6ca] bg-transparent px-7 py-3.5 text-[15px] font-semibold text-[#171c24] shadow-sm transition-all duration-200 hover:border-[#128C7E]/50 hover:bg-[#f0f3ff] hover:text-[#075E54]"
               >
                 See how it works
-                <span className="text-[16px] text-[#128C7E]">&#9654;</span>
               </Link>
             </div>
           </Reveal>
@@ -222,39 +217,25 @@ function Hero() {
                 <span className="text-[18px]">{tracked ? "&#10003;" : "&#128278;"}</span>
                 <span>{tracked ? "Tracked in WhatsApp" : "Track commitment"}</span>
               </button>
-              <button className="rounded-full px-4 py-2 text-[13px] font-medium text-[#76777b] transition-colors hover:bg-[#f0f3ff] hover:text-[#171c24]">
-                Dismiss
-              </button>
             </div>
           </div>
 
-          {/* Card 3: Stat pill */}
+          {/* Card 3: WhatsApp notification */}
           <div className="mb-6 w-full rotate-1 rounded-2xl border border-[#e5e8f4]/80 bg-white p-5 shadow-xl transition-transform duration-300 hover:rotate-0 sm:w-[340px] lg:absolute lg:bottom-4 lg:right-6 lg:mb-0 z-20">
-            <div className="mb-3 flex items-center justify-between text-left">
-              <div>
-                <div className="font-serif text-[28px] leading-[36px] tracking-[-0.02em] text-[#171c24]">
-                  1,842
-                </div>
-                <div className="text-[11px] font-semibold uppercase tracking-wider text-[#76777b]">
-                  Commitments preserved
-                </div>
+            <div className="mb-3 flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#25D366] text-[14px] text-white">
+                &#128276;
               </div>
-              <div className="text-right">
-                <span className="inline-flex items-center gap-1 rounded-full border border-[#128C7E]/20 bg-[#e7f7ef] px-2.5 py-1 text-[11px] font-medium text-[#075E54]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#25D366]" />
-                  0 missed
-                </span>
+              <div className="text-left">
+                <p className="text-[14px] font-semibold text-[#171c24]">Reminder from NANTI</p>
+                <p className="text-[11px] text-[#76777b]">2 hours before deadline</p>
               </div>
             </div>
-            <svg className="h-8 w-full text-[#128C7E]" fill="none" viewBox="0 0 280 40">
-              <path
-                d="M0 32C40 28 60 14 100 20C140 26 170 8 210 12C240 15 260 4 280 2"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2.5"
-              />
-            </svg>
+            <div className="rounded-lg border border-[#128C7E]/15 bg-[#f0f9f4] p-3 text-left">
+              <p className="text-[13px] leading-snug text-[#171c24]">
+                &ldquo;Invoice for Pak Tom is due at 10:00 AM today.&rdquo;
+              </p>
+            </div>
           </div>
 
           {/* Card 4: AI Search Bar */}
@@ -335,7 +316,7 @@ function ProblemSection() {
         <div className="mb-14 max-w-2xl text-left">
           <Reveal>
             <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.18em] text-[#075E54]">
-              The Unwritten Ledger
+              The problem
             </span>
           </Reveal>
           <Reveal delay={50}>
@@ -452,7 +433,7 @@ function HowItWorks() {
         <div className="mx-auto mb-14 max-w-2xl text-center">
           <Reveal>
             <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.18em] text-[#075E54]">
-              Quiet Methodology
+              How it works
             </span>
           </Reveal>
           <Reveal delay={50}>
@@ -535,42 +516,34 @@ function HowItWorks() {
   );
 }
 
-/* ─── TESTIMONIAL ─── */
+/* ─── HOW IT WORKS (compact) ─── */
 
-function TestimonialSection() {
+function CompactHowItWorks() {
   return (
-    <section className="w-full py-8 lg:py-12">
+    <section className="w-full bg-white py-16 lg:py-20">
       <div className="mx-auto max-w-[1240px] px-6">
-        <Reveal>
-          <div className="mx-auto max-w-4xl rounded-xl border border-[#8b4e3c]/15 bg-[#ffdbd0] p-8 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-12 lg:p-16">
-            <div className="mb-8 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
-              <span className="font-serif text-[40px] opacity-30">&ldquo;</span>
-              <div className="inline-flex items-center gap-2 rounded-full bg-[#8b4e3c]/10 px-3.5 py-1.5 text-[11px] font-semibold text-[#5d2a1a]">
-                <span className="text-[16px] text-emerald-800">&#10003;</span>
-                <span>Verified Operator Case</span>
-              </div>
-            </div>
-            <blockquote className="font-serif text-[28px] leading-[36px] text-[#26190f] tracking-[-0.02em] mb-8 max-sm:text-[22px] max-sm:leading-[28px]">
-              &ldquo;NANTI helped me stop losing promises in WhatsApp. In logistics, missed timings
-              break trust immediately.&rdquo;
-            </blockquote>
-            <div className="flex flex-col gap-4 rounded-lg bg-[#8b4e3c]/5 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#26190f] text-[15px] font-bold text-[#ffdbd0]">
-                  T
-                </div>
-                <div>
-                  <div className="text-[15px] font-semibold text-[#26190f]">Tom</div>
-                  <div className="text-[12px] text-[#26190f]/80">Owner, PT Maju Jaya</div>
-                </div>
-              </div>
-              <div className="text-left sm:text-right">
-                <div className="font-serif text-[22px] text-[#26190f] font-medium">~4.5 hrs</div>
-                <div className="text-[11px] text-[#26190f]/80">Weekly recovery time saved</div>
-              </div>
-            </div>
-          </div>
-        </Reveal>
+        <div className="mx-auto max-w-2xl text-center">
+          <Reveal>
+            <h2 className="font-serif text-[32px] leading-[40px] tracking-[-0.025em] text-[#171c24] max-sm:text-[26px] max-sm:leading-[32px]">
+              You do not create tasks.{" "}
+              <span className="italic text-[#075E54]">You just talk.</span>
+            </h2>
+          </Reveal>
+          <Reveal delay={100}>
+            <p className="mt-4 text-[16px] text-[#45474a]">
+              Forward a WhatsApp message. NANTI extracts the commitment, tracks the deadline, and
+              reminds you when it matters.
+            </p>
+          </Reveal>
+          <Reveal delay={200}>
+            <Link
+              to="/how-it-works"
+              className="mt-6 inline-flex items-center gap-2 text-[14px] font-semibold text-[#128C7E] hover:text-[#075E54]"
+            >
+              See how NANTI works
+            </Link>
+          </Reveal>
+        </div>
       </div>
     </section>
   );
@@ -584,7 +557,7 @@ function IntegrationsSection() {
       <div className="mx-auto max-w-[1240px] px-6 text-center">
         <Reveal>
           <span className="mb-3 block text-[11px] font-bold uppercase tracking-[0.18em] text-[#075E54]">
-            Ecosystem Synergy
+              Integrations
           </span>
           <h3 className="font-serif text-[22px] leading-[28px] text-[#171c24] mb-8">
             Works with the tools you already use
@@ -596,10 +569,7 @@ function IntegrationsSection() {
               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#128C7E]">
                 <span className="text-[16px] text-white">&#128172;</span>
               </div>
-              <span className="text-[15px] font-bold text-[#075E54]">WhatsApp Native</span>
-              <span className="rounded-full bg-[#128C7E] px-2 py-0.5 text-[10px] font-bold uppercase text-white">
-                Primary
-              </span>
+              <span className="text-[15px] font-bold text-[#075E54]">WhatsApp</span>
             </div>
             <div className="inline-flex cursor-pointer items-center gap-3 rounded-full border border-[#c6c6ca]/50 bg-white px-5 py-3 shadow-sm transition-all hover:border-[#128C7E]/40 hover:shadow-md hover:scale-105">
               <span className="text-[20px] text-[#128C7E]">&#128197;</span>
@@ -636,9 +606,9 @@ function PrivacySection() {
     },
     {
       icon: "&#128065;",
-      title: "AI reads patterns, not people",
-      desc: "NANTI extracts semantic commitments and timeframes. It never models your personality for behavioral monetization.",
-      footer: "Semantic-only extraction",
+      title: "We only extract what matters",
+      desc: "NANTI finds commitments and deadlines in your messages. It does not use your conversations for advertising or profiling.",
+      footer: "Commitment extraction only",
     },
   ];
 
@@ -648,7 +618,7 @@ function PrivacySection() {
         <div className="mb-16 max-w-2xl text-left">
           <Reveal>
             <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.18em] text-[#075E54]">
-              Sovereign Privacy
+              Privacy
             </span>
           </Reveal>
           <Reveal delay={50}>
@@ -698,7 +668,7 @@ function FinalCta() {
       <div className="mx-auto max-w-[800px] px-6 text-center">
         <Reveal>
           <span className="mb-4 block text-[11px] font-bold uppercase tracking-[0.18em] text-[#075E54]">
-            Return to Clarity
+              Get started
           </span>
         </Reveal>
         <Reveal delay={50}>
@@ -723,7 +693,6 @@ function FinalCta() {
               className="inline-flex items-center justify-center gap-2 rounded-full bg-[#128C7E] px-9 py-4 text-[15px] font-semibold text-white shadow-lg shadow-[#128C7E]/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#0b5e54] hover:shadow-xl hover:shadow-[#128C7E]/40 active:translate-y-0"
             >
               Try NANTI for free
-              <span className="text-[20px]">&#8594;</span>
             </Link>
           </div>
         </Reveal>

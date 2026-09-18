@@ -5,7 +5,7 @@ import {
   ClipboardPaste,
   ImageIcon,
   Loader2,
-  Sparkles,
+  Search,
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
@@ -231,7 +231,7 @@ function ImportPage() {
             onClick={() => analyzeText(text, "paste")}
             disabled={loading || !text.trim()}
           >
-            {loading ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+            {loading ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
             Analyze with NANTI
           </Button>
         </div>
@@ -268,7 +268,7 @@ function ImportPage() {
       {drafts && !loading && (
         <div className="mt-8">
           <div className="flex items-center gap-2">
-            <Sparkles className="size-4 text-primary" />
+            <Search className="size-4 text-primary" />
             <h2 className="text-[16px] font-semibold">
               NANTI found {drafts.length} thing{drafts.length !== 1 ? "s" : ""} to remember.
             </h2>
