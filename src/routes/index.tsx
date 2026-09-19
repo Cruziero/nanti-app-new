@@ -52,15 +52,14 @@ function HomePage() {
 function Hero() {
   const [tracked, setTracked] = useState(false);
   const [query, setQuery] = useState("What did I promise Pak Tom?");
-  const [activeStep, setActiveStep] = useState(0);
 
   const responses: Record<string, string> = {
     "What did I promise Pak Tom?":
       'Pak Tom: Send invoice by <strong className="text-[#128C7E]">28 August, 10:00 AM</strong> detected from WhatsApp forwarded message.',
     "Follow-up supplier deadline":
-      'PT Maju Supplier: Follow-up raw materials shipment promised by <strong className="text-[#128C7E]">Friday 15:00</strong>.',
+      "PT Maju Supplier: Follow-up raw materials shipment promised by <strong className=\"text-[#128C7E]\">Friday 15:00</strong>.",
     "When is invoice due?":
-      'Invoice Dispatch: 28 August, 10:00 AM for Pak Tom. Reminder set for 09:00 AM.',
+      "Invoice Dispatch: 28 August, 10:00 AM for Pak Tom. Reminder set for 09:00 AM.",
   };
 
   const runQuery = (q: string) => {
@@ -80,12 +79,10 @@ function Hero() {
 
   return (
     <section className="relative w-full overflow-hidden bg-[#f9f9ff] pt-24 pb-20 lg:pt-28 lg:pb-28">
-      {/* Ambient background accents */}
       <div className="pointer-events-none absolute left-1/2 top-1/4 -z-10 h-[360px] w-[620px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-100/40 blur-[140px]" />
       <div className="pointer-events-none absolute right-10 top-1/3 -z-10 h-[300px] w-[300px] rounded-full bg-[#ffb199]/20 blur-[120px]" />
 
       <div className="mx-auto max-w-[1240px] px-6">
-        {/* Centered hero text */}
         <div className="mx-auto mb-16 max-w-4xl text-center">
           <Reveal>
             <div className="mb-6 inline-flex items-center gap-2.5 rounded-full border border-[#128C7E]/25 bg-[#e7f7ef] px-4 py-1.5 text-[#075E54] shadow-sm">
@@ -135,164 +132,174 @@ function Hero() {
           </Reveal>
         </div>
 
-        {/* Floating product artifacts */}
-        <div className="relative mx-auto max-w-5xl min-h-[480px] lg:h-[510px]">
-          {/* Card 1: WhatsApp Forwarded Message */}
-          <div className="animate-editorial-float-slow mb-6 w-full rounded-2xl border border-[#e5e8f4]/80 bg-white p-6 shadow-xl transition-all duration-300 hover:shadow-2xl sm:w-[360px] lg:absolute lg:left-2 lg:top-4 lg:mb-0 z-20">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#128C7E]/20 bg-[#e7f7ef] text-[14px] font-semibold text-[#075E54]">
-                  PT
-                </div>
-                <div className="text-left">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[15px] font-semibold text-[#171c24]">Pak Tom</span>
-                    <span className="text-[14px] text-[#25D366]">&#10003;</span>
+        {/* Product demo grid */}
+        <div className="mx-auto max-w-[960px]">
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+            {/* Left column: WhatsApp message */}
+            <div className="animate-editorial-float-slow rounded-2xl border border-[#e5e8f4]/80 bg-white p-6 shadow-xl transition-all duration-300 hover:shadow-2xl">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#128C7E]/20 bg-[#e7f7ef] text-[14px] font-semibold text-[#075E54]">
+                    PT
                   </div>
-                  <span className="text-[12px] text-[#76777b]">WhatsApp Business</span>
+                  <div className="text-left">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[15px] font-semibold text-[#171c24]">Pak Tom</span>
+                      <span className="text-[14px] text-[#25D366]">&#10003;</span>
+                    </div>
+                    <span className="text-[12px] text-[#76777b]">WhatsApp Business</span>
+                  </div>
                 </div>
+                <span className="text-[11px] font-semibold text-[#76777b]">14:32</span>
               </div>
-              <span className="text-[11px] font-semibold text-[#76777b]">14:32</span>
-            </div>
-            <div className="mb-3 rounded-r-lg border-l-4 border-[#128C7E] bg-[#f0f9f4] p-3.5 text-left">
-              <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-[#075E54]">
-                <span className="text-[14px] text-[#128C7E]">&#8618;</span>
-                <span>Forwarded message</span>
+              <div className="mb-3 rounded-r-lg border-l-4 border-[#128C7E] bg-[#f0f9f4] p-3.5 text-left">
+                <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-[#075E54]">
+                  <span className="text-[14px] text-[#128C7E]">&#8618;</span>
+                  <span>Forwarded message</span>
+                </div>
+                <p className="text-[14px] leading-snug text-[#171c24]">
+                  &ldquo;nanti saya kirim invoice tgl 28 agustus ya pak Tom&rdquo;
+                </p>
               </div>
-              <p className="text-[14px] leading-snug text-[#171c24]">
-                &ldquo;nanti saya kirim invoice tgl 28 agustus ya pak Tom&rdquo;
-              </p>
-            </div>
-            <div className="flex items-center justify-between pt-1">
-              <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#075E54]">
-                <span className="h-2 w-2 rounded-full bg-[#25D366]" />
-                <span>Forwarded to NANTI</span>
+              <div className="flex items-center justify-between pt-1">
+                <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#075E54]">
+                  <span className="h-2 w-2 rounded-full bg-[#25D366]" />
+                  <span>Forwarded to NANTI</span>
+                </div>
+                <span className="text-[16px] text-[#128C7E]">&#10003;&#10003;</span>
               </div>
-              <span className="text-[16px] text-[#128C7E]">&#10003;&#10003;</span>
             </div>
-          </div>
 
-          {/* Card 2: Commitment Detected */}
-          <div className="animate-editorial-float-delayed mb-6 w-full rounded-lg border border-[#e5e8f4] bg-white p-7 shadow-2xl transition-all duration-300 hover:shadow-2xl sm:w-[410px] lg:absolute lg:left-1/2 lg:top-8 lg:-translate-x-1/4 lg:mb-0 z-30">
-            <div className="mb-5 flex items-center justify-between">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#128C7E]/20 bg-[#e8f8f2] px-3.5 py-1 text-[11px] font-semibold text-[#0f5132]">
-                <span className="h-2 w-2 rounded-full bg-[#25D366]" />
-                <span id="commitment-status">{tracked ? "Saved to Ledger" : "Commitment detected"}</span>
-              </div>
-              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#128C7E] shadow-sm">
-                <span className="text-[13px] font-bold tracking-tighter text-white">N</span>
-              </div>
-            </div>
-            <div className="mb-6 space-y-3.5 text-left">
-              {[
-                { label: "WHO", value: "Pak Tom" },
-                { label: "WHAT", value: "Send invoice" },
-                { label: "WHEN", value: "28 August, 10:00 AM", accent: true },
-              ].map((row) => (
-                <div
-                  key={row.label}
-                  className="flex items-baseline justify-between rounded bg-[#f0f3ff] px-3.5 py-2.5 transition-colors hover:bg-[#e5e8f4]"
-                >
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#76777b]">
-                    {row.label}
-                  </span>
-                  <span
-                    className={`text-[15px] font-semibold ${row.accent ? "flex items-center gap-1 text-[#075E54]" : "text-[#171c24]"}`}
-                  >
-                    {row.accent && <span className="text-[16px]">&#128197;</span>}
-                    {row.value}
-                  </span>
+            {/* Right column: Commitment detected */}
+            <div className="animate-editorial-float-delayed rounded-2xl border border-[#e5e8f4] bg-white p-6 shadow-2xl transition-all duration-300 hover:shadow-2xl">
+              <div className="mb-5 flex items-center justify-between">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#128C7E]/20 bg-[#e8f8f2] px-3.5 py-1 text-[11px] font-semibold text-[#0f5132]">
+                  <span className="h-2 w-2 rounded-full bg-[#25D366]" />
+                  <span>{tracked ? "Saved to Ledger" : "Commitment detected"}</span>
                 </div>
-              ))}
-            </div>
-            <div className="flex items-center justify-between gap-3 pt-1">
+                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#128C7E] shadow-sm">
+                  <span className="text-[13px] font-bold tracking-tighter text-white">N</span>
+                </div>
+              </div>
+              <div className="mb-5 space-y-3 text-left">
+                {[
+                  { label: "WHO", value: "Pak Tom" },
+                  { label: "WHAT", value: "Send invoice" },
+                  { label: "WHEN", value: "28 August, 10:00 AM", accent: true },
+                ].map((row) => (
+                  <div
+                    key={row.label}
+                    className="flex items-baseline justify-between rounded bg-[#f0f3ff] px-3.5 py-2.5 transition-colors hover:bg-[#e5e8f4]"
+                  >
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#76777b]">
+                      {row.label}
+                    </span>
+                    <span
+                      className={`text-[15px] font-semibold ${row.accent ? "flex items-center gap-1 text-[#075E54]" : "text-[#171c24]"}`}
+                    >
+                      {row.accent && <span className="text-[16px]">&#128197;</span>}
+                      {row.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
               <button
                 onClick={() => setTracked(!tracked)}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-full px-5 py-2.5 text-[15px] font-semibold transition-all duration-200 active:scale-95 ${
+                className={`flex w-full items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[15px] font-semibold transition-all duration-200 active:scale-95 ${
                   tracked
                     ? "bg-[#075E54] text-[#25D366] shadow-sm"
                     : "bg-[#128C7E] text-white shadow-sm hover:bg-[#075E54] hover:shadow-md"
                 }`}
               >
-                <span className="text-[18px]">{tracked ? "&#10003;" : "&#128278;"}</span>
-                <span>{tracked ? "Tracked in WhatsApp" : "Track commitment"}</span>
+                {tracked ? (
+                  <span>&#10003; Tracked in WhatsApp</span>
+                ) : (
+                  <span>&#128203; Track commitment</span>
+                )}
               </button>
             </div>
           </div>
 
-          {/* Card 3: WhatsApp notification */}
-          <div className="mb-6 w-full rotate-1 rounded-2xl border border-[#e5e8f4]/80 bg-white p-5 shadow-xl transition-transform duration-300 hover:rotate-0 sm:w-[340px] lg:absolute lg:bottom-4 lg:right-6 lg:mb-0 z-20">
-            <div className="mb-3 flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#25D366] text-[14px] text-white">
-                &#128276;
-              </div>
-              <div className="text-left">
-                <p className="text-[14px] font-semibold text-[#171c24]">Reminder from NANTI</p>
-                <p className="text-[11px] text-[#76777b]">2 hours before deadline</p>
-              </div>
-            </div>
-            <div className="rounded-lg border border-[#128C7E]/15 bg-[#f0f9f4] p-3 text-left">
-              <p className="text-[13px] leading-snug text-[#171c24]">
-                &ldquo;Invoice for Pak Tom is due at 10:00 AM today.&rdquo;
-              </p>
-            </div>
-          </div>
-
-          {/* Card 4: AI Search Bar */}
-          <div className="z-30 w-full lg:absolute lg:bottom-1 lg:left-8 sm:w-[440px]">
-            <div className="flex items-center justify-between rounded-full border border-[#128C7E]/30 bg-white p-2 pl-4 shadow-xl transition-all focus-within:border-transparent focus-within:ring-2 focus-within:ring-[#128C7E]">
-              <div className="flex flex-1 items-center gap-2.5 overflow-hidden">
-                <span className="text-[20px] text-[#128C7E]">&#128269;</span>
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && runQuery(query)}
-                  placeholder="Ask NANTI anything from your chats..."
-                  className="w-full border-0 bg-transparent p-0 text-[14px] text-[#171c24] placeholder-[#76777b] focus:outline-none"
-                />
-              </div>
-              <button
-                onClick={() => runQuery(query)}
-                className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#128C7E] text-white shadow-sm transition-all hover:scale-105 hover:bg-[#075E54] active:scale-95"
-              >
-                <span className="text-[16px]">&#8593;</span>
-              </button>
-            </div>
-            <div className="no-scrollbar mt-2.5 flex items-center gap-1.5 overflow-x-auto px-2 text-left">
-              <span className="shrink-0 text-[11px] font-semibold text-[#76777b]">Try:</span>
-              {['"Promise Pak Tom?"', '"Supplier follow-up"', '"Invoice deadline"'].map(
-                (chip, i) => (
+          {/* Bottom row: search + reminder */}
+          <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-5">
+            {/* Search bar: wider */}
+            <div className="lg:col-span-3">
+              <div className="rounded-2xl border border-[#128C7E]/25 bg-[#f0f9f4] p-4 shadow-md">
+                <div className="flex items-center justify-between rounded-full border border-[#128C7E]/30 bg-white p-2 pl-4 shadow-sm transition-all focus-within:border-transparent focus-within:ring-2 focus-within:ring-[#128C7E]">
+                  <div className="flex flex-1 items-center gap-2.5 overflow-hidden">
+                    <span className="text-[20px] text-[#128C7E]">&#128269;</span>
+                    <input
+                      type="text"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && runQuery(query)}
+                      placeholder="Ask NANTI anything from your chats..."
+                      className="w-full border-0 bg-transparent p-0 text-[14px] text-[#171c24] placeholder-[#76777b] focus:outline-none"
+                    />
+                  </div>
                   <button
-                    key={i}
-                    onClick={() =>
-                      runQuery(
-                        i === 0
-                          ? "What did I promise Pak Tom?"
-                          : i === 1
-                            ? "Follow-up supplier deadline"
-                            : "When is invoice due?",
-                      )
-                    }
-                    className="shrink-0 rounded-full border border-[#c6c6ca]/40 bg-[#f0f3ff] px-2.5 py-0.5 text-[11px] font-medium text-[#171c24] transition-colors hover:bg-[#e7f7ef] hover:text-[#075E54]"
+                    onClick={() => runQuery(query)}
+                    className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#128C7E] text-white shadow-sm transition-all hover:scale-105 hover:bg-[#075E54] active:scale-95"
                   >
-                    {chip}
+                    <span className="text-[16px]">&#8593;</span>
                   </button>
-                ),
-              )}
-            </div>
-            <div className="mt-2 rounded-xl border border-[#128C7E]/25 bg-[#f0f9f4] p-3 shadow-md text-left transition-all duration-200">
-              <div className="mb-1 flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-[12px] font-semibold text-[#075E54]">
-                  <span className="text-[15px] text-[#128C7E]">&#129302;</span>
-                  <span>NANTI Answer</span>
                 </div>
-                <span className="text-[10px] text-[#76777b]">WhatsApp Memory</span>
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="text-[11px] font-semibold text-[#76777b]">Try:</span>
+                  {["Promise Pak Tom?", "Supplier follow-up", "Invoice deadline"].map(
+                    (chip, i) => (
+                      <button
+                        key={i}
+                        onClick={() =>
+                          runQuery(
+                            i === 0
+                              ? "What did I promise Pak Tom?"
+                              : i === 1
+                                ? "Follow-up supplier deadline"
+                                : "When is invoice due?",
+                          )
+                        }
+                        className="rounded-full border border-[#c6c6ca]/40 bg-white px-2.5 py-0.5 text-[11px] font-medium text-[#171c24] transition-colors hover:bg-[#e7f7ef] hover:text-[#075E54]"
+                      >
+                        {chip}
+                      </button>
+                    ),
+                  )}
+                </div>
+                <div className="mt-3 rounded-xl border border-[#128C7E]/20 bg-white p-3 shadow-sm text-left">
+                  <div className="mb-1 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-[12px] font-semibold text-[#075E54]">
+                      <span className="text-[15px] text-[#128C7E]">&#129302;</span>
+                      <span>NANTI Answer</span>
+                    </div>
+                    <span className="text-[10px] text-[#76777b]">WhatsApp Memory</span>
+                  </div>
+                  <p
+                    className="text-[12px] leading-relaxed text-[#171c24]"
+                    dangerouslySetInnerHTML={{ __html: getResponse() }}
+                  />
+                </div>
               </div>
-              <p
-                className="text-[12px] leading-relaxed text-[#171c24]"
-                dangerouslySetInnerHTML={{ __html: getResponse() }}
-              />
+            </div>
+
+            {/* Reminder card: narrower */}
+            <div className="lg:col-span-2">
+              <div className="animate-editorial-float-delayed flex h-full flex-col rounded-2xl border border-[#e5e8f4]/80 bg-white p-5 shadow-xl transition-all duration-300 hover:shadow-2xl">
+                <div className="mb-3 flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#25D366] text-[14px] text-white">
+                    &#128276;
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[14px] font-semibold text-[#171c24]">Reminder from NANTI</p>
+                    <p className="text-[11px] text-[#76777b]">2 hours before deadline</p>
+                  </div>
+                </div>
+                <div className="flex-1 rounded-lg border border-[#128C7E]/15 bg-[#f0f9f4] p-3 text-left">
+                  <p className="text-[13px] leading-snug text-[#171c24]">
+                    &ldquo;Invoice for Pak Tom is due at 10:00 AM today.&rdquo;
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -327,8 +334,8 @@ function ProblemSection() {
           </Reveal>
           <Reveal delay={100}>
             <p className="mt-4 text-[16px] leading-[1.65] text-[#45474a]">
-              They live scattered across chaotic conversation threads. You say it in passing; you
-              promise in good faith. NANTI listens quietly, cataloging your word.
+              They live in scattered chat threads. You say it in passing, you promise in good faith.
+              NANTI captures it and turns it into something trackable.
             </p>
           </Reveal>
         </div>
@@ -373,13 +380,13 @@ function HowItWorks() {
       num: "01",
       label: "TALK",
       title: "Converse naturally",
-      desc: "Your conversations already hold what needs to get done. WhatsApp remains your natural interface.",
+      desc: "Your conversations already hold what needs to get done. Just forward a message to NANTI.",
       footer: "Forward or tag",
       icon: "&#128172;",
       inspector: {
         badge: "Step 1 Preview",
         title: "Forwarding into WhatsApp Bot",
-        desc: 'You simply swipe right on any message with a promise and forward to NANTI contact: \u201cNanti kirim invoice tgl 28 ya pak Tom.\u201d',
+        desc: "Swipe right on any message with a promise and forward to NANTI contact.",
         icon: "&#128172;",
       },
     },
@@ -387,13 +394,13 @@ function HowItWorks() {
       num: "02",
       label: "UNDERSTAND",
       title: "Extract intent",
-      desc: "NANTI isolates commitments, counterparty obligations, and implied deadlines without clutter.",
+      desc: "NANTI finds commitments, who said what, and when it is due.",
       footer: "Pattern synthesis",
       icon: "&#10024;",
       inspector: {
         badge: "Step 2 Preview",
         title: "Natural Language Entity Extraction",
-        desc: "Our neural model isolates counterparty (Pak Tom), action item (Send invoice), and strict temporal boundary (28 August 10:00 AM).",
+        desc: "Our model finds the person (Pak Tom), the action (Send invoice), and the deadline (28 August 10:00 AM).",
         icon: "&#10024;",
       },
     },
@@ -401,13 +408,13 @@ function HowItWorks() {
       num: "03",
       label: "REMEMBER",
       title: "Maintain ledger",
-      desc: "Keep precise track of what you pledged and what deliverables you are currently anticipating.",
+      desc: "Track what you promised and what you are waiting for from others.",
       footer: "Silent preservation",
       icon: "&#128220;",
       inspector: {
         badge: "Step 3 Preview",
         title: "Encrypted Ledger Maintenance",
-        desc: "Recorded silently into your encrypted timeline. No complicated boards, kanbans, or cluttering task lists to manage.",
+        desc: "Recorded silently into your encrypted timeline. No boards, kanbans, or task lists to manage.",
         icon: "&#128220;",
       },
     },
@@ -415,13 +422,13 @@ function HowItWorks() {
       num: "04",
       label: "FOLLOW UP",
       title: "Gentle surfacing",
-      desc: "When the hour approaches, NANTI resurfaces context right back in WhatsApp. No forgotten vows.",
+      desc: "When the time comes, NANTI sends a reminder back in WhatsApp.",
       footer: "Contextual reminder",
       icon: "&#128276;",
       inspector: {
         badge: "Step 4 Preview",
         title: "Proactive WhatsApp Ping",
-        desc: 'Two hours before the deadline, NANTI sends a polite brief message: \u201cReminder: invoice for Pak Tom is due at 10:00 AM today.\u201d',
+        desc: "Two hours before the deadline, NANTI sends a reminder: Invoice for Pak Tom is due at 10:00 AM today.",
         icon: "&#128276;",
       },
     },
@@ -595,14 +602,14 @@ function PrivacySection() {
     {
       icon: "&#128274;",
       title: "End-to-end encrypted",
-      desc: "Your messages are encrypted in transit and at rest. We never preserve raw conversation archives or chat history logs.",
-      footer: "Zero retention on transcripts",
+      desc: "Your messages are encrypted in transit and at rest. We never store raw conversation history.",
+      footer: "No transcript retention",
     },
     {
       icon: "&#128273;",
       title: "You control your data",
-      desc: "Purge your data anytime with one keystroke. We never sell, lease, or syndicate your operational graph to third parties.",
-      footer: "Single-click export & purge",
+      desc: "Delete your data anytime with one click. We never sell or share your information with third parties.",
+      footer: "Export and delete anytime",
     },
     {
       icon: "&#128065;",
@@ -629,8 +636,7 @@ function PrivacySection() {
           </Reveal>
           <Reveal delay={100}>
             <p className="mt-4 text-[16px] text-[#45474a]">
-              We treat professional communication with solemn confidentiality. No eavesdropping, no
-              corporate advertising.
+              Your data stays yours. No ads, no profiling, no selling to third parties.
             </p>
           </Reveal>
         </div>
