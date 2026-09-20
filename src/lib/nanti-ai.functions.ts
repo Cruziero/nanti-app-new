@@ -1,7 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-export const analyzeConversation = createServerFn({ method: "POST" })
+export const analyzeConversation = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({ text: z.string().min(1).max(20000), source: z.string().max(120).optional() })
@@ -12,7 +13,7 @@ export const analyzeConversation = createServerFn({ method: "POST" })
     return extractItems(data.text, data.source);
   });
 
-export const analyzeScreenshot = createServerFn({ method: "POST" })
+export const analyzeScreenshot = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
@@ -26,7 +27,7 @@ export const analyzeScreenshot = createServerFn({ method: "POST" })
     return extractFromImage(data.image, data.source);
   });
 
-export const askAssistant = createServerFn({ method: "POST" })
+export const askAssistant = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z.object({ question: z.string().min(1).max(2000), context: z.string().max(20000) }).parse(data),
   )
@@ -35,14 +36,14 @@ export const askAssistant = createServerFn({ method: "POST" })
     return { answer: await askNanti(data.question, data.context) };
   });
 
-export const parseSmartDateServer = createServerFn({ method: "POST" })
+export const parseSmartDateServer = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ text: z.string().min(1).max(500) }).parse(data))
   .handler(async ({ data }) => {
     const { parseSmartDate } = await import("./nanti-dates");
     return parseSmartDate(data.text);
   });
 
-export const generateFollowUpMessageServer = createServerFn({ method: "POST" })
+export const generateFollowUpMessageServer = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
