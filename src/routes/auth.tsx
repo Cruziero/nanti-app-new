@@ -1,20 +1,7 @@
-import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
-
-const SETTINGS_KEY = "nanti.settings.v1";
-
-function isOnboarded(): boolean {
-  try {
-    const raw = window.localStorage.getItem(SETTINGS_KEY);
-    if (raw) {
-      const settings = JSON.parse(raw);
-      return settings.onboarded === true;
-    }
-  } catch { /* ignore */ }
-  return false;
-}
 
 export const Route = createFileRoute("/auth")({
   component: AuthLayout,
@@ -24,6 +11,7 @@ function AuthLayout() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const isPasswordReset = useLocation({ select: (location) => location.pathname }) === "/auth/reset-password";
 
   useEffect(() => {
     let mounted = true;
@@ -33,12 +21,8 @@ function AuthLayout() {
       if (mounted) {
         setUser(session?.user ?? null);
         setLoading(false);
-        if (session?.user) {
-          if (isOnboarded()) {
-            navigate({ to: "/app/today" });
-          } else {
-            navigate({ to: "/welcome" });
-          }
+        if (session?.user && !isPasswordReset) {
+          navigate({ to: "/app/today" });
         }
       }
     };
@@ -51,12 +35,8 @@ function AuthLayout() {
       if (mounted) {
         setUser(session?.user ?? null);
         setLoading(false);
-        if (session?.user) {
-          if (isOnboarded()) {
-            navigate({ to: "/app/today" });
-          } else {
-            navigate({ to: "/welcome" });
-          }
+        if (session?.user && !isPasswordReset) {
+          navigate({ to: "/app/today" });
         }
       }
     });
@@ -65,7 +45,7 @@ function AuthLayout() {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, isPasswordReset]);
 
   if (loading) {
     return (
@@ -75,7 +55,7 @@ function AuthLayout() {
     );
   }
 
-  if (user) return null;
+  if (user && !isPasswordReset) return null;
 
   return (
     <div className="flex min-h-screen">

@@ -31,7 +31,7 @@ const EXAMPLE_EXTRACT = [
 ];
 
 export function Welcome() {
-  const { setSettings, settings } = useNanti();
+  const { setSettings, settings, hydrated } = useNanti();
   const { user, loading } = useSupabaseAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
@@ -45,10 +45,10 @@ export function Welcome() {
       navigate({ to: "/auth/login" });
       return;
     }
-    if (settings.onboarded) {
+    if (hydrated && settings.onboarded) {
       navigate({ to: "/app/today" });
     }
-  }, [user, loading, settings.onboarded, navigate]);
+  }, [user, loading, hydrated, settings.onboarded, navigate]);
 
   useEffect(() => {
     if (step === 1) {
@@ -57,7 +57,7 @@ export function Welcome() {
     }
   }, [step]);
 
-  if (loading || !user || settings.onboarded) return null;
+  if (loading || !hydrated || !user || settings.onboarded) return null;
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-5">
