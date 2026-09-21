@@ -32,7 +32,7 @@ function SignupPage() {
 
     setLoading(true);
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -50,7 +50,9 @@ function SignupPage() {
       return;
     }
 
-    toast.success("Pendaftaran berhasil! Silakan cek email Anda untuk verifikasi.");
+    toast.success(data.session
+      ? "Akun NANTI siap. Mari atur preferensi Anda."
+      : "Cek email Anda untuk melanjutkan pendaftaran NANTI.");
     setLoading(false);
   };
 
