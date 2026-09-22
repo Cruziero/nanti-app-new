@@ -180,6 +180,8 @@ function taskToItem(task: Record<string, unknown>): Item {
     time: (task.time as string) || undefined,
     personId: (task.person_id as string) || undefined,
     projectId: (task.project_id as string) || undefined,
+    personName: (task.person_name as string) || undefined,
+    projectName: (task.project_name as string) || undefined,
     source: (task.source as string) || "",
     sourceType: (task.source_type as Item["sourceType"]) || undefined,
     quote: (task.quote as string) || "",
