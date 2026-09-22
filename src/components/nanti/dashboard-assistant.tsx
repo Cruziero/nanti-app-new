@@ -30,12 +30,17 @@ type Command = {
     | "dismiss"
     | "reschedule"
     | "set_reminder"
+    | "edit"
     | "mark_followed_up"
     | "mark_received";
   targetId: string | null;
   dueText: string | null;
   time: string | null;
   reminderOffsetMinutes: number | null;
+  title: string | null;
+  priority: "low" | "medium" | "high" | null;
+  personName: string | null;
+  projectName: string | null;
   confidence: number;
   question: string | null;
   acknowledgement: string | null;
@@ -59,6 +64,10 @@ function fallbackCommand(message: string, target?: Item): Command | null {
       dueText: null,
       time: null,
       reminderOffsetMinutes: null,
+      title: null,
+      priority: null,
+      personName: null,
+      projectName: null,
       confidence: 0.9,
       question: null,
       acknowledgement: null,
@@ -71,6 +80,10 @@ function fallbackCommand(message: string, target?: Item): Command | null {
       dueText: null,
       time: null,
       reminderOffsetMinutes: null,
+      title: null,
+      priority: null,
+      personName: null,
+      projectName: null,
       confidence: 0.86,
       question: null,
       acknowledgement: null,
@@ -83,6 +96,10 @@ function fallbackCommand(message: string, target?: Item): Command | null {
       dueText: null,
       time: null,
       reminderOffsetMinutes: null,
+      title: null,
+      priority: null,
+      personName: null,
+      projectName: null,
       confidence: 0.88,
       question: null,
       acknowledgement: null,
@@ -98,6 +115,10 @@ function fallbackCommand(message: string, target?: Item): Command | null {
       dueText: parsed.date ? message : null,
       time: parsed.time,
       reminderOffsetMinutes: offset ? (unit.startsWith("jam") || unit.startsWith("hour") ? amount * 60 : amount) : null,
+      title: null,
+      priority: null,
+      personName: null,
+      projectName: null,
       confidence: 0.84,
       question: null,
       acknowledgement: null,
@@ -113,6 +134,10 @@ function fallbackCommand(message: string, target?: Item): Command | null {
       dueText: message,
       time: parsed.time,
       reminderOffsetMinutes: null,
+      title: null,
+      priority: null,
+      personName: null,
+      projectName: null,
       confidence: 0.84,
       question: null,
       acknowledgement: null,
@@ -372,6 +397,28 @@ export function DashboardAssistant() {
       };
     }
 
+    if (command.intent === "edit") {
+      const patch: Partial<Item> = {};
+      if (command.title?.trim()) patch.title = command.title.trim();
+      if (command.priority) patch.priority = command.priority;
+      if (command.personName?.trim()) patch.personName = command.personName.trim();
+      if (command.projectName?.trim()) patch.projectName = command.projectName.trim();
+
+      if (!Object.keys(patch).length) {
+        return {
+          handled: true,
+          answer: command.question || "Apa yang mau kamu ubah dari tugas itu?",
+        };
+      }
+      if (!await editItem(target.id, patch)) {
+        return { handled: true, answer: "Perubahannya belum berhasil saya simpan." };
+      }
+      return {
+        handled: true,
+        answer: command.acknowledgement || `Siap. “${target.title}” sudah saya perbarui.`,
+      };
+    }
+
     if (command.intent === "set_reminder") {
       const parsed = parseSmartDate(
         [command.dueText || "", command.time ? `jam ${command.time}` : "", rawMessage]
@@ -488,6 +535,10 @@ export function DashboardAssistant() {
           dueText: null,
           time: null,
           reminderOffsetMinutes: null,
+          title: null,
+          priority: null,
+          personName: null,
+          projectName: null,
           confidence: 0,
           question: null,
           acknowledgement: null,
