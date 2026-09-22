@@ -22,13 +22,22 @@ export function usePushSubscription() {
 
   useEffect(() => {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    let cancelled = false;
 
-    navigator.serviceWorker.ready.then((reg) => {
-      reg.pushManager.getSubscription().then((sub) => {
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then(() => navigator.serviceWorker.ready)
+      .then((reg) => reg.pushManager.getSubscription())
+      .then((sub) => {
+        if (cancelled) return;
         setSubscription(sub);
         setPermission(Notification.permission);
-      });
-    });
+      })
+      .catch((error) => console.error("Service worker setup failed:", error));
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const subscribe = useCallback(async () => {
