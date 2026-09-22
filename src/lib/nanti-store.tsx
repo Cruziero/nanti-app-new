@@ -196,6 +196,10 @@ function taskToItem(task: Record<string, unknown>): Item {
     reminderIntensity: (task.reminder_intensity as ReminderIntensity) || undefined,
     lastRemindedAt: (task.last_reminded_at as string) || undefined,
     reminderCount: (task.reminder_count as number) || 0,
+    semanticContext:
+      task.semantic_context && typeof task.semantic_context === "object"
+        ? (task.semantic_context as Item["semanticContext"])
+        : undefined,
   };
 }
 
@@ -224,6 +228,10 @@ function waitingToItem(item: Record<string, unknown>): Item {
     lastFollowedUpAt: (item.last_followed_up_at as string) || undefined,
     followUpCount: (item.follow_up_count as number) || 0,
     autoFollowUpEnabled: item.auto_follow_up_enabled !== false,
+    semanticContext:
+      item.semantic_context && typeof item.semantic_context === "object"
+        ? (item.semantic_context as Item["semanticContext"])
+        : undefined,
   };
 }
 
@@ -537,6 +545,7 @@ export function NantiProvider({ children }: { children: ReactNode }) {
                     resolvedPatch.reminderIntensity === undefined
                       ? undefined
                       : resolvedPatch.reminderIntensity || null,
+                  semantic_context: resolvedPatch.semanticContext,
                 },
               });
             }
@@ -637,6 +646,7 @@ export function NantiProvider({ children }: { children: ReactNode }) {
               source: item.source, source_type: item.sourceType,
               clarification_type: item.clarificationType,
               clarification_question: item.clarificationQuestion,
+              semantic_context: item.semanticContext,
               status: "pending",
             } });
             return inboxToItem(saved);
@@ -653,6 +663,7 @@ export function NantiProvider({ children }: { children: ReactNode }) {
                 item.followUpAt ||
                 new Date(Date.now() + 2 * 86400000).toISOString(),
               auto_follow_up_enabled: item.autoFollowUpEnabled ?? true,
+              semantic_context: item.semanticContext,
             } });
             return waitingToItem(saved);
           }
@@ -667,6 +678,7 @@ export function NantiProvider({ children }: { children: ReactNode }) {
             reminder_time: item.reminderTime,
             reminder_channels: item.reminderChannels,
             reminder_intensity: item.reminderIntensity,
+            semantic_context: item.semanticContext,
           } });
           return taskToItem(saved);
         }));
