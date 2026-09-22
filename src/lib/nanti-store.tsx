@@ -470,6 +470,28 @@ export function NantiProvider({ children }: { children: ReactNode }) {
         if (!item || item.status === "inbox") return false;
 
         const resolvedPatch: Partial<Item> = { ...patch };
+        const semantic = { ...(item.semanticContext || {}) };
+        let semanticChanged = false;
+        if (patch.title) {
+          semantic.what = patch.title;
+          semanticChanged = true;
+        }
+        if (patch.due !== undefined || patch.time !== undefined) {
+          const due = patch.due ?? item.due;
+          const time = patch.time ?? item.time;
+          semantic.when = [due, time].filter(Boolean).join(" · ") || undefined;
+          semanticChanged = true;
+        }
+        if (patch.personName !== undefined) {
+          semantic.who = patch.personName || "user";
+          semanticChanged = true;
+        }
+        if (patch.semanticContext) {
+          Object.assign(semantic, patch.semanticContext);
+          semanticChanged = true;
+        }
+        if (semanticChanged) resolvedPatch.semanticContext = semantic;
+
         let resolvedPerson: Person | undefined;
         let resolvedProject: Project | undefined;
 
@@ -949,6 +971,30 @@ export function NantiProvider({ children }: { children: ReactNode }) {
         if (!item || item.status !== "inbox") return false;
         if (useSupabase) {
           try {
+            const semantic = { ...(item.semanticContext || {}) };
+            let semanticChanged = false;
+            if (details?.title) {
+              semantic.what = details.title;
+              semanticChanged = true;
+            }
+            if (details?.personName) {
+              semantic.who = details.personName;
+              semanticChanged = true;
+            }
+            if (details?.due || details?.time) {
+              semantic.when = [
+                details.due || item.due,
+                details.time || item.time,
+              ].filter(Boolean).join(" · ");
+              semanticChanged = true;
+            }
+            if (semanticChanged) {
+              semantic.ambiguity = [];
+              await updateInboxItemFn({
+                data: { id, semantic_context: semantic },
+              });
+            }
+
             const result = await promoteInboxItemFn({
               data: {
                 id,
