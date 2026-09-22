@@ -243,6 +243,7 @@ export type AssistantCommandIntent =
   | "dismiss"
   | "reschedule"
   | "set_reminder"
+  | "edit"
   | "mark_followed_up"
   | "mark_received";
 
@@ -252,6 +253,10 @@ export interface AssistantCommand {
   dueText: string | null;
   time: string | null;
   reminderOffsetMinutes: number | null;
+  title: string | null;
+  priority: "low" | "medium" | "high" | null;
+  personName: string | null;
+  projectName: string | null;
   confidence: number;
   question: string | null;
   acknowledgement: string | null;
@@ -266,6 +271,7 @@ Intent yang boleh:
 - dismiss: pengguna bilang itu bukan tugas, hapus, abaikan
 - reschedule: ubah hari/tanggal/jam
 - set_reminder: minta diingatkan pada/berapa lama sebelum
+- edit: ganti judul, prioritas, orang, atau proyek pada item tersimpan
 - mark_followed_up: pengguna bilang sudah follow up item waiting
 - mark_received: hal yang ditunggu sudah diterima
 - none: bukan perintah edit terhadap item tersimpan
@@ -277,6 +283,8 @@ ATURAN:
 - dueText simpan frasa waktu pengguna apa adanya, misalnya "Jumat", "besok", "tanggal 25".
 - time gunakan HH:mm bila eksplisit.
 - reminderOffsetMinutes hanya bila pengguna bilang "2 jam sebelum", "30 menit sebelum", dst.
+- Untuk edit, isi hanya field yang diminta: title, priority, personName, projectName.
+- priority hanya low|medium|high. "urgent"/"penting banget" -> high.
 - acknowledgement adalah jawaban sangat singkat setelah tindakan berhasil.
 Balas JSON valid saja.`;
 
@@ -310,6 +318,7 @@ export async function interpretAssistantCommand(
     "dismiss",
     "reschedule",
     "set_reminder",
+    "edit",
     "mark_followed_up",
     "mark_received",
   ]);
@@ -327,6 +336,15 @@ export async function interpretAssistantCommand(
       typeof parsed?.reminderOffsetMinutes === "number"
         ? Math.max(0, Math.min(30 * 24 * 60, parsed.reminderOffsetMinutes))
         : null,
+    title: typeof parsed?.title === "string" ? parsed.title.slice(0, 500) : null,
+    priority:
+      parsed?.priority === "low" || parsed?.priority === "medium" || parsed?.priority === "high"
+        ? parsed.priority
+        : null,
+    personName:
+      typeof parsed?.personName === "string" ? parsed.personName.slice(0, 200) : null,
+    projectName:
+      typeof parsed?.projectName === "string" ? parsed.projectName.slice(0, 200) : null,
     confidence:
       typeof parsed?.confidence === "number"
         ? Math.max(0, Math.min(1, parsed.confidence))
