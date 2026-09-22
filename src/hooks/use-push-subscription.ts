@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || "";
 
@@ -54,11 +55,18 @@ export function usePushSubscription() {
 
       setSubscription(sub);
 
-      await fetch("/api/push/subscribe", {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("No authenticated session");
+
+      const response = await fetch("/api/push/subscribe", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify(sub.toJSON()),
       });
+      if (!response.ok) throw new Error("Push subscription was not saved");
 
       toast.success("Notifikasi push aktif");
     } catch (err) {
@@ -74,11 +82,17 @@ export function usePushSubscription() {
     try {
       if (subscription) {
         await subscription.unsubscribe();
-        await fetch("/api/push/unsubscribe", {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) throw new Error("No authenticated session");
+        const response = await fetch("/api/push/unsubscribe", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
           body: JSON.stringify({ endpoint: subscription.endpoint }),
         });
+        if (!response.ok) throw new Error("Push subscription was not removed");
       }
       setSubscription(null);
       toast.success("Notifikasi push dinonaktifkan");
