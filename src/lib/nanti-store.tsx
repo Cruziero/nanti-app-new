@@ -36,6 +36,8 @@ import {
   createInboxItem as createInboxItemFn,
   updateInboxItem as updateInboxItemFn,
   promoteInboxItem as promoteInboxItemFn,
+  markWaitingFollowedUp as markWaitingFollowedUpFn,
+  logProductEvent,
   createConversation as createConversationFn,
   seedDemoData,
   fetchUserSettings,
@@ -212,6 +214,10 @@ function waitingToItem(item: Record<string, unknown>): Item {
     memoryStrength: 1.0,
     createdBy: "ai",
     createdAt: item.created_at as string,
+    followUpAt: (item.follow_up_at as string) || undefined,
+    lastFollowedUpAt: (item.last_followed_up_at as string) || undefined,
+    followUpCount: (item.follow_up_count as number) || 0,
+    autoFollowUpEnabled: item.auto_follow_up_enabled !== false,
   };
 }
 
@@ -234,6 +240,8 @@ function inboxToItem(item: Record<string, unknown>): Item {
     memoryStrength: 0.5,
     createdBy: "ai",
     createdAt: item.created_at as string,
+    clarificationType: (item.clarification_type as Item["clarificationType"]) || undefined,
+    clarificationQuestion: (item.clarification_question as string) || undefined,
   };
 }
 
@@ -254,6 +262,7 @@ function personToPerson(person: Record<string, unknown>): Person {
     name: person.name as string,
     org: (person.company as string) || "",
     role: (person.role as string) || undefined,
+    phone: (person.phone as string) || undefined,
     lastConversation: (person.last_conversation_at as string)?.slice(0, 10) || todayISO(),
     activity: [],
   };
@@ -262,10 +271,12 @@ function personToPerson(person: Record<string, unknown>): Person {
 interface Ctx extends State {
   hydrated: boolean;
   update: (id: string, patch: Partial<Item>) => void;
+  editItem: (id: string, patch: Partial<Item>) => Promise<boolean>;
   addItems: (items: Item[], conversationText?: string) => Promise<number[]>;
   complete: (id: string) => Promise<boolean>;
   snooze: (id: string, days: number) => Promise<boolean>;
   followUp: (id: string, days: number) => Promise<boolean>;
+  markWaitingFollowedUp: (id: string, nextDays?: number) => Promise<boolean>;
   track: (id: string, details?: { personName?: string; due?: string; title?: string }) => Promise<boolean>;
   ignore: (id: string) => Promise<boolean>;
   remove: (id: string) => Promise<boolean>;
@@ -422,6 +433,80 @@ export function NantiProvider({ children }: { children: ReactNode }) {
           items: s.items.map((i) => (i.id === id ? { ...i, ...patch } : i)),
         }));
       },
+      editItem: async (id, patch) => {
+        const item = state.items.find((i) => i.id === id);
+        if (!item || item.status === "inbox") return false;
+        if (useSupabase) {
+          try {
+            if (item.kind === "waiting") {
+              await updateWaitingItemFn({
+                data: {
+                  id,
+                  title: patch.title,
+                  person_id: patch.personId === undefined ? undefined : patch.personId || null,
+                  project_id: patch.projectId === undefined ? undefined : patch.projectId || null,
+                  follow_up_at: patch.followUpAt,
+                  auto_follow_up_enabled: patch.autoFollowUpEnabled,
+                  status:
+                    patch.status === "received"
+                      ? "received"
+                      : patch.status === "open"
+                        ? "waiting"
+                        : undefined,
+                },
+              });
+            } else {
+              await updateTaskFn({
+                data: {
+                  id,
+                  title: patch.title,
+                  description: patch.description,
+                  type: patch.kind && patch.kind !== "invoice" ? patch.kind : undefined,
+                  status:
+                    patch.status === "done"
+                      ? "completed"
+                      : patch.status === "ignored"
+                        ? "dismissed"
+                        : patch.status === "open"
+                          ? "pending"
+                          : undefined,
+                  priority:
+                    patch.priority === "critical" ? "urgent" : patch.priority,
+                  due_date: patch.due,
+                  time: patch.time,
+                  person_id: patch.personId === undefined ? undefined : patch.personId || null,
+                  project_id: patch.projectId === undefined ? undefined : patch.projectId || null,
+                  person_name: patch.personName,
+                  project_name: patch.projectName,
+                  reminder_enabled: patch.reminderEnabled,
+                  reminder_time:
+                    patch.reminderTime === undefined ? undefined : patch.reminderTime || null,
+                  reminder_channels: patch.reminderChannels,
+                  reminder_intensity:
+                    patch.reminderIntensity === undefined ? undefined : patch.reminderIntensity || null,
+                },
+              });
+            }
+          } catch (error) {
+            console.error("Failed to edit item:", error);
+            toast.error("Perubahan belum tersimpan. Coba lagi.");
+            return false;
+          }
+        }
+        mutate((current) => ({
+          ...current,
+          items: current.items.map((i) => (i.id === id ? { ...i, ...patch } : i)),
+        }));
+        void logProductEvent({
+          data: {
+            event_name: "item_edited",
+            item_id: id,
+            source: "assistant",
+            properties: { fields: Object.keys(patch) },
+          },
+        }).catch(() => {});
+        return true;
+      },
       addItems: async (newItems, conversationText?: string) => {
         if (!useSupabase) {
           mutate((s) => ({ ...s, items: [...newItems, ...s.items] }));
@@ -443,7 +528,10 @@ export function NantiProvider({ children }: { children: ReactNode }) {
               type: item.kind, title: item.title, person_name: item.personName,
               project_name: item.projectName, due_date: item.due,
               conversation_text: conversationText?.slice(0, 5000),
-              source: item.source, source_type: item.sourceType, status: "pending",
+              source: item.source, source_type: item.sourceType,
+              clarification_type: item.clarificationType,
+              clarification_question: item.clarificationQuestion,
+              status: "pending",
             } });
             return inboxToItem(saved);
           }
@@ -455,6 +543,10 @@ export function NantiProvider({ children }: { children: ReactNode }) {
               source: item.source, quote: item.quote, ai_note: item.aiNote,
               confidence: item.confidence, source_type: item.sourceType,
               conversation_id: conversationId,
+              follow_up_at:
+                item.followUpAt ||
+                new Date(Date.now() + 2 * 86400000).toISOString(),
+              auto_follow_up_enabled: item.autoFollowUpEnabled ?? true,
             } });
             return waitingToItem(saved);
           }
@@ -508,6 +600,13 @@ export function NantiProvider({ children }: { children: ReactNode }) {
             i.id === id ? { ...i, status: i.kind === "waiting" ? "received" : "done" } : i,
           ),
         }));
+        void logProductEvent({
+          data: {
+            event_name: current.kind === "waiting" ? "waiting_received" : "task_completed",
+            item_id: id,
+            source: "app",
+          },
+        }).catch(() => {});
         return true;
       },
       snooze: async (id, days) => {
@@ -557,6 +656,49 @@ export function NantiProvider({ children }: { children: ReactNode }) {
             i.id === id ? { ...i, kind: "followup", status: "open", due } : i,
           ),
         }));
+        return true;
+      },
+      markWaitingFollowedUp: async (id, nextDays = 2) => {
+        const item = state.items.find((i) => i.id === id);
+        if (!item || item.kind !== "waiting" || item.status !== "open") return false;
+        if (useSupabase) {
+          try {
+            const updated = await markWaitingFollowedUpFn({ data: { id, next_days: nextDays } });
+            const mapped = waitingToItem(updated as Record<string, unknown>);
+            mutate((current) => ({
+              ...current,
+              items: current.items.map((i) => (i.id === id ? mapped : i)),
+            }));
+          } catch (error) {
+            console.error("Failed to mark waiting follow-up:", error);
+            toast.error("Follow-up belum tercatat. Coba lagi.");
+            return false;
+          }
+        } else {
+          const now = new Date().toISOString();
+          const next = new Date(Date.now() + nextDays * 86400000).toISOString();
+          mutate((current) => ({
+            ...current,
+            items: current.items.map((i) =>
+              i.id === id
+                ? {
+                    ...i,
+                    lastFollowedUpAt: now,
+                    followUpAt: next,
+                    followUpCount: (i.followUpCount || 0) + 1,
+                  }
+                : i,
+            ),
+          }));
+        }
+        void logProductEvent({
+          data: {
+            event_name: "waiting_followed_up",
+            item_id: id,
+            source: "app",
+            properties: { next_days: nextDays },
+          },
+        }).catch(() => {});
         return true;
       },
       track: async (id, details) => {
