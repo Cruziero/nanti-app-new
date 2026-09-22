@@ -40,6 +40,27 @@ export interface Project {
   sources: string[];
 }
 
+export interface SemanticReminderPlan {
+  shouldRemind: boolean;
+  strategy?: "before" | "at_time" | "morning_of" | "follow_up" | "none";
+  offsetMinutes?: number | null;
+  reason?: string;
+  message?: string;
+}
+
+export interface SemanticContext {
+  normalizedText?: string;
+  what?: string;
+  who?: string;
+  when?: string;
+  where?: string;
+  how?: string;
+  owner?: "me" | "other" | "unknown";
+  reminder?: SemanticReminderPlan;
+  typoCorrected?: boolean;
+  ambiguity?: string[];
+}
+
 export interface Item {
   id: string;
   title: string;
@@ -63,6 +84,8 @@ export interface Item {
   memoryStrength: number; // 0..2, 1.0 = normal, 2.0 = very strong, 0 = forgotten
   createdBy: "ai" | "user";
   createdAt?: string | undefined; // ISO timestamp
+  // Structured meaning detected from the source conversation.
+  semanticContext?: SemanticContext;
   // Reminder fields
   reminderEnabled?: boolean;
   reminderTime?: string | undefined; // ISO timestamp
