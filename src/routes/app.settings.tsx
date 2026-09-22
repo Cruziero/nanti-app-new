@@ -91,6 +91,11 @@ function SettingsPage() {
     return () => window.clearInterval(timer);
   }, [refreshWhatsApp, whatsAppLink?.link_code, whatsappConnected]);
 
+  useEffect(() => {
+    if (whatsAppLoading || settings.whatsappConnected === whatsappConnected) return;
+    void setSettings({ whatsappConnected });
+  }, [whatsAppLoading, whatsappConnected, settings.whatsappConnected, setSettings]);
+
   const connectWhatsApp = async () => {
     setWhatsAppLoading(true);
     try {
