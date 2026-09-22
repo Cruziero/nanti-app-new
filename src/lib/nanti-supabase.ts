@@ -276,6 +276,7 @@ export const createTask = createServerFn({ method: "POST" }).middleware([require
         reminder_time: z.string().optional().nullable(),
         reminder_channels: z.array(z.enum(["whatsapp", "push", "calendar", "in_app"])).optional(),
         reminder_intensity: z.enum(["gentle", "normal", "persistent"]).optional().nullable(),
+        semantic_context: z.record(z.unknown()).optional(),
       })
       .parse(data),
   )
@@ -310,6 +311,7 @@ export const updateTask = createServerFn({ method: "POST" }).middleware([require
         reminder_time: z.string().optional().nullable(),
         reminder_channels: z.array(z.enum(["whatsapp", "push", "calendar", "in_app"])).optional(),
         reminder_intensity: z.enum(["gentle", "normal", "persistent"]).optional().nullable(),
+        semantic_context: z.record(z.unknown()).optional(),
       })
       .parse(data),
   )
@@ -366,6 +368,7 @@ export const createWaitingItem = createServerFn({ method: "POST" }).middleware([
         last_followed_up_at: z.string().optional().nullable(),
         follow_up_count: z.number().int().min(0).optional(),
         auto_follow_up_enabled: z.boolean().optional(),
+        semantic_context: z.record(z.unknown()).optional(),
       })
       .parse(data),
   )
@@ -393,6 +396,7 @@ export const updateWaitingItem = createServerFn({ method: "POST" }).middleware([
         last_followed_up_at: z.string().optional().nullable(),
         follow_up_count: z.number().int().min(0).optional(),
         auto_follow_up_enabled: z.boolean().optional(),
+        semantic_context: z.record(z.unknown()).optional(),
       })
       .parse(data),
   )
@@ -446,6 +450,7 @@ export const createInboxItem = createServerFn({ method: "POST" }).middleware([re
         clarification_type: z.enum(["date", "time", "person", "confirmation"]).optional().nullable(),
         clarification_question: z.string().max(500).optional().nullable(),
         status: z.enum(["pending", "tracked", "ignored"]).optional(),
+        semantic_context: z.record(z.unknown()).optional(),
       })
       .parse(data),
   )
@@ -467,6 +472,7 @@ export const updateInboxItem = createServerFn({ method: "POST" }).middleware([re
         id: z.string().uuid(),
         status: z.enum(["pending", "tracked", "ignored"]).optional(),
         task_id: z.string().uuid().optional().nullable(),
+        semantic_context: z.record(z.unknown()).optional(),
       })
       .parse(data),
   )
