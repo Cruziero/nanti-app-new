@@ -521,6 +521,7 @@ export function NantiProvider({ children }: { children: ReactNode }) {
                     resolvedPatch.projectId === undefined ? undefined : resolvedPatch.projectId || null,
                   follow_up_at: resolvedPatch.followUpAt,
                   auto_follow_up_enabled: resolvedPatch.autoFollowUpEnabled,
+                  semantic_context: resolvedPatch.semanticContext,
                   status:
                     resolvedPatch.status === "received"
                       ? "received"
