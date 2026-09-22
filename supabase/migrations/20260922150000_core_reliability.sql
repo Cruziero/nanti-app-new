@@ -25,15 +25,16 @@ begin
     alter table public.tasks
       add constraint tasks_confidence_range check (confidence >= 0 and confidence <= 1);
   end if;
-  if not exists (
+  if exists (
     select 1 from pg_constraint
     where conrelid = 'public.tasks'::regclass
       and conname = 'tasks_source_type_check'
   ) then
-    alter table public.tasks
-      add constraint tasks_source_type_check
-      check (source_type is null or source_type in ('paste','screenshot','chat','demo','manual','whatsapp','calendar'));
+    alter table public.tasks drop constraint tasks_source_type_check;
   end if;
+  alter table public.tasks
+    add constraint tasks_source_type_check
+    check (source_type is null or source_type in ('paste','screenshot','chat','demo','manual','whatsapp','calendar'));
   if not exists (
     select 1 from pg_constraint
     where conrelid = 'public.tasks'::regclass
