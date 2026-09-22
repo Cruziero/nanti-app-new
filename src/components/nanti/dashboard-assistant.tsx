@@ -548,6 +548,23 @@ export function DashboardAssistant() {
           reminderChannels: target.reminderChannels?.length
             ? target.reminderChannels
             : ["in_app", "push"],
+          semanticContext: {
+            ...(target.semanticContext || {}),
+            when:
+              [
+                parsed.date || target.due,
+                parsed.time || command.time || target.time,
+              ].filter(Boolean).join(" · ") || target.semanticContext?.when,
+            reminder: {
+              shouldRemind: true,
+              strategy: offset > 0 ? "before" : "at_time",
+              offsetMinutes: offset,
+              reason: "Requested in chat.",
+              message:
+                target.semanticContext?.reminder?.message ||
+                `Ingat: ${target.title}`,
+            },
+          },
           ...(parsed.date ? { due: parsed.date } : {}),
           ...(parsed.time || command.time ? { time } : {}),
         })
@@ -771,7 +788,8 @@ export function DashboardAssistant() {
       if (
         answerResult.status === "rejected" &&
         extractionResult.status === "rejected" &&
-        !nextItems.length
+        !nextItems.length &&
+        !deterministicAnswer
       ) {
         setError("NANTI couldn’t answer or detect an action from that message. Please try again.");
       }
