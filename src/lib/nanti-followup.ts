@@ -19,15 +19,21 @@ export function detectFollowUps(items: Item[], people: Person[]): FollowUpSugges
   for (const item of openItems) {
     if (item.kind === "waiting" && item.since) {
       const days = Math.abs(dayDiff(item.since) ?? 0);
-      if (days >= 2) {
+      const followUpDue = item.followUpAt
+        ? new Date(item.followUpAt).getTime() <= Date.now()
+        : days >= 2;
+      if (followUpDue) {
         const person = people.find((p) => p.id === item.personId);
+        const personName = person?.name || item.personName;
         suggestions.push({
           itemId: item.id,
           type: days >= 4 ? "stale_waiting" : "waiting_no_response",
           title: item.title,
-          personName: person?.name || item.personName,
+          personName,
           daysSince: days,
-          suggestedAction: `Sudah ${days} hari menunggu${person?.name ? ` dari ${person.name}` : ""}`,
+          suggestedAction: item.followUpCount
+            ? `Sudah follow up ${item.followUpCount}× · waktunya cek lagi`
+            : `Sudah ${days} hari menunggu${personName ? ` dari ${personName}` : ""}`,
         });
       }
     }
