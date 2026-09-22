@@ -236,7 +236,7 @@ function inboxToItem(item: Record<string, unknown>): Item {
     sourceType: (item.source_type as Item["sourceType"]) || undefined,
     quote: (item.conversation_text as string) || "",
     aiNote: "",
-    confidence: 0.8,
+    confidence: item.clarification_type ? 0.6 : 0.8,
     memoryStrength: 0.5,
     createdBy: "ai",
     createdAt: item.created_at as string,
@@ -578,6 +578,19 @@ export function NantiProvider({ children }: { children: ReactNode }) {
           }
         });
         mutate((s) => ({ ...s, items: [...savedItems, ...s.items] }));
+        for (const savedItem of savedItems) {
+          void logProductEvent({
+            data: {
+              event_name: "capture_saved",
+              item_id: savedItem.id,
+              source: savedItem.sourceType || "unknown",
+              properties: {
+                kind: savedItem.kind,
+                needs_clarification: savedItem.status === "inbox",
+              },
+            },
+          }).catch(() => {});
+        }
         return savedRecords;
       },
       complete: async (id) => {
@@ -750,6 +763,7 @@ export function NantiProvider({ children }: { children: ReactNode }) {
                   title: details?.title || i.title,
                   personName: details?.personName || i.personName,
                   due: details?.due || i.due,
+                  time: details?.time || i.time,
                   status: "open" as const,
                   memoryStrength: Math.min((i.memoryStrength || 1) + 0.2, 2),
                 }
