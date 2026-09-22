@@ -50,6 +50,7 @@ export const interpretTaskCommand = createServerFn({ method: "POST" }).middlewar
           due: z.string().optional(),
           time: z.string().optional(),
           person: z.string().max(200).optional(),
+          project: z.string().max(200).optional(),
           updatedAt: z.string().optional(),
         }),
       ).max(25),
