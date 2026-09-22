@@ -79,7 +79,9 @@ export function draftToItem(
   draft: Draft,
   ctx: { people: Person[]; projects: Project[]; sourceType: SourceType; sourceName?: string },
 ): Item {
-  const person = matchPerson(ctx.people, draft.person || draft.who);
+  const relatedPersonName =
+    draft.person || (draft.who && draft.who !== "user" ? draft.who : null);
+  const person = matchPerson(ctx.people, relatedPersonName);
   const project = matchProject(ctx.projects, draft.project);
 
   // Determine due date from structured fields
@@ -144,7 +146,7 @@ export function draftToItem(
     ...(time ? { time } : {}),
     ...(draft.kind === "waiting" ? { since: todayISO() } : {}),
     ...(person ? { personId: person.id } : {}),
-    ...(draft.person || draft.who ? { personName: draft.person || draft.who || undefined } : {}),
+    ...(relatedPersonName ? { personName: relatedPersonName } : {}),
     ...(project ? { projectId: project.id } : {}),
     ...(draft.project ? { projectName: draft.project } : {}),
     source: draft.source || ctx.sourceName || "Impor percakapan",
