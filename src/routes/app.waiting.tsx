@@ -17,7 +17,7 @@ export const Route = createFileRoute("/app/waiting")({
 });
 
 function WaitingPage() {
-  const { items, personOf, complete, snooze } = useNanti();
+  const { items, personOf, complete } = useNanti();
   const openDetail = useItemDetail();
   const list = openItems(items)
     .filter((i) => i.kind === "waiting")
@@ -65,15 +65,6 @@ function WaitingPage() {
                     className="rounded-md border border-border px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground transition-colors hover:bg-secondary"
                   >
                     Done
-                  </button>
-                  <button
-                    onClick={async () => {
-                      if (!await snooze(item.id, 2)) return;
-                      toast("Snoozed 2 days");
-                    }}
-                    className="rounded-md px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground"
-                  >
-                    Snooze
                   </button>
                 </div>
               </div>
