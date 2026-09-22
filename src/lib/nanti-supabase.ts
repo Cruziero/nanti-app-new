@@ -174,6 +174,9 @@ export const createTask = createServerFn({ method: "POST" }).middleware([require
         reminder_time: z.string().optional().nullable(),
         reminder_channels: z.array(z.enum(["whatsapp", "push", "calendar", "in_app"])).optional(),
         reminder_intensity: z.enum(["gentle", "normal", "persistent"]).optional().nullable(),
+        time: z.string().max(20).optional().nullable(),
+        person_name: z.string().max(200).optional().nullable(),
+        project_name: z.string().max(200).optional().nullable(),
       })
       .parse(data),
   )
@@ -257,6 +260,10 @@ export const createWaitingItem = createServerFn({ method: "POST" }).middleware([
         confidence: z.number().min(0).max(1).optional(),
         source_type: z.enum(["paste", "screenshot", "chat", "demo", "manual", "whatsapp", "calendar"]).optional(),
         conversation_id: z.string().uuid().optional(),
+        follow_up_at: z.string().optional().nullable(),
+        last_followed_up_at: z.string().optional().nullable(),
+        follow_up_count: z.number().int().min(0).optional(),
+        auto_follow_up_enabled: z.boolean().optional(),
       })
       .parse(data),
   )
@@ -280,6 +287,10 @@ export const updateWaitingItem = createServerFn({ method: "POST" }).middleware([
         status: z.enum(["waiting", "received", "snoozed"]).optional(),
         person_id: z.string().uuid().optional().nullable(),
         project_id: z.string().uuid().optional().nullable(),
+        follow_up_at: z.string().optional().nullable(),
+        last_followed_up_at: z.string().optional().nullable(),
+        follow_up_count: z.number().int().min(0).optional(),
+        auto_follow_up_enabled: z.boolean().optional(),
       })
       .parse(data),
   )
@@ -330,6 +341,8 @@ export const createInboxItem = createServerFn({ method: "POST" }).middleware([re
         conversation_text: z.string().max(5000).optional(),
         source: z.string().max(200).optional(),
         source_type: z.enum(["paste", "screenshot", "chat", "demo", "manual", "whatsapp", "calendar"]).optional(),
+        clarification_type: z.enum(["date", "time", "person", "confirmation"]).optional().nullable(),
+        clarification_question: z.string().max(500).optional().nullable(),
         status: z.enum(["pending", "tracked", "ignored"]).optional(),
       })
       .parse(data),
@@ -387,6 +400,116 @@ export const promoteInboxItem = createServerFn({ method: "POST" }).middleware([r
     });
     if (error) throw error;
     return result as { entity: "task" | "waiting"; item: Record<string, unknown> };
+  });
+
+
+// Waiting follow-up state
+export const markWaitingFollowedUp = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({
+      id: z.string().uuid(),
+      next_days: z.number().int().min(1).max(30).default(2),
+    }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId, supabase } = context;
+    const { data: current, error: currentError } = await supabase
+      .from("waiting_items")
+      .select("id,follow_up_count,status")
+      .eq("id", data.id)
+      .eq("user_id", userId)
+      .single();
+    if (currentError) throw currentError;
+    if (current.status !== "waiting" && current.status !== "snoozed") {
+      throw new Error("Waiting item is no longer active.");
+    }
+    const now = new Date();
+    const next = new Date(now.getTime() + data.next_days * 86400000).toISOString();
+    const { data: updated, error } = await supabase
+      .from("waiting_items")
+      .update({
+        last_followed_up_at: now.toISOString(),
+        follow_up_at: next,
+        follow_up_count: (current.follow_up_count || 0) + 1,
+        status: "waiting",
+        updated_at: now.toISOString(),
+      })
+      .eq("id", data.id)
+      .eq("user_id", userId)
+      .select("*")
+      .single();
+    if (error) throw error;
+    return updated;
+  });
+
+// WhatsApp linking
+export const fetchWhatsAppLink = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId, supabase } = context;
+    const { data, error } = await supabase
+      .from("whatsapp_user_links")
+      .select("phone_number,link_code,link_expires_at,verified_at,updated_at")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  });
+
+export const startWhatsAppLink = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId, supabase } = context;
+    const { data: existing, error: existingError } = await supabase
+      .from("whatsapp_user_links")
+      .select("phone_number,verified_at")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (existingError) throw existingError;
+    if (existing?.verified_at) return { connected: true, phone_number: existing.phone_number, code: null };
+
+    const code = crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase();
+    const expires = new Date(Date.now() + 15 * 60_000).toISOString();
+    const { error } = await supabase.from("whatsapp_user_links").upsert(
+      {
+        user_id: userId,
+        link_code: code,
+        link_expires_at: expires,
+        phone_number: null,
+        verified_at: null,
+        pending_inbox_id: null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" },
+    );
+    if (error) throw error;
+    return { connected: false, phone_number: null, code, expires_at: expires };
+  });
+
+export const disconnectWhatsApp = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId, supabase } = context;
+    const { error } = await supabase.from("whatsapp_user_links").delete().eq("user_id", userId);
+    if (error) throw error;
+    return { success: true };
+  });
+
+export const logProductEvent = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({
+      event_name: z.string().min(1).max(120),
+      item_id: z.string().uuid().optional().nullable(),
+      source: z.string().max(80).optional(),
+      properties: z.record(z.unknown()).optional(),
+    }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId, supabase } = context;
+    const { error } = await supabase.from("product_events").insert({
+      ...data,
+      user_id: userId,
+      properties: data.properties ?? {},
+    });
+    if (error) throw error;
+    return { success: true };
   });
 
 // Conversations
