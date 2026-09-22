@@ -202,10 +202,13 @@ function waitingToItem(item: Record<string, unknown>): Item {
     since: (item.started_at as string)?.slice(0, 10),
     personId: (item.person_id as string) || undefined,
     projectId: (item.project_id as string) || undefined,
-    source: "",
-    quote: "",
-    aiNote: "",
-    confidence: 0.8,
+    personName: (item.person_name as string) || undefined,
+    projectName: (item.project_name as string) || undefined,
+    source: (item.source as string) || "",
+    sourceType: (item.source_type as Item["sourceType"]) || undefined,
+    quote: (item.quote as string) || "",
+    aiNote: (item.ai_note as string) || "",
+    confidence: typeof item.confidence === "number" ? item.confidence : 0.8,
     memoryStrength: 1.0,
     createdBy: "ai",
     createdAt: item.created_at as string,
@@ -223,7 +226,8 @@ function inboxToItem(item: Record<string, unknown>): Item {
     due: (item.due_date as string)?.slice(0, 10),
     personName: (item.person_name as string) || undefined,
     projectName: (item.project_name as string) || undefined,
-    source: "",
+    source: (item.source as string) || "",
+    sourceType: (item.source_type as Item["sourceType"]) || undefined,
     quote: (item.conversation_text as string) || "",
     aiNote: "",
     confidence: 0.8,
@@ -426,7 +430,10 @@ export function NantiProvider({ children }: { children: ReactNode }) {
         let conversationId: string | undefined;
         if (conversationText) {
           const conversation = await createConversationFn({ data: {
-            source: "Impor percakapan", message_text: conversationText.slice(0, 20000),
+            source: newItems.some((item) => item.sourceType === "chat")
+              ? "Chat dengan NANTI"
+              : "Impor percakapan",
+            message_text: conversationText.slice(0, 20000),
           } });
           conversationId = conversation.id;
         }
