@@ -454,11 +454,18 @@ async function persistExtractedItem(
         clarification_question: question,
         status: "pending",
       }, { onConflict: "user_id,source_external_id" })
-      .select("id,title")
+      .select("*")
       .single();
     if (error) throw error;
     return { entity: "inbox", id: data.id, title: data.title, question };
   }
+
+  const person = item.person
+    ? await resolvePersonAdmin(supabase, userId, item.person, item.org)
+    : null;
+  const project = item.project
+    ? await resolveProjectAdmin(supabase, userId, item.project)
+    : null;
 
   if (item.kind === "waiting") {
     const { data, error } = await supabase
@@ -467,6 +474,8 @@ async function persistExtractedItem(
         user_id: userId,
         source_external_id: sourceExternalId,
         title: item.title,
+        person_id: person?.id || null,
+        project_id: project?.id || null,
         person_name: item.person,
         project_name: item.project,
         status: "waiting",
@@ -483,6 +492,19 @@ async function persistExtractedItem(
       .select("id,title")
       .single();
     if (error) throw error;
+    if (person?.id) {
+      await recordPersonActivityAdmin(supabase, {
+        userId,
+        personId: person.id,
+        eventType: "captured",
+        itemId: data.id,
+        conversationId,
+        summary: `Captured from WhatsApp: ${data.title}`,
+        source: "WhatsApp",
+        dedupeKey: `whatsapp:${sourceExternalId}:activity`,
+        metadata: { kind: "waiting" },
+      });
+    }
     return { entity: "waiting", id: data.id, title: data.title };
   }
 
@@ -493,6 +515,8 @@ async function persistExtractedItem(
       user_id: userId,
       source_external_id: sourceExternalId,
       title: item.title,
+      person_id: person?.id || null,
+      project_id: project?.id || null,
       type: item.kind,
       status: "pending",
       priority: item.priority || "medium",
@@ -511,9 +535,22 @@ async function persistExtractedItem(
       reminder_channels: enableReminder ? ["in_app", "push"] : [],
       reminder_intensity: "normal",
     }, { onConflict: "user_id,source_external_id" })
-    .select("id,title")
+    .select("*")
     .single();
   if (error) throw error;
+  if (person?.id) {
+    await recordPersonActivityAdmin(supabase, {
+      userId,
+      personId: person.id,
+      eventType: "captured",
+      itemId: data.id,
+      conversationId,
+      summary: `Captured from WhatsApp: ${data.title}`,
+      source: "WhatsApp",
+      dedupeKey: `whatsapp:${sourceExternalId}:activity`,
+      metadata: { kind: item.kind },
+    });
+  }
   return { entity: "task", id: data.id, title: data.title };
 }
 
@@ -579,13 +616,23 @@ async function promoteInboxAdmin(
   inbox: Record<string, any>,
   details: { personName?: string; due?: string; time?: string },
 ) {
+  const personName = details.personName || inbox.person_name;
+  const person = personName
+    ? await resolvePersonAdmin(supabase, userId, personName, null)
+    : null;
+  const project = inbox.project_name
+    ? await resolveProjectAdmin(supabase, userId, String(inbox.project_name))
+    : null;
+
   if (inbox.type === "waiting") {
     const { data, error } = await supabase
       .from("waiting_items")
       .insert({
         user_id: userId,
         title: inbox.title,
-        person_name: details.personName || inbox.person_name,
+        person_id: person?.id || null,
+        project_id: project?.id || null,
+        person_name: personName,
         project_name: inbox.project_name,
         status: "waiting",
         started_at: new Date().toISOString(),
@@ -605,6 +652,18 @@ async function promoteInboxAdmin(
       .eq("id", inbox.id)
       .eq("user_id", userId);
     if (updateError) throw updateError;
+    if (person?.id) {
+      await recordPersonActivityAdmin(supabase, {
+        userId,
+        personId: person.id,
+        eventType: "captured",
+        itemId: data.id,
+        summary: `Clarified from WhatsApp: ${data.title}`,
+        source: "WhatsApp",
+        dedupeKey: `whatsapp:promoted:${inbox.id}`,
+        metadata: { kind: "waiting" },
+      });
+    }
     return { ...data, kind: "waiting" };
   }
 
@@ -614,12 +673,14 @@ async function promoteInboxAdmin(
     .insert({
       user_id: userId,
       title: inbox.title,
+      person_id: person?.id || null,
+      project_id: project?.id || null,
       type: inbox.type,
       status: "pending",
       priority: "medium",
       due_date: due,
       time: details.time || null,
-      person_name: details.personName || inbox.person_name,
+      person_name: personName,
       project_name: inbox.project_name,
       source: inbox.source || "WhatsApp",
       source_type: "whatsapp",
@@ -640,7 +701,150 @@ async function promoteInboxAdmin(
     .eq("id", inbox.id)
     .eq("user_id", userId);
   if (updateError) throw updateError;
+  if (person?.id) {
+    await recordPersonActivityAdmin(supabase, {
+      userId,
+      personId: person.id,
+      eventType: "captured",
+      itemId: data.id,
+      summary: `Clarified from WhatsApp: ${data.title}`,
+      source: "WhatsApp",
+      dedupeKey: `whatsapp:promoted:${inbox.id}`,
+      metadata: { kind: inbox.type },
+    });
+  }
   return { ...data, kind: inbox.type };
+}
+
+async function resolvePersonAdmin(
+  supabase: ReturnType<typeof adminClient>,
+  userId: string,
+  name: string,
+  company?: string | null,
+) {
+  const cleanName = name.trim().slice(0, 200);
+  if (!cleanName) return null;
+
+  const { data: existing, error: existingError } = await supabase
+    .from("people")
+    .select("*")
+    .eq("user_id", userId)
+    .ilike("name", cleanName)
+    .limit(1)
+    .maybeSingle();
+  if (existingError) throw existingError;
+
+  if (existing) {
+    if (company && !existing.company) {
+      const { data: updated, error } = await supabase
+        .from("people")
+        .update({ company: company.trim().slice(0, 200), updated_at: new Date().toISOString() })
+        .eq("id", existing.id)
+        .eq("user_id", userId)
+        .select("*")
+        .single();
+      if (error) throw error;
+      return updated;
+    }
+    return existing;
+  }
+
+  const { data, error } = await supabase
+    .from("people")
+    .insert({
+      user_id: userId,
+      name: cleanName,
+      company: company?.trim().slice(0, 200) || null,
+      last_conversation_at: new Date().toISOString(),
+    })
+    .select("*")
+    .single();
+  if (!error) return data;
+  if ((error as { code?: string }).code !== "23505") throw error;
+
+  const { data: raced, error: racedError } = await supabase
+    .from("people")
+    .select("*")
+    .eq("user_id", userId)
+    .ilike("name", cleanName)
+    .limit(1)
+    .single();
+  if (racedError) throw racedError;
+  return raced;
+}
+
+async function resolveProjectAdmin(
+  supabase: ReturnType<typeof adminClient>,
+  userId: string,
+  name: string,
+) {
+  const cleanName = name.trim().slice(0, 200);
+  if (!cleanName) return null;
+
+  const { data: existing, error: existingError } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("user_id", userId)
+    .ilike("name", cleanName)
+    .limit(1)
+    .maybeSingle();
+  if (existingError) throw existingError;
+  if (existing) return existing;
+
+  const { data, error } = await supabase
+    .from("projects")
+    .insert({ user_id: userId, name: cleanName, description: "" })
+    .select("*")
+    .single();
+  if (!error) return data;
+  if ((error as { code?: string }).code !== "23505") throw error;
+
+  const { data: raced, error: racedError } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("user_id", userId)
+    .ilike("name", cleanName)
+    .limit(1)
+    .single();
+  if (racedError) throw racedError;
+  return raced;
+}
+
+async function recordPersonActivityAdmin(
+  supabase: ReturnType<typeof adminClient>,
+  input: {
+    userId: string;
+    personId: string;
+    eventType: "captured" | "completed" | "followed_up" | "received" | "conversation" | "note";
+    itemId?: string | null;
+    conversationId?: string | null;
+    summary: string;
+    source?: string | null;
+    dedupeKey?: string | null;
+    metadata?: Record<string, unknown>;
+  },
+) {
+  const occurredAt = new Date().toISOString();
+  const { error } = await supabase.from("person_activity").insert({
+    user_id: input.userId,
+    person_id: input.personId,
+    event_type: input.eventType,
+    item_id: input.itemId ?? null,
+    conversation_id: input.conversationId ?? null,
+    summary: input.summary.slice(0, 1000),
+    source: input.source ?? null,
+    occurred_at: occurredAt,
+    dedupe_key: input.dedupeKey ?? null,
+    metadata: input.metadata ?? {},
+  });
+  if (error && (error as { code?: string }).code !== "23505") throw error;
+
+  const { error: personError } = await supabase
+    .from("people")
+    .update({ last_conversation_at: occurredAt, updated_at: occurredAt })
+    .eq("id", input.personId)
+    .eq("user_id", input.userId);
+  if (personError) throw personError;
 }
 
 async function clearPendingClarification(

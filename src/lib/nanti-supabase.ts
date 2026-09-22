@@ -173,6 +173,72 @@ export const resolveProjectMemory = createServerFn({ method: "POST" })
     return row as Record<string, unknown>;
   });
 
+export const fetchPersonActivity = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId, supabase } = context;
+    const { data, error } = await supabase
+      .from("person_activity")
+      .select("id,person_id,event_type,item_id,conversation_id,summary,source,occurred_at,metadata")
+      .eq("user_id", userId)
+      .order("occurred_at", { ascending: false })
+      .limit(300);
+    if (error) throw error;
+    return data;
+  });
+
+export const logPersonActivity = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({
+      person_id: z.string().uuid(),
+      event_type: z.enum(["captured", "completed", "followed_up", "received", "conversation", "note"]),
+      item_id: z.string().uuid().optional().nullable(),
+      conversation_id: z.string().uuid().optional().nullable(),
+      summary: z.string().min(1).max(1000),
+      source: z.string().max(200).optional().nullable(),
+      occurred_at: z.string().optional(),
+      dedupe_key: z.string().max(300).optional().nullable(),
+      metadata: z.record(z.unknown()).optional(),
+    }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId, supabase } = context;
+    const occurredAt = data.occurred_at || new Date().toISOString();
+    const { data: activity, error } = await supabase
+      .from("person_activity")
+      .insert({
+        user_id: userId,
+        person_id: data.person_id,
+        event_type: data.event_type,
+        item_id: data.item_id ?? null,
+        conversation_id: data.conversation_id ?? null,
+        summary: data.summary,
+        source: data.source ?? null,
+        occurred_at: occurredAt,
+        dedupe_key: data.dedupe_key ?? null,
+        metadata: data.metadata ?? {},
+      })
+      .select("*")
+      .single();
+
+    if (error) {
+      if ((error as { code?: string }).code === "23505") return null;
+      throw error;
+    }
+
+    if (["captured", "followed_up", "received", "conversation"].includes(data.event_type)) {
+      const { error: personError } = await supabase
+        .from("people")
+        .update({ last_conversation_at: occurredAt, updated_at: new Date().toISOString() })
+        .eq("id", data.person_id)
+        .eq("user_id", userId);
+      if (personError) throw personError;
+    }
+
+    return activity;
+  });
+
 // Tasks
 export const fetchTasks = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { userId, supabase } = context;

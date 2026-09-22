@@ -509,7 +509,20 @@ export function DashboardAssistant() {
         .join("\n");
       const peopleMemory = people
         .slice(0, 50)
-        .map((person) => `${person.name}${person.org ? ` — ${person.org}` : ""}`)
+        .map((person) => {
+          const recentActivity = person.activity
+            .slice(0, 4)
+            .map((activity) => `${activity.date}: ${activity.text}`)
+            .join(" | ");
+          return [
+            `${person.name}${person.org ? ` — ${person.org}` : ""}`,
+            person.role ? `role: ${person.role}` : "",
+            person.lastConversation ? `last interaction: ${person.lastConversation}` : "",
+            recentActivity ? `recent: ${recentActivity}` : "",
+          ]
+            .filter(Boolean)
+            .join(" · ");
+        })
         .join("\n");
       const projectMemory = projects
         .slice(0, 50)

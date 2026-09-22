@@ -24,6 +24,7 @@ import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
 import {
   fetchProjects,
   fetchPeople,
+  fetchPersonActivity,
   fetchTasks,
   fetchWaitingItems,
   fetchInboxItems,
@@ -40,6 +41,7 @@ import {
   resolveProjectMemory,
   markWaitingFollowedUp as markWaitingFollowedUpFn,
   logProductEvent,
+  logPersonActivity,
   createConversation as createConversationFn,
   seedDemoData,
   fetchUserSettings,
@@ -178,6 +180,8 @@ function taskToItem(task: Record<string, unknown>): Item {
     time: (task.time as string) || undefined,
     personId: (task.person_id as string) || undefined,
     projectId: (task.project_id as string) || undefined,
+    personName: (task.person_name as string) || undefined,
+    projectName: (task.project_name as string) || undefined,
     source: (task.source as string) || "",
     sourceType: (task.source_type as Item["sourceType"]) || undefined,
     quote: (task.quote as string) || "",
@@ -317,9 +321,10 @@ export function NantiProvider({ children }: { children: ReactNode }) {
       setUseSupabase(true);
       const loadFromSupabase = async () => {
         try {
-          const [projectsData, peopleData, tasksData, waitingData, inboxData] = await Promise.all([
+          const [projectsData, peopleData, activityData, tasksData, waitingData, inboxData] = await Promise.all([
             fetchProjects(),
             fetchPeople(),
+            fetchPersonActivity(),
             fetchTasks(),
             fetchWaitingItems(),
             fetchInboxItems(),
@@ -329,9 +334,23 @@ export function NantiProvider({ children }: { children: ReactNode }) {
           const savedSettings = { ...defaultSettings, ...remoteSettings };
           if (cancelled) return;
 
+          const activityByPerson = new Map<string, Person["activity"]>();
+          for (const row of activityData) {
+            const personId = row.person_id as string;
+            const current = activityByPerson.get(personId) || [];
+            current.push({
+              date: String(row.occurred_at || new Date().toISOString()).slice(0, 10),
+              text: String(row.summary || ""),
+            });
+            activityByPerson.set(personId, current.slice(0, 20));
+          }
+
           setState({
             projects: projectsData.map(projectToProject),
-            people: peopleData.map(personToPerson),
+            people: peopleData.map((row) => {
+              const person = personToPerson(row);
+              return { ...person, activity: activityByPerson.get(person.id) || [] };
+            }),
             items: [...tasksData.map(taskToItem), ...waitingData.map(waitingToItem), ...inboxData.map(inboxToItem)],
             settings: savedSettings,
           });
@@ -661,22 +680,40 @@ export function NantiProvider({ children }: { children: ReactNode }) {
             console.error("Failed to save imported item:", result.reason);
           }
         });
-        mutate((current) => ({
-          ...current,
-          items: [...savedItems, ...current.items],
-          people: [
+        mutate((current) => {
+          const mergedPeople = [
             ...newPeople.filter(
               (person) => !current.people.some((existing) => existing.id === person.id),
             ),
             ...current.people,
-          ],
-          projects: [
-            ...newProjects.filter(
-              (project) => !current.projects.some((existing) => existing.id === project.id),
-            ),
-            ...current.projects,
-          ],
-        }));
+          ];
+          const nowDay = todayISO();
+          return {
+            ...current,
+            items: [...savedItems, ...current.items],
+            people: mergedPeople.map((person) => {
+              const related = savedItems.filter((item) => item.personId === person.id);
+              if (!related.length) return person;
+              return {
+                ...person,
+                lastConversation: nowDay,
+                activity: [
+                  ...related.map((item) => ({
+                    date: nowDay,
+                    text: `Captured: ${item.title}`,
+                  })),
+                  ...person.activity,
+                ].slice(0, 20),
+              };
+            }),
+            projects: [
+              ...newProjects.filter(
+                (project) => !current.projects.some((existing) => existing.id === project.id),
+              ),
+              ...current.projects,
+            ],
+          };
+        });
         for (const savedItem of savedItems) {
           void logProductEvent({
             data: {
@@ -689,6 +726,20 @@ export function NantiProvider({ children }: { children: ReactNode }) {
               },
             },
           }).catch(() => {});
+          if (savedItem.personId) {
+            void logPersonActivity({
+              data: {
+                person_id: savedItem.personId,
+                event_type: "captured",
+                item_id: savedItem.id,
+                conversation_id: conversationId,
+                summary: `Captured: ${savedItem.title}`,
+                source: savedItem.source || savedItem.sourceType || "NANTI",
+                dedupe_key: `capture:${savedItem.id}`,
+                metadata: { kind: savedItem.kind },
+              },
+            }).catch(() => {});
+          }
         }
         return savedRecords;
       },
@@ -709,11 +760,32 @@ export function NantiProvider({ children }: { children: ReactNode }) {
             return false;
           }
         }
+        const completionDay = todayISO();
         mutate((s) => ({
           ...s,
           items: s.items.map((i) =>
             i.id === id ? { ...i, status: i.kind === "waiting" ? "received" : "done" } : i,
           ),
+          people: current.personId
+            ? s.people.map((person) =>
+                person.id === current.personId
+                  ? {
+                      ...person,
+                      ...(current.kind === "waiting" ? { lastConversation: completionDay } : {}),
+                      activity: [
+                        {
+                          date: completionDay,
+                          text:
+                            current.kind === "waiting"
+                              ? `Received: ${current.title}`
+                              : `Completed: ${current.title}`,
+                        },
+                        ...person.activity,
+                      ].slice(0, 20),
+                    }
+                  : person,
+              )
+            : s.people,
         }));
         void logProductEvent({
           data: {
@@ -722,6 +794,21 @@ export function NantiProvider({ children }: { children: ReactNode }) {
             source: "app",
           },
         }).catch(() => {});
+        if (current.personId) {
+          void logPersonActivity({
+            data: {
+              person_id: current.personId,
+              event_type: current.kind === "waiting" ? "received" : "completed",
+              item_id: id,
+              summary:
+                current.kind === "waiting"
+                  ? `Received: ${current.title}`
+                  : `Completed: ${current.title}`,
+              source: current.source || "NANTI",
+              dedupe_key: `${current.kind === "waiting" ? "received" : "completed"}:${id}`,
+            },
+          }).catch(() => {});
+        }
         return true;
       },
       snooze: async (id, days) => {
@@ -814,6 +901,35 @@ export function NantiProvider({ children }: { children: ReactNode }) {
             properties: { next_days: nextDays },
           },
         }).catch(() => {});
+        if (item.personId) {
+          const followDay = todayISO();
+          mutate((current) => ({
+            ...current,
+            people: current.people.map((person) =>
+              person.id === item.personId
+                ? {
+                    ...person,
+                    lastConversation: followDay,
+                    activity: [
+                      { date: followDay, text: `Followed up: ${item.title}` },
+                      ...person.activity,
+                    ].slice(0, 20),
+                  }
+                : person,
+            ),
+          }));
+          void logPersonActivity({
+            data: {
+              person_id: item.personId,
+              event_type: "followed_up",
+              item_id: id,
+              summary: `Followed up: ${item.title}`,
+              source: item.source || "NANTI",
+              dedupe_key: `followed_up:${id}:${item.followUpCount || 0}`,
+              metadata: { next_days: nextDays },
+            },
+          }).catch(() => {});
+        }
         return true;
       },
       track: async (id, details) => {
@@ -846,6 +962,34 @@ export function NantiProvider({ children }: { children: ReactNode }) {
                 source: "clarification",
               },
             }).catch(() => {});
+            if (promoted.personId) {
+              const trackDay = todayISO();
+              mutate((current) => ({
+                ...current,
+                people: current.people.map((person) =>
+                  person.id === promoted.personId
+                    ? {
+                        ...person,
+                        lastConversation: trackDay,
+                        activity: [
+                          { date: trackDay, text: `Clarified and saved: ${promoted.title}` },
+                          ...person.activity,
+                        ].slice(0, 20),
+                      }
+                    : person,
+                ),
+              }));
+              void logPersonActivity({
+                data: {
+                  person_id: promoted.personId,
+                  event_type: "captured",
+                  item_id: promoted.id,
+                  summary: `Clarified and saved: ${promoted.title}`,
+                  source: "clarification",
+                  dedupe_key: `promoted:${promoted.id}`,
+                },
+              }).catch(() => {});
+            }
             return promoted.id;
           } catch (error) {
             console.error("Failed to promote inbox item:", error);
