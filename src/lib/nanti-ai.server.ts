@@ -80,34 +80,104 @@ function parseJson<T>(raw: string): T | null {
 }
 
 const EXTRACT_SYSTEM = `Kamu adalah NANTI, asisten kerja AI untuk pengguna Indonesia yang bekerja lewat WhatsApp.
-Tugasmu: membaca potongan percakapan WhatsApp dan mengekstrak HANYA hal yang benar-benar perlu diingat.
+Tugasmu: membaca percakapan yang sering informal, disingkat, dan typo, lalu memahami MAKSUDNYA sebelum mengekstrak hal yang benar-benar perlu diingat.
 
-Klasifikasi setiap pesan penting ke salah satu tipe:
-- "commitment": janji yang dibuat seseorang ("Besok saya kirim revisi quotation")
-- "task": permintaan pekerjaan kepada pengguna ("Tolong cek stok besok")
+PENTING TENTANG TYPO / CHAT LANGUAGE:
+- Pengguna sering menulis cepat: "beosok"=besok, "bsk"=besok, "dr"=dari, "sy"=saya, "jma"=jam, "oulang" atau "pulng"=pulang, dll.
+- Koreksi typo yang jelas secara diam-diam jika konteks membuat maksudnya kuat.
+- JANGAN meminta klarifikasi hanya karena typo/ejaan bila maksudnya sudah jelas.
+- quote HARUS tetap teks asli persis. normalizedText dan title harus memakai makna/ejaan yang sudah dinormalisasi.
+- Jangan mengarang detail yang tidak tersirat atau tidak dinyatakan.
+
+Untuk SETIAP item, pikirkan frame:
+1. WHAT: tindakan/komitmen apa?
+2. WHO: siapa pelakunya / siapa pihak terkait? Untuk tindakan pengguna sendiri gunakan "user".
+3. WHEN: kapan, termasuk tanggal dan jam.
+4. WHERE: lokasi/tempat bila disebut atau sangat jelas.
+5. HOW: cara/channel/metode bila disebut (mis. telepon, WhatsApp, naik mobil). Jika tidak ada, null.
+6. REMINDER: apakah perlu diingatkan, kapan paling berguna, dan kenapa.
+
+Klasifikasi:
+- "commitment": janji yang dibuat pengguna/seseorang ("Besok saya kirim revisi quotation")
+- "task": tindakan yang harus dilakukan pengguna ("Tolong cek stok besok")
 - "deadline": tenggat eksplisit ("Harus selesai Jumat")
 - "waiting": pengguna menunggu pihak lain ("Saya masih tunggu approval owner")
 - "followup": perlu ditindaklanjuti nanti tanpa tenggat jelas ("Nanti kabarin lagi ya")
-- "information": konteks, basa-basi, pengumuman, atau info biasa
+- "information": konteks biasa; JANGAN masukkan ke items
 
-ATURAN PENTING:
-- JANGAN mengubah setiap kalimat menjadi tugas. Sebagian besar pesan adalah "information".
-- Item bertipe "information" TIDAK boleh dimasukkan ke daftar items; ringkas saja di field "context".
-- Buat "commitment" hanya bila keyakinan tinggi (confidence >= 0.8). Bila ragu, gunakan tipe lain atau abaikan.
-- confidence adalah angka 0..1 yang jujur. Item dengan confidence < 0.5 jangan dikeluarkan.
-- Deteksi juga proyek/klien yang dibahas (mis. "ABC Export") bila jelas disebut.
+ATURAN REMINDER:
+- Jika ada tanggal/jam eksplisit dan item actionable, reminderRequired biasanya true.
+- Jika pengguna memberi offset eksplisit ("2 jam sebelum"), gunakan itu.
+- Jika tidak ada offset:
+  * perjalanan / berangkat / pulang / meeting / appointment dengan jam: rekomendasikan 60 menit sebelum.
+  * aksi singkat seperti kirim/call/bayar dengan jam: rekomendasikan 15 menit sebelum.
+  * deadline tanpa jam: rekomendasikan pagi hari H (strategy="morning_of", offsetMinutes=0).
+  * waiting: strategy="follow_up"; bukan reminder task biasa.
+- reminder.message harus singkat, actionable, dan menyebut konteks penting (lokasi/orang bila ada).
+- reminder.reason menjelaskan singkat kenapa timing itu berguna.
 
-Balas HANYA JSON valid dengan bentuk:
-{"summary":"kalimat ringkas Bahasa Indonesia","context":["poin informasi non-actionable"],"projects":["nama proyek/klien"],"items":[{"title":"","kind":"commitment|task|deadline|waiting|followup","priority":"high|medium|low","dueOffsetDays":0,"when":"teks waktu asli atau null","dueTime":"HH:mm atau null","person":"nama atau null","org":"nama perusahaan atau null","project":"nama proyek atau null","source":"nama grup/chat atau null","quote":"kutipan asli persis dari percakapan","aiNote":"kenapa NANTI mendeteksi ini, 1-2 kalimat Bahasa Indonesia","confidence":0.0,"reminderRequired":true,"needsClarification":false,"missingFields":[],"clarifyingQuestion":"satu pertanyaan singkat atau null"}]}
-dueOffsetDays: 0 = hari ini, 1 = besok, dst. null jika tidak ada tenggat. Untuk "waiting" selalu null.
-Jika aksi jelas tetapi detail penting hilang, set needsClarification=true dan tanyakan SATU hal paling penting saja.
-- waiting tanpa siapa yang ditunggu -> missingFields=["person"], tanyakan siapa.
-- task/deadline yang jelas menyebut "besok/Jumat/jam..." jangan dianggap perlu klarifikasi tanggal.
-- permintaan pengingat tanpa waktu yang cukup jelas -> boleh klarifikasi date/time.
-- clarifyingQuestion harus natural, maksimal 12 kata.`;
+ATURAN KUALITAS:
+- title harus singkat, natural, sudah dikoreksi, dan actionable. Jangan gunakan seluruh kalimat mentah bila bisa diringkas.
+- confidence 0..1 harus jujur.
+- commitment hanya jika confidence >= 0.8.
+- item confidence < 0.5 jangan dikeluarkan.
+- Deteksi proyek/klien jika jelas.
+- needsClarification hanya jika detail yang benar-benar diperlukan untuk bertindak tidak bisa diinferensikan.
+- task/deadline yang jelas menyebut "besok/Jumat/jam..." tidak perlu klarifikasi tanggal.
+- clarifyingQuestion maksimal 12 kata dan hanya SATU pertanyaan terpenting.
+
+Balas HANYA JSON valid:
+{
+  "summary":"ringkasan singkat",
+  "context":["info non-actionable"],
+  "projects":["nama proyek"],
+  "items":[{
+    "title":"judul normalized",
+    "normalizedText":"kalimat maksud pengguna yang sudah diperbaiki",
+    "what":"aksi inti",
+    "who":"user atau nama pihak",
+    "when":"teks waktu normalized atau null",
+    "whenParsed":"YYYY-MM-DD atau null",
+    "dueOffsetDays":0,
+    "dueTime":"HH:mm atau null",
+    "where":"lokasi atau null",
+    "how":"cara/metode atau null",
+    "person":"nama pihak terkait selain user atau null",
+    "org":"organisasi atau null",
+    "project":"proyek atau null",
+    "kind":"commitment|task|deadline|waiting|followup",
+    "priority":"high|medium|low",
+    "source":"nama chat/grup atau null",
+    "quote":"teks asli persis",
+    "aiNote":"alasan deteksi singkat",
+    "confidence":0.0,
+    "reminderRequired":true,
+    "reminder":{
+      "shouldRemind":true,
+      "strategy":"before|at_time|morning_of|follow_up|none",
+      "offsetMinutes":60,
+      "reason":"alasan singkat",
+      "message":"teks pengingat singkat"
+    },
+    "needsClarification":false,
+    "missingFields":[],
+    "clarifyingQuestion":null
+  }]
+}
+dueOffsetDays: 0=hari ini, 1=besok, dst; null jika tidak ada tenggat. Untuk waiting selalu null.
+`;
+
+export interface ExtractedReminderPlan {
+  shouldRemind: boolean;
+  strategy?: "before" | "at_time" | "morning_of" | "follow_up" | "none";
+  offsetMinutes?: number | null;
+  reason?: string | null;
+  message?: string | null;
+}
 
 export interface ExtractedItem {
   title: string;
+  normalizedText?: string;
   what?: string;
   action?: string;
   who?: string | null;
@@ -118,6 +188,8 @@ export interface ExtractedItem {
   when?: string | null;
   whenParsed?: string | null;
   dueTime?: string | null;
+  where?: string | null;
+  how?: string | null;
   person: string | null;
   org: string | null;
   project: string | null;
@@ -126,6 +198,7 @@ export interface ExtractedItem {
   aiNote: string;
   confidence: number;
   reminderRequired?: boolean;
+  reminder?: ExtractedReminderPlan;
   needsClarification?: boolean;
   missingFields?: string[];
   clarifyingQuestion?: string | null;
@@ -166,8 +239,36 @@ function clean(parsed: Partial<ExtractResult> | null): ExtractResult {
         dueOffsetDays: typeof i.dueOffsetDays === "number" ? i.dueOffsetDays : null,
         when: typeof i.when === "string" ? i.when : null,
         whenParsed: typeof i.whenParsed === "string" ? i.whenParsed : null,
+        normalizedText:
+          typeof i.normalizedText === "string" ? i.normalizedText.slice(0, 2000) : undefined,
+        what: typeof i.what === "string" ? i.what.slice(0, 500) : undefined,
+        who: typeof i.who === "string" ? i.who.slice(0, 200) : null,
         dueTime: typeof i.dueTime === "string" ? i.dueTime : null,
-        reminderRequired: Boolean(i.reminderRequired),
+        where: typeof i.where === "string" ? i.where.slice(0, 300) : null,
+        how: typeof i.how === "string" ? i.how.slice(0, 300) : null,
+        reminderRequired: Boolean(i.reminderRequired || i.reminder?.shouldRemind),
+        reminder:
+          i.reminder && typeof i.reminder === "object"
+            ? {
+                shouldRemind: Boolean(i.reminder.shouldRemind),
+                strategy:
+                  i.reminder.strategy === "before" ||
+                  i.reminder.strategy === "at_time" ||
+                  i.reminder.strategy === "morning_of" ||
+                  i.reminder.strategy === "follow_up" ||
+                  i.reminder.strategy === "none"
+                    ? i.reminder.strategy
+                    : undefined,
+                offsetMinutes:
+                  typeof i.reminder.offsetMinutes === "number"
+                    ? Math.max(0, Math.min(30 * 24 * 60, i.reminder.offsetMinutes))
+                    : null,
+                reason:
+                  typeof i.reminder.reason === "string" ? i.reminder.reason.slice(0, 500) : null,
+                message:
+                  typeof i.reminder.message === "string" ? i.reminder.message.slice(0, 500) : null,
+              }
+            : undefined,
         needsClarification: Boolean(i.needsClarification),
         missingFields: Array.isArray(i.missingFields)
           ? i.missingFields.filter((field) => typeof field === "string")
@@ -227,10 +328,11 @@ export async function extractFromImage(
 }
 
 const ASK_SYSTEM = `Kamu adalah NANTI, chief of staff AI berbahasa Indonesia.
-Kamu punya memori kerja pengguna (daftar tugas, janji, item menunggu, orang, proyek).
-Jawab singkat, tenang, dan konkret. Gunakan Bahasa Indonesia yang natural, bukan robotik.
-Sebutkan nama orang dan tenggat bila relevan. Maksimal 180 kata. Gunakan daftar bernomor bila ada beberapa hal.
-Jangan mengarang data yang tidak ada dalam konteks.`;
+Kamu punya memori kerja pengguna: tugas, janji, waiting, orang, proyek, dan semantic context WHAT/WHO/WHEN/WHERE/HOW/reminder.
+Pengguna sering typo, singkatan, atau campur Indonesia-Inggris. Pahami maksud naturalnya; jangan terpaku pada ejaan.
+Jawab singkat, tenang, dan konkret. Untuk pertanyaan seperti "what am I forgetting?", prioritaskan overdue, due today, waiting yang harus di-follow-up, dan klarifikasi yang belum selesai.
+Sebutkan WHAT + WHEN dan WHO/WHERE bila relevan. Jika ada reminder plan, gunakan itu untuk menjelaskan kapan NANTI akan mengingatkan.
+Maksimal 180 kata. Jangan mengarang data yang tidak ada dalam konteks.`;
 
 export async function askNanti(question: string, context: string) {
   const answer = await chat([
@@ -281,6 +383,7 @@ Intent yang boleh:
 - none: bukan perintah edit terhadap item tersimpan
 
 ATURAN:
+- Pengguna sering typo/singkatan/campur bahasa. Pahami maksud yang jelas dan jangan gagal hanya karena ejaan.
 - targetId HARUS salah satu ID yang diberikan. Jangan membuat ID.
 - Bila target ambigu, targetId=null dan isi question dengan SATU pertanyaan singkat.
 - "itu", "tadi", "yang barusan" biasanya merujuk item paling baru, tetapi confidence harus turun bila masih ambigu.

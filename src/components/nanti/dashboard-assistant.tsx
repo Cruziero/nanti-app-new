@@ -11,11 +11,15 @@ import {
 import { chatMessageToFallbackItem, draftToItem } from "@/lib/nanti-import";
 import type { Item } from "@/lib/nanti-types";
 import { parseSmartDate } from "@/lib/nanti-dates";
-import { todayISO } from "@/lib/nanti-utils";
+import { isDueToday, isOverdue, todayISO, waitingDays } from "@/lib/nanti-utils";
+import { normalizedIntentText } from "@/lib/nanti-language";
 import { createAiMessage, fetchAiMessages } from "@/lib/nanti-supabase";
 
 type Message = { role: "user" | "assistant"; text: string };
-type SavedCard = Pick<Item, "id" | "title" | "kind" | "due" | "time" | "status">;
+type SavedCard = Pick<
+  Item,
+  "id" | "title" | "kind" | "due" | "time" | "status" | "semanticContext" | "reminderTime"
+>;
 type PendingClarification = {
   itemId: string;
   type: NonNullable<Item["clarificationType"]>;
@@ -46,6 +50,107 @@ type Command = {
   acknowledgement: string | null;
 };
 
+function formatReminderClock(value?: string) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Jakarta",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date);
+}
+
+function deterministicMemoryAnswer(
+  question: string,
+  items: Item[],
+  people: Array<{ id: string; name: string }>,
+) {
+  const normalized = normalizedIntentText(question);
+  const asksForForgetting =
+    /\bforget(?:ting)?\b/.test(normalized) ||
+    /\b(lupa|kelupaan)\b/.test(normalized);
+  const asksDueToday =
+    /\bdue\s+today\b/.test(normalized) ||
+    /jatuh\s+tempo.*hari\s+ini/.test(normalized) ||
+    /apa.*hari\s+ini.*(?:tugas|deadline)/.test(normalized);
+  const asksFollowUp =
+    /\bfollowup\b/.test(normalized) ||
+    /tindak\s+lanjut/.test(normalized) ||
+    /siapa.*(?:tunggu|hubungi)/.test(normalized);
+
+  if (!asksForForgetting && !asksDueToday && !asksFollowUp) return null;
+
+  const activeTasks = items.filter(
+    (item) => item.status === "open" && item.kind !== "waiting",
+  );
+  const overdue = activeTasks.filter(isOverdue);
+  const dueToday = activeTasks.filter(isDueToday);
+  const waiting = items
+    .filter((item) => item.status === "open" && item.kind === "waiting")
+    .sort((a, b) => {
+      const aAt = a.followUpAt ? new Date(a.followUpAt).getTime() : 0;
+      const bAt = b.followUpAt ? new Date(b.followUpAt).getTime() : 0;
+      return aAt - bAt;
+    });
+  const inbox = items.filter((item) => item.status === "inbox");
+
+  const describeTask = (item: Item) => {
+    const place = item.semanticContext?.where;
+    const clock = item.time ? ` · ${item.time}` : "";
+    const location = place ? ` · ${place}` : "";
+    return `${item.title}${clock}${location}`;
+  };
+
+  if (asksFollowUp) {
+    if (!waiting.length) return "Tidak ada follow-up aktif yang sedang menunggu.";
+    return [
+      "Yang perlu kamu follow up:",
+      ...waiting.slice(0, 5).map((item, index) => {
+        const person =
+          people.find((candidate) => candidate.id === item.personId)?.name ||
+          item.personName ||
+          "pihak terkait";
+        const age = item.since ? ` · menunggu ${waitingDays(item)} hari` : "";
+        return `${index + 1}. ${person} — ${item.title}${age}`;
+      }),
+    ].join("\n");
+  }
+
+  if (asksDueToday) {
+    if (!dueToday.length && !overdue.length) {
+      return "Tidak ada tugas yang jatuh tempo hari ini atau sudah terlambat.";
+    }
+    const lines = [
+      ...overdue.map((item) => `Overdue: ${describeTask(item)}`),
+      ...dueToday.map((item) => `Hari ini: ${describeTask(item)}`),
+    ];
+    return ["Ini yang perlu perhatian sekarang:", ...lines.slice(0, 6)].join("\n");
+  }
+
+  const attention = [
+    ...overdue.map((item) => ({ label: "Overdue", item })),
+    ...dueToday.map((item) => ({ label: "Hari ini", item })),
+  ];
+  if (!attention.length && !waiting.length && !inbox.length) {
+    return "Saya tidak melihat tugas overdue, due hari ini, follow-up aktif, atau item yang masih butuh klarifikasi.";
+  }
+  const lines = attention
+    .slice(0, 4)
+    .map(({ label, item }) => `${label}: ${describeTask(item)}`);
+  if (waiting.length) {
+    const first = waiting[0]!;
+    const person =
+      people.find((candidate) => candidate.id === first.personId)?.name ||
+      first.personName ||
+      "pihak terkait";
+    lines.push(`Follow-up: ${person} — ${first.title}`);
+  }
+  if (inbox.length) lines.push(`Clarify: ${inbox.length} item di Inbox masih belum lengkap.`);
+  return ["Yang mungkin kamu lupa:", ...lines].join("\n");
+}
+
 function reminderIso(date: string, time: string, offsetMinutes = 0) {
   const base = new Date(`${date}T${time}:00+07:00`);
   if (Number.isNaN(base.getTime())) return undefined;
@@ -54,7 +159,7 @@ function reminderIso(date: string, time: string, offsetMinutes = 0) {
 
 function fallbackCommand(message: string, target?: Item): Command | null {
   if (!target) return null;
-  const lower = message.trim().toLowerCase();
+  const lower = normalizedIntentText(message);
   const parsed = parseSmartDate(message);
 
   if (/^(sudah|udah|selesai|done|beres)\b/.test(lower)) {
@@ -89,7 +194,7 @@ function fallbackCommand(message: string, target?: Item): Command | null {
       acknowledgement: null,
     };
   }
-  if (/follow\s*up/.test(lower) && /sudah|udah|already/.test(lower)) {
+  if (/followup/.test(lower) && /sudah|udah|already/.test(lower)) {
     return {
       intent: "mark_followed_up",
       targetId: target.id,
@@ -443,6 +548,23 @@ export function DashboardAssistant() {
           reminderChannels: target.reminderChannels?.length
             ? target.reminderChannels
             : ["in_app", "push"],
+          semanticContext: {
+            ...(target.semanticContext || {}),
+            when:
+              [
+                parsed.date || target.due,
+                parsed.time || command.time || target.time,
+              ].filter(Boolean).join(" · ") || target.semanticContext?.when,
+            reminder: {
+              shouldRemind: true,
+              strategy: offset > 0 ? "before" : "at_time",
+              offsetMinutes: offset,
+              reason: "Requested in chat.",
+              message:
+                target.semanticContext?.reminder?.message ||
+                `Ingat: ${target.title}`,
+            },
+          },
           ...(parsed.date ? { due: parsed.date } : {}),
           ...(parsed.time || command.time ? { time } : {}),
         })
@@ -499,6 +621,8 @@ export function DashboardAssistant() {
             kind: item.kind,
             person: people.find((person) => person.id === item.personId)?.name || item.personName,
             project: projects.find((project) => project.id === item.projectId)?.name || item.projectName,
+            semantic: item.semanticContext,
+            reminderTime: item.reminderTime,
           }),
         )
         .join("\n")
@@ -541,6 +665,8 @@ export function DashboardAssistant() {
         project: projects.find((project) => project.id === item.projectId)?.name || item.projectName,
         updatedAt: item.createdAt,
       }));
+
+      const deterministicAnswer = deterministicMemoryAnswer(question, items, people);
 
       const [commandResult, answerResult, extractionResult] = await Promise.allSettled([
         interpretTaskCommand({ data: { message: question, items: commandItems } }),
@@ -610,6 +736,8 @@ export function DashboardAssistant() {
           due: nextItems[index]!.due,
           time: nextItems[index]!.time,
           status: nextItems[index]!.status,
+          semanticContext: nextItems[index]!.semanticContext,
+          reminderTime: nextItems[index]!.reminderTime,
         }));
         setSavedCards(cards);
 
@@ -632,11 +760,14 @@ export function DashboardAssistant() {
       }
 
       const baseAnswer =
-        answerResult.status === "fulfilled"
+        deterministicAnswer ||
+        (answerResult.status === "fulfilled"
           ? answerResult.value.answer
           : nextItems.length
             ? "Saya menangkap sesuatu yang perlu diingat."
-            : "Saya belum bisa menjawab penuh sekarang, tapi pesanmu tetap tersimpan di percakapan.";
+            : "Saya sudah menyimpan pesanmu. Coba tanyakan lagi kalau kamu ingin saya merangkum ingatan aktif.");
+
+      const resolvedBaseAnswer = baseAnswer;
 
       const savedText =
         saved.length > 0
@@ -645,7 +776,7 @@ export function DashboardAssistant() {
       const clarificationText = newClarification
         ? `\n\n${newClarification.question}`
         : "";
-      const answer = `${baseAnswer}${savedText}${clarificationText}`;
+      const answer = `${resolvedBaseAnswer}${savedText}${clarificationText}`;
 
       setInput("");
       await appendTurn(question, answer, {
@@ -657,7 +788,8 @@ export function DashboardAssistant() {
       if (
         answerResult.status === "rejected" &&
         extractionResult.status === "rejected" &&
-        !nextItems.length
+        !nextItems.length &&
+        !deterministicAnswer
       ) {
         setError("NANTI couldn’t answer or detect an action from that message. Please try again.");
       }
@@ -778,10 +910,20 @@ export function DashboardAssistant() {
                   {card.status === "inbox" ? "Saved · needs one detail" : "Saved to NANTI"}
                 </div>
                 <p className="mt-1 truncate text-sm font-medium">{card.title}</p>
-                {(card.due || card.time) && (
-                  <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                {(card.due || card.time || card.semanticContext?.where) && (
+                  <p className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
                     <Clock3 className="size-3" />
-                    {[card.due, card.time].filter(Boolean).join(" · ")}
+                    {[card.due, card.time, card.semanticContext?.where]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                )}
+                {card.reminderTime && (
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Reminder {formatReminderClock(card.reminderTime)}
+                    {card.semanticContext?.reminder?.reason
+                      ? ` · ${card.semanticContext.reminder.reason}`
+                      : ""}
                   </p>
                 )}
               </div>

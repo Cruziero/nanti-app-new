@@ -26,7 +26,7 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
           ] = await Promise.all([
             supabase
               .from("tasks")
-              .select("id,user_id,title,due_date,time,reminder_time,reminder_channels,reminder_intensity,last_reminded_at,reminder_count")
+              .select("id,user_id,title,due_date,time,reminder_time,reminder_channels,reminder_intensity,last_reminded_at,reminder_count,semantic_context")
               .eq("status", "pending")
               .eq("reminder_enabled", true),
             supabase
@@ -178,6 +178,20 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
             const today = jakartaDate(now);
             const overdue = Boolean(dueDay && dueDay < today);
             const title = overdue ? "Tugas terlambat" : "Pengingat NANTI";
+            const semantic =
+              task.semantic_context && typeof task.semantic_context === "object"
+                ? (task.semantic_context as Record<string, any>)
+                : {};
+            const reminderBody =
+              (typeof semantic?.reminder?.message === "string" && semantic.reminder.message.trim()) ||
+              [
+                task.title,
+                typeof semantic.where === "string" && semantic.where
+                  ? `di ${semantic.where}`
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(" · ");
             let sent = 0;
 
             if (channels.includes("in_app")) {
@@ -188,7 +202,7 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
                 itemId: task.id,
                 type: overdue ? "task_overdue" : "task_due",
                 title,
-                body: task.title,
+                body: reminderBody,
                 dedupeKey: `task:${task.id}:${bucket}`,
               });
             }
@@ -196,7 +210,7 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
               attempted++;
               sent += await sendPushNotification(supabase, task.user_id, {
                 title,
-                body: task.title,
+                body: reminderBody,
                 tag: `nanti-task-${task.id}`,
                 data: { itemId: task.id, url: "/app/today" },
               });
@@ -206,7 +220,7 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
               sent += await sendWhatsAppNotification(
                 supabase,
                 task.user_id,
-                `${title}: ${task.title}`,
+                `${title}: ${reminderBody}`,
               );
             }
 

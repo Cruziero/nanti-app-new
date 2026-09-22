@@ -92,6 +92,51 @@ export function ItemDetailProvider({ children }: { children: ReactNode }) {
                 <Field label="Dibuat oleh">{item.createdBy === "ai" ? "NANTI (AI)" : "Anda"}</Field>
                 <Field label="Keyakinan AI">{Math.round(item.confidence * 100)}%</Field>
 
+                {item.semanticContext && (
+                  <div className="mt-5 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                    <p className="text-[11px] uppercase tracking-wider text-primary">
+                      Yang NANTI pahami
+                    </p>
+                    <div className="mt-2">
+                      <Field label="What">{item.semanticContext.what || item.title}</Field>
+                      <Field label="Who">
+                        {item.semanticContext.who === "user"
+                          ? "Anda"
+                          : item.semanticContext.who || person?.name || item.personName || "—"}
+                      </Field>
+                      <Field label="When">
+                        {item.semanticContext.when ||
+                          [item.due ? formatDate(item.due) : "", item.time].filter(Boolean).join(" · ") ||
+                          "—"}
+                      </Field>
+                      <Field label="Where">{item.semanticContext.where || "—"}</Field>
+                      <Field label="How">{item.semanticContext.how || "—"}</Field>
+                      {item.semanticContext.reminder?.shouldRemind && (
+                        <Field label="Reminder">
+                          {[
+                            item.reminderTime
+                              ? new Intl.DateTimeFormat("en-GB", {
+                                  timeZone: "Asia/Jakarta",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hour12: false,
+                                }).format(new Date(item.reminderTime))
+                              : "",
+                            item.semanticContext.reminder.reason,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ") || "Aktif"}
+                        </Field>
+                      )}
+                    </div>
+                    {item.semanticContext.typoCorrected && item.semanticContext.normalizedText && (
+                      <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                        Normalized from your message: “{item.semanticContext.normalizedText}”
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <div className="mt-5 rounded-xl border border-border bg-surface-strong/60 p-4">
                   <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
                     Pesan asli
