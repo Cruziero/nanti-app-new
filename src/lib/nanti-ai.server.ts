@@ -383,6 +383,7 @@ Intent yang boleh:
 - none: bukan perintah edit terhadap item tersimpan
 
 ATURAN:
+- Pengguna sering typo/singkatan/campur bahasa. Pahami maksud yang jelas dan jangan gagal hanya karena ejaan.
 - targetId HARUS salah satu ID yang diberikan. Jangan membuat ID.
 - Bila target ambigu, targetId=null dan isi question dengan SATU pertanyaan singkat.
 - "itu", "tadi", "yang barusan" biasanya merujuk item paling baru, tetapi confidence harus turun bila masih ambigu.
