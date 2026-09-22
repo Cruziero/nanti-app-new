@@ -35,6 +35,7 @@ import {
   deleteWaitingItem as deleteWaitingItemFn,
   createInboxItem as createInboxItemFn,
   updateInboxItem as updateInboxItemFn,
+  promoteInboxItem as promoteInboxItemFn,
   createConversation as createConversationFn,
   seedDemoData,
   fetchUserSettings,
@@ -261,17 +262,17 @@ interface Ctx extends State {
   complete: (id: string) => Promise<boolean>;
   snooze: (id: string, days: number) => Promise<boolean>;
   followUp: (id: string, days: number) => Promise<boolean>;
-  track: (id: string) => void;
-  ignore: (id: string) => void;
+  track: (id: string, details?: { personName?: string; due?: string; title?: string }) => Promise<boolean>;
+  ignore: (id: string) => Promise<boolean>;
   remove: (id: string) => Promise<boolean>;
   setSettings: (patch: Partial<Settings>) => Promise<boolean>;
   reset: () => void;
   personOf: (id?: string) => Person | undefined;
   projectOf: (id?: string) => Project | undefined;
   // New methods
-  toggleReminder: (id: string) => void;
-  setReminderIntensity: (id: string, intensity: ReminderIntensity) => void;
-  setReminderChannels: (id: string, channels: ReminderChannel[]) => void;
+  toggleReminder: (id: string) => Promise<boolean>;
+  setReminderIntensity: (id: string, intensity: ReminderIntensity) => Promise<boolean>;
+  setReminderChannels: (id: string, channels: ReminderChannel[]) => Promise<boolean>;
 }
 
 const StoreContext = createContext<Ctx | null>(null);
@@ -434,14 +435,19 @@ export function NantiProvider({ children }: { children: ReactNode }) {
             const saved = await createInboxItemFn({ data: {
               type: item.kind, title: item.title, person_name: item.personName,
               project_name: item.projectName, due_date: item.due,
-              conversation_text: conversationText?.slice(0, 5000), status: "pending",
+              conversation_text: conversationText?.slice(0, 5000),
+              source: item.source, source_type: item.sourceType, status: "pending",
             } });
             return inboxToItem(saved);
           }
           if (item.kind === "waiting") {
             const saved = await createWaitingItemFn({ data: {
               title: item.title, person_id: item.personId, project_id: item.projectId,
+              person_name: item.personName, project_name: item.projectName,
               started_at: item.since || new Date().toISOString(),
+              source: item.source, quote: item.quote, ai_note: item.aiNote,
+              confidence: item.confidence, source_type: item.sourceType,
+              conversation_id: conversationId,
             } });
             return waitingToItem(saved);
           }
@@ -451,6 +457,11 @@ export function NantiProvider({ children }: { children: ReactNode }) {
             project_id: item.projectId, person_id: item.personId, source: item.source,
             quote: item.quote, ai_note: item.aiNote, confidence: item.confidence,
             source_type: item.sourceType, time: item.time, conversation_id: conversationId,
+            person_name: item.personName, project_name: item.projectName,
+            reminder_enabled: item.reminderEnabled,
+            reminder_time: item.reminderTime,
+            reminder_channels: item.reminderChannels,
+            reminder_intensity: item.reminderIntensity,
           } });
           return taskToItem(saved);
         }));
@@ -541,31 +552,66 @@ export function NantiProvider({ children }: { children: ReactNode }) {
         }));
         return true;
       },
-      track: (id) => {
+      track: async (id, details) => {
+        const item = state.items.find((i) => i.id === id);
+        if (!item || item.status !== "inbox") return false;
         if (useSupabase) {
-          updateInboxItemFn({ data: { id, status: "tracked" } }).catch(console.error);
+          try {
+            const result = await promoteInboxItemFn({
+              data: {
+                id,
+                title: details?.title || item.title,
+                person_name: details?.personName || item.personName,
+                due_date: details?.due || item.due,
+              },
+            });
+            const promoted =
+              result.entity === "waiting" ? waitingToItem(result.item) : taskToItem(result.item);
+            mutate((s) => ({
+              ...s,
+              items: [promoted, ...s.items.filter((i) => i.id !== id)],
+            }));
+            return true;
+          } catch (error) {
+            console.error("Failed to promote inbox item:", error);
+            toast.error("Item belum disimpan sebagai tugas. Coba lagi.");
+            return false;
+          }
         }
         mutate((s) => ({
           ...s,
           items: s.items.map((i) =>
             i.id === id
-              ? { ...i, status: "open" as const, memoryStrength: Math.min((i.memoryStrength || 1) + 0.2, 2) }
+              ? {
+                  ...i,
+                  title: details?.title || i.title,
+                  personName: details?.personName || i.personName,
+                  due: details?.due || i.due,
+                  status: "open" as const,
+                  memoryStrength: Math.min((i.memoryStrength || 1) + 0.2, 2),
+                }
               : i,
           ),
         }));
+        return true;
       },
-      ignore: (id) => {
+      ignore: async (id) => {
+        const item = state.items.find((i) => i.id === id);
+        if (!item || item.status !== "inbox") return false;
         if (useSupabase) {
-          updateInboxItemFn({ data: { id, status: "ignored" } }).catch(console.error);
+          try {
+            await updateInboxItemFn({ data: { id, status: "ignored" } });
+          } catch (error) {
+            console.error("Failed to ignore inbox item:", error);
+            toast.error("Item belum diabaikan. Coba lagi.");
+            return false;
+          }
         }
         mutate((s) => ({
           ...s,
-          items: s.items.map((i) =>
-            i.id === id
-              ? { ...i, status: "ignored" as const, memoryStrength: Math.max((i.memoryStrength || 1) - 0.3, 0) }
-              : i,
-          ),
+          items: s.items.filter((i) => i.id !== id),
         }));
+        return true;
       },
       remove: async (id) => {
         const item = state.items.find((i) => i.id === id);
@@ -630,25 +676,60 @@ export function NantiProvider({ children }: { children: ReactNode }) {
       },
       personOf: (id) => state.people.find((p) => p.id === id),
       projectOf: (id) => state.projects.find((p) => p.id === id),
-      toggleReminder: (id) => {
+      toggleReminder: async (id) => {
+        const item = state.items.find((i) => i.id === id);
+        if (!item || item.kind === "waiting" || item.status === "inbox") return false;
+        const reminderEnabled = !item.reminderEnabled;
+        if (useSupabase) {
+          try {
+            await updateTaskFn({ data: { id, reminder_enabled: reminderEnabled } });
+          } catch (error) {
+            console.error("Failed to toggle reminder:", error);
+            toast.error("Pengingat belum tersimpan. Coba lagi.");
+            return false;
+          }
+        }
         mutate((s) => ({
           ...s,
-          items: s.items.map((i) =>
-            i.id === id ? { ...i, reminderEnabled: !i.reminderEnabled } : i,
-          ),
+          items: s.items.map((i) => i.id === id ? { ...i, reminderEnabled } : i),
         }));
+        return true;
       },
-      setReminderIntensity: (id, intensity) => {
+      setReminderIntensity: async (id, intensity) => {
+        const item = state.items.find((i) => i.id === id);
+        if (!item || item.kind === "waiting" || item.status === "inbox") return false;
+        if (useSupabase) {
+          try {
+            await updateTaskFn({ data: { id, reminder_intensity: intensity } });
+          } catch (error) {
+            console.error("Failed to set reminder intensity:", error);
+            toast.error("Intensitas pengingat belum tersimpan.");
+            return false;
+          }
+        }
         mutate((s) => ({
           ...s,
-          items: s.items.map((i) => (i.id === id ? { ...i, reminderIntensity: intensity } : i)),
+          items: s.items.map((i) => i.id === id ? { ...i, reminderIntensity: intensity } : i),
         }));
+        return true;
       },
-      setReminderChannels: (id, channels) => {
+      setReminderChannels: async (id, channels) => {
+        const item = state.items.find((i) => i.id === id);
+        if (!item || item.kind === "waiting" || item.status === "inbox") return false;
+        if (useSupabase) {
+          try {
+            await updateTaskFn({ data: { id, reminder_channels: channels } });
+          } catch (error) {
+            console.error("Failed to set reminder channels:", error);
+            toast.error("Channel pengingat belum tersimpan.");
+            return false;
+          }
+        }
         mutate((s) => ({
           ...s,
-          items: s.items.map((i) => (i.id === id ? { ...i, reminderChannels: channels } : i)),
+          items: s.items.map((i) => i.id === id ? { ...i, reminderChannels: channels } : i),
         }));
+        return true;
       },
     }),
     [state, hydrated, mutate, persist, useSupabase],
