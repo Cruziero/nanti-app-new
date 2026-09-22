@@ -1,4 +1,5 @@
 import { addDays, todayISO, TIMEZONE } from "./nanti-utils";
+import { normalizeCasualIndonesian } from "./nanti-language";
 
 const DAY_NAMES_ID = ["minggu", "senin", "selasa", "rabu", "kamis", "jumat", "sabtu"];
 const DAY_NAMES_EN = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
@@ -125,41 +126,42 @@ function parseMonthDay(text: string): { month: number; day: number } | null {
 }
 
 export function parseIndonesianDate(text: string): DateParseResult {
-  const lower = text.toLowerCase().trim();
+  const normalizedText = normalizeCasualIndonesian(text);
+  const lower = normalizedText.toLowerCase().trim();
   const today = todayISO();
   const year = getCurrentYear();
-  const time = parseTime(text);
+  const time = parseTime(normalizedText);
 
   // "hari ini"
   if (/\bhari\s+ini\b/.test(lower)) {
-    return { date: today, time, confidence: 1.0, raw: text };
+    return { date: today, time, confidence: 1.0, raw: normalizedText };
   }
 
   // "besok" and common chat shorthand ("bsk")
   if (/\b(besok|bsk)\b/.test(lower)) {
-    return { date: addDays(today, 1), time, confidence: 1.0, raw: text };
+    return { date: addDays(today, 1), time, confidence: 1.0, raw: normalizedText };
   }
 
   // "lusa"
   if (/\blusa\b/.test(lower)) {
-    return { date: addDays(today, 2), time, confidence: 1.0, raw: text };
+    return { date: addDays(today, 2), time, confidence: 1.0, raw: normalizedText };
   }
 
   // "nanti sore", "nanti malam", "nanti pagi" = today
   if (/\bnanti\s+(sore|malam|pagi)\b/.test(lower)) {
-    return { date: today, time: time || "17:00", confidence: 0.9, raw: text };
+    return { date: today, time: time || "17:00", confidence: 0.9, raw: normalizedText };
   }
 
   // "3 hari lagi", "5 hari lagi"
   const daysLaterMatch = /(\d+)\s+hari\s+lagi/.exec(lower);
   if (daysLaterMatch) {
     const days = parseInt(daysLaterMatch[1], 10);
-    return { date: addDays(today, days), time, confidence: 0.95, raw: text };
+    return { date: addDays(today, days), time, confidence: 0.95, raw: normalizedText };
   }
 
   // "minggu depan" = next week same day
   if (/minggu\s+depan/.test(lower)) {
-    return { date: addDays(today, 7), time, confidence: 0.85, raw: text };
+    return { date: addDays(today, 7), time, confidence: 0.85, raw: normalizedText };
   }
 
   // "akhir bulan" = last day of current month
@@ -167,14 +169,14 @@ export function parseIndonesianDate(text: string): DateParseResult {
     const now = new Date();
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     const lastDayStr = `${lastDay.getFullYear()}-${String(lastDay.getMonth() + 1).padStart(2, "0")}-${String(lastDay.getDate()).padStart(2, "0")}`;
-    return { date: lastDayStr, time, confidence: 0.85, raw: text };
+    return { date: lastDayStr, time, confidence: 0.85, raw: normalizedText };
   }
 
   // "awal bulan" = 1st of current month
   if (/awal\s+bul(an)?/.test(lower)) {
     const now = new Date();
     const firstDay = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
-    return { date: firstDay, time, confidence: 0.85, raw: text };
+    return { date: firstDay, time, confidence: 0.85, raw: normalizedText };
   }
 
   // Day name: "jumat", "senin depan", "jumat ini"
@@ -190,7 +192,7 @@ export function parseIndonesianDate(text: string): DateParseResult {
       } else {
         targetDate = getNextWeekday(i);
       }
-      return { date: targetDate, time, confidence: 0.85, raw: text };
+      return { date: targetDate, time, confidence: 0.85, raw: normalizedText };
     }
   }
 
@@ -198,7 +200,7 @@ export function parseIndonesianDate(text: string): DateParseResult {
   for (let i = 0; i < DAY_NAMES_EN.length; i++) {
     if (lower.includes(DAY_NAMES_EN[i]!)) {
       const targetDate = getNextWeekday(i);
-      return { date: targetDate, time, confidence: 0.85, raw: text };
+      return { date: targetDate, time, confidence: 0.85, raw: normalizedText };
     }
   }
 
@@ -217,24 +219,24 @@ export function parseIndonesianDate(text: string): DateParseResult {
         date: `${y + 1}-${String(m).padStart(2, "0")}-${String(monthDay.day).padStart(2, "0")}`,
         time,
         confidence: 0.9,
-        raw: text,
+        raw: normalizedText,
       };
     }
-    return { date: dateStr, time, confidence: 0.95, raw: text };
+    return { date: dateStr, time, confidence: 0.95, raw: normalizedText };
   }
 
   // ISO date pattern
-  const isoMatch = /(\d{4})-(\d{2})-(\d{2})/.exec(text);
+  const isoMatch = /(\d{4})-(\d{2})-(\d{2})/.exec(normalizedText);
   if (isoMatch) {
     return {
       date: `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`,
       time,
       confidence: 1.0,
-      raw: text,
+      raw: normalizedText,
     };
   }
 
-  return { date: null, time, confidence: 0, raw: text };
+  return { date: null, time, confidence: 0, raw: normalizedText };
 }
 
 export function parseSmartDate(text: string): DateParseResult {
