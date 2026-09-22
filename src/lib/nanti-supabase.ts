@@ -607,6 +607,46 @@ export const createAiMessage = createServerFn({ method: "POST" }).middleware([re
     return msg;
   });
 
+// Notifications
+export const fetchNotifications = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId, supabase } = context;
+    const { data, error } = await supabase
+      .from("notifications")
+      .select("*")
+      .eq("user_id", userId)
+      .neq("status", "dismissed")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    return data;
+  });
+
+export const updateNotification = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({
+      id: z.string().uuid(),
+      status: z.enum(["read", "dismissed"]),
+    }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId, supabase } = context;
+    const { data: updated, error } = await supabase
+      .from("notifications")
+      .update({
+        status: data.status,
+        read_at: data.status === "read" ? new Date().toISOString() : null,
+      })
+      .eq("id", data.id)
+      .eq("user_id", userId)
+      .select("*")
+      .single();
+    if (error) throw error;
+    return updated;
+  });
+
 // Seed demo data for new users
 export const seedDemoData = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { userId, supabase } = context;
