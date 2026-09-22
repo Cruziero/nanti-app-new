@@ -55,6 +55,8 @@ function ImportPage() {
   const [text, setText] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const saveInProgress = useRef(false);
   const [sourceType, setSourceType] = useState<SourceType>("paste");
   const [drafts, setDrafts] = useState<Draft[] | null>(null);
   const [summary, setSummary] = useState("");
@@ -147,21 +149,39 @@ function ImportPage() {
     void analyzeText(content, "paste");
   };
 
-  const track = (indexes: number[]) => {
-    if (!drafts) return;
-    const chosen = indexes
-      .map((i) => getClarifiedDraft(drafts[i], i))
-      .filter(Boolean) as Draft[];
+  const track = async (indexes: number[]) => {
+    if (!drafts || saveInProgress.current) return;
+    const chosen = indexes.map((i) => getClarifiedDraft(drafts[i], i));
     if (!chosen.length) {
       toast("Select at least one item.");
       return;
     }
-    addItems(chosen.map((d) => draftToItem(d, { people, projects, sourceType })), text || undefined);
-    toast.success(`${chosen.length} item${chosen.length !== 1 ? "s" : ""} saved to NANTI memory`);
-    reset();
-    setText("");
-    setPreview(null);
-    void navigate({ to: "/app/today" });
+    saveInProgress.current = true;
+    setSaving(true);
+    try {
+      const saved = await addItems(chosen.map((d) => draftToItem(d, { people, projects, sourceType })), text || undefined);
+      const savedDraftIndexes = new Set(saved.map((index) => indexes[index]));
+      const remaining = drafts.map((draft, index) => ({ draft: getClarifiedDraft(draft, index), index }))
+        .filter(({ index }) => !savedDraftIndexes.has(index)).map(({ draft }) => draft);
+      setDrafts(remaining);
+      setSelected({});
+      setClarificationAnswers({});
+      setClarifyingIndex(null);
+      if (saved.length) toast.success(`${saved.length} item${saved.length !== 1 ? "s" : ""} saved to NANTI memory`);
+      if (saved.length < chosen.length) toast.error("Some items could not be saved. Unsaved items are still here; please retry.");
+      if (!remaining.length) {
+        reset();
+        setText("");
+        setPreview(null);
+        await navigate({ to: "/app/today" });
+      }
+    } catch (error) {
+      console.error("Import save failed:", error);
+      toast.error("Could not save this import. Your results are still here; please retry.");
+    } finally {
+      saveInProgress.current = false;
+      setSaving(false);
+    }
   };
 
   return (
@@ -420,12 +440,13 @@ function ImportPage() {
 
           {!!drafts.length && (
             <div className="mt-5 flex flex-wrap gap-2">
-              <Button onClick={() => track(drafts.map((_, i) => i))}>
+              <Button disabled={saving} onClick={() => { void track(drafts.map((_, i) => i)); }}>
                 Remember all
               </Button>
               <Button
                 variant="outline"
-                onClick={() => track(drafts.map((_, i) => i).filter((i) => selected[i]))}
+                disabled={saving}
+                onClick={() => { void track(drafts.map((_, i) => i).filter((i) => selected[i])); }}
               >
                 Remember selected
               </Button>
