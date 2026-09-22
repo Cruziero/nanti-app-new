@@ -214,6 +214,41 @@ function SettingsPage() {
 
       <section className="mb-10">
         <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+          Daily Briefing
+        </h2>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-[13.5px]">Morning chief-of-staff brief</p>
+            <p className="text-[12px] text-muted-foreground">
+              One summary of what is due, overdue, waiting, and unclear
+            </p>
+          </div>
+          <Switch
+            checked={settings.notifications["Briefing harian"] !== false}
+            onCheckedChange={(enabled) =>
+              void setSettings({
+                notifications: {
+                  ...settings.notifications,
+                  "Briefing harian": enabled,
+                },
+              })
+            }
+          />
+        </div>
+        <div className="mt-4 max-w-40">
+          <Label className="text-[12px]">Briefing time · Jakarta</Label>
+          <Input
+            type="time"
+            className="mt-1"
+            value={settings.briefingTime}
+            disabled={settings.notifications["Briefing harian"] === false}
+            onChange={(event) => void setSettings({ briefingTime: event.target.value })}
+          />
+        </div>
+      </section>
+
+      <section className="mb-10">
+        <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground/70">
           Quiet Hours
         </h2>
         <div className="flex items-center justify-between">
