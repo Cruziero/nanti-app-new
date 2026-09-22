@@ -277,7 +277,10 @@ interface Ctx extends State {
   snooze: (id: string, days: number) => Promise<boolean>;
   followUp: (id: string, days: number) => Promise<boolean>;
   markWaitingFollowedUp: (id: string, nextDays?: number) => Promise<boolean>;
-  track: (id: string, details?: { personName?: string; due?: string; title?: string }) => Promise<boolean>;
+  track: (
+    id: string,
+    details?: { personName?: string; due?: string; time?: string; title?: string },
+  ) => Promise<string | false>;
   ignore: (id: string) => Promise<boolean>;
   remove: (id: string) => Promise<boolean>;
   setSettings: (patch: Partial<Settings>) => Promise<boolean>;
@@ -714,13 +717,24 @@ export function NantiProvider({ children }: { children: ReactNode }) {
                 due_date: details?.due || item.due,
               },
             });
-            const promoted =
+            let promoted =
               result.entity === "waiting" ? waitingToItem(result.item) : taskToItem(result.item);
+            if (details?.time && result.entity === "task") {
+              await updateTaskFn({ data: { id: promoted.id, time: details.time } });
+              promoted = { ...promoted, time: details.time };
+            }
             mutate((s) => ({
               ...s,
               items: [promoted, ...s.items.filter((i) => i.id !== id)],
             }));
-            return true;
+            void logProductEvent({
+              data: {
+                event_name: "inbox_promoted",
+                item_id: promoted.id,
+                source: "clarification",
+              },
+            }).catch(() => {});
+            return promoted.id;
           } catch (error) {
             console.error("Failed to promote inbox item:", error);
             toast.error("Item belum disimpan sebagai tugas. Coba lagi.");
@@ -742,7 +756,7 @@ export function NantiProvider({ children }: { children: ReactNode }) {
               : i,
           ),
         }));
-        return true;
+        return id;
       },
       ignore: async (id) => {
         const item = state.items.find((i) => i.id === id);
