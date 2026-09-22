@@ -272,7 +272,7 @@ interface Ctx extends State {
   hydrated: boolean;
   update: (id: string, patch: Partial<Item>) => void;
   editItem: (id: string, patch: Partial<Item>) => Promise<boolean>;
-  addItems: (items: Item[], conversationText?: string) => Promise<number[]>;
+  addItems: (items: Item[], conversationText?: string) => Promise<Array<{ index: number; id: string }>>;
   complete: (id: string) => Promise<boolean>;
   snooze: (id: string, days: number) => Promise<boolean>;
   followUp: (id: string, days: number) => Promise<boolean>;
@@ -510,7 +510,7 @@ export function NantiProvider({ children }: { children: ReactNode }) {
       addItems: async (newItems, conversationText?: string) => {
         if (!useSupabase) {
           mutate((s) => ({ ...s, items: [...newItems, ...s.items] }));
-          return newItems.map((_, index) => index);
+          return newItems.map((item, index) => ({ index, id: item.id }));
         }
         let conversationId: string | undefined;
         if (conversationText) {
@@ -565,17 +565,17 @@ export function NantiProvider({ children }: { children: ReactNode }) {
           return taskToItem(saved);
         }));
         const savedItems: Item[] = [];
-        const savedIndexes: number[] = [];
+        const savedRecords: Array<{ index: number; id: string }> = [];
         results.forEach((result, index) => {
           if (result.status === "fulfilled") {
             savedItems.push(result.value);
-            savedIndexes.push(index);
+            savedRecords.push({ index, id: result.value.id });
           } else {
             console.error("Failed to save imported item:", result.reason);
           }
         });
         mutate((s) => ({ ...s, items: [...savedItems, ...s.items] }));
-        return savedIndexes;
+        return savedRecords;
       },
       complete: async (id) => {
         const current = state.items.find((i) => i.id === id);
