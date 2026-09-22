@@ -60,36 +60,31 @@ function getNextWeekday(targetDay: number): string {
 }
 
 function parseTime(text: string): string | null {
-  const patterns = [
-    /jam\s+(\d{1,2})[.:](\d{2})(?:\s*(pagi|siang|sore|malam|am|pm))?/i,
-    /jam\s+(\d{1,2})(?:\s*(pagi|siang|sore|malam|am|pm))?/i,
-    /pukul\s+(\d{1,2})[.:](\d{2})(?:\s*(pagi|siang|sore|malam|am|pm))?/i,
-    /pukul\s+(\d{1,2})(?:\s*(pagi|siang|sore|malam|am|pm))?/i,
-    /(\d{1,2})[.:](\d{2})(?:\s*(am|pm))?/i,
-  ];
+  const normalize = (hourValue: string, minuteValue?: string, periodValue?: string) => {
+    let hour = parseInt(hourValue, 10);
+    const minute = minuteValue ? parseInt(minuteValue, 10) : 0;
+    const period = (periodValue || "").toLowerCase();
 
-  for (const pattern of patterns) {
-    const match = pattern.exec(text);
-    if (match) {
-      let hour = parseInt(match[1]!, 10);
-      const minute = match[2] ? parseInt(match[2], 10) : 0;
-      const period = (match[3] || "").toLowerCase();
-
-      if (period === "sore" || period === "pm") {
-        if (hour < 12) hour += 12;
-      } else if (period === "pagi" || period === "am") {
-        if (hour === 12) hour = 0;
-      } else if (period === "siang") {
-        if (hour < 12) hour += 12;
-      } else if (period === "malam") {
-        if (hour < 12) hour += 12;
-      }
-
-      if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
-        return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
-      }
+    if (period === "sore" || period === "pm" || period === "siang" || period === "malam") {
+      if (hour < 12) hour += 12;
+    } else if (period === "pagi" || period === "am") {
+      if (hour === 12) hour = 0;
     }
-  }
+
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+    return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+  };
+
+  const labelled =
+    /\b(?:jam|pukul)\s+(\d{1,2})(?:[.:](\d{2}))?(?:\s*(pagi|siang|sore|malam|am|pm))?\b/i.exec(
+      text,
+    );
+  if (labelled) return normalize(labelled[1]!, labelled[2], labelled[3]);
+
+  const clock =
+    /\b(\d{1,2})[.:](\d{2})(?:\s*(am|pm))?\b/i.exec(text);
+  if (clock) return normalize(clock[1]!, clock[2], clock[3]);
+
   return null;
 }
 
