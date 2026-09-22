@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { Check, Bell, BellOff } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Check, Bell, BellOff, X } from "lucide-react";
 import { PageHeader, Section, EmptyState } from "@/components/nanti/app-shell";
 import { useNanti } from "@/lib/nanti-store";
 import { isOverdue, isDueToday, isUpcoming, dueLabel } from "@/lib/nanti-utils";
 import { cn } from "@/lib/utils";
+import { fetchNotifications, updateNotification } from "@/lib/nanti-supabase";
 
 export const Route = createFileRoute("/app/reminders")({
   head: () => ({
@@ -16,11 +17,49 @@ export const Route = createFileRoute("/app/reminders")({
   component: RemindersPage,
 });
 
+type NantiNotification = {
+  id: string;
+  item_id?: string | null;
+  notification_type: "task_due" | "task_overdue" | "waiting_followup" | "briefing";
+  title: string;
+  body: string;
+  status: "unread" | "read" | "dismissed";
+  created_at: string;
+};
+
 type Tab = "active" | "completed";
 
 function RemindersPage() {
   const { items, personOf, toggleReminder, complete, snooze } = useNanti();
   const [tab, setTab] = useState<Tab>("active");
+  const [notifications, setNotifications] = useState<NantiNotification[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const rows = await fetchNotifications();
+        if (!cancelled) setNotifications(rows as NantiNotification[]);
+      } catch (error) {
+        console.error("Failed to load NANTI notifications:", error);
+      }
+    };
+    void load();
+    const timer = window.setInterval(() => void load(), 60_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  const dismissNotification = async (id: string) => {
+    try {
+      await updateNotification({ data: { id, status: "dismissed" } });
+      setNotifications((current) => current.filter((item) => item.id !== id));
+    } catch (error) {
+      console.error("Failed to dismiss notification:", error);
+    }
+  };
 
   const itemsWithReminders = items.filter((i) => i.reminderEnabled);
   const activeItems = itemsWithReminders.filter((i) => i.status === "open");
@@ -57,6 +96,40 @@ function RemindersPage() {
           </div>
         }
       />
+
+      {tab === "active" && notifications.some((notice) => notice.status === "unread") && (
+        <section className="mb-7 rounded-xl border border-primary/20 bg-primary/5 p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <Bell className="size-4 text-primary" />
+            <h2 className="text-[13px] font-semibold uppercase tracking-wider text-primary">
+              NANTI nudges
+            </h2>
+          </div>
+          <div className="divide-y divide-primary/10">
+            {notifications
+              .filter((notice) => notice.status === "unread")
+              .slice(0, 8)
+              .map((notice) => (
+                <div key={notice.id} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13.5px] font-medium">{notice.title}</p>
+                    <p className="mt-0.5 text-[12.5px] leading-5 text-muted-foreground">
+                      {notice.body}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="Dismiss notification"
+                    onClick={() => void dismissNotification(notice.id)}
+                    className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-background hover:text-foreground"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                </div>
+              ))}
+          </div>
+        </section>
+      )}
 
       {tab === "active" && overdueItems.length > 0 && (
         <Section title="Overdue" count={overdueItems.length}>
