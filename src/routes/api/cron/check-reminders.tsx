@@ -14,6 +14,7 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
             return json({ error: "Unauthorized" }, 401);
           }
           const now = new Date();
+          const dryRun = new URL(request.url).searchParams.get("dry_run") === "1";
 
           const [
             { data: tasks, error: taskError },
@@ -38,6 +39,16 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
           if (taskError) throw taskError;
           if (waitingError) throw waitingError;
           if (settingsError) throw settingsError;
+
+          if (dryRun) {
+            return json({
+              ok: true,
+              dryRun: true,
+              taskCandidates: tasks?.length || 0,
+              waitingCandidates: waitingItems?.length || 0,
+              timestamp: now.toISOString(),
+            });
+          }
 
           const settingsByUser = new Map(
             (settingsRows || []).map((row) => [row.user_id, (row.settings || {}) as Record<string, unknown>]),
@@ -355,6 +366,53 @@ async function sendWhatsAppNotification(
   if (error) throw error;
   if (!link?.phone_number) return 0;
 
+  const { data: lastInbound, error: inboundError } = await supabase
+    .from("whatsapp_messages")
+    .select("created_at")
+    .eq("user_id", userId)
+    .eq("direction", "inbound")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (inboundError) throw inboundError;
+
+  const withinServiceWindow =
+    Boolean(lastInbound?.created_at) &&
+    Date.now() - new Date(lastInbound!.created_at).getTime() < 23.5 * 60 * 60 * 1000;
+  const templateName = process.env.WHATSAPP_REMINDER_TEMPLATE_NAME;
+  const templateLanguage = process.env.WHATSAPP_REMINDER_TEMPLATE_LANGUAGE || "id";
+
+  let messageBody: Record<string, unknown>;
+  if (withinServiceWindow) {
+    messageBody = {
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: String(link.phone_number).replace(/\D/g, ""),
+      type: "text",
+      text: { body: body.slice(0, 4096), preview_url: false },
+    };
+  } else if (templateName) {
+    messageBody = {
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: String(link.phone_number).replace(/\D/g, ""),
+      type: "template",
+      template: {
+        name: templateName,
+        language: { code: templateLanguage },
+        components: [
+          {
+            type: "body",
+            parameters: [{ type: "text", text: body.slice(0, 1024) }],
+          },
+        ],
+      },
+    };
+  } else {
+    // Keep in-app/push reminders reliable even before a WhatsApp utility template is approved.
+    return 0;
+  }
+
   const response = await fetch(
     `https://graph.facebook.com/${version}/${phoneNumberId}/messages`,
     {
@@ -363,13 +421,7 @@ async function sendWhatsAppNotification(
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        recipient_type: "individual",
-        to: String(link.phone_number).replace(/\D/g, ""),
-        type: "text",
-        text: { body: body.slice(0, 4096), preview_url: false },
-      }),
+      body: JSON.stringify(messageBody),
     },
   );
   if (!response.ok) {
