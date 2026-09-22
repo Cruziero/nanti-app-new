@@ -526,6 +526,7 @@ export function DashboardAssistant() {
       const nextItems = detected.length ? detected : fallback ? [fallback] : [];
 
       let saved: Array<{ index: number; id: string }> = [];
+      let newClarification: PendingClarification | null = null;
       if (nextItems.length) {
         saved = await addItems(nextItems, question);
         const cards = saved.map(({ index, id }) => ({
@@ -542,14 +543,15 @@ export function DashboardAssistant() {
           .map(({ index, id }) => ({ draft: nextItems[index]!, id }))
           .find(({ draft }) => draft.status === "inbox");
         if (unclear) {
-          setPendingClarification({
+          newClarification = {
             itemId: unclear.id,
             type: unclear.draft.clarificationType || "confirmation",
             question:
               unclear.draft.clarificationQuestion ||
               "Mau NANTI simpan ini sebagai tugas?",
             title: unclear.draft.title,
-          });
+          };
+          setPendingClarification(newClarification);
         }
       } else {
         setSavedCards([]);
@@ -566,8 +568,8 @@ export function DashboardAssistant() {
         saved.length > 0
           ? `\n\n✓ ${saved.length === 1 ? "Sudah saya simpan" : `${saved.length} hal sudah saya simpan`}.`
           : "";
-      const clarificationText = pendingClarification
-        ? `\n\n${pendingClarification.question}`
+      const clarificationText = newClarification
+        ? `\n\n${newClarification.question}`
         : "";
       const answer = `${baseAnswer}${savedText}${clarificationText}`;
 
@@ -603,10 +605,17 @@ export function DashboardAssistant() {
     lock.current = true;
     setBusy(true);
     setError("");
-    const chosen = drafts.filter((item) => selected.includes(item.id));
+    const chosenWithSourceIndex = drafts
+      .map((item, sourceIndex) => ({ item, sourceIndex }))
+      .filter(({ item }) => selected.includes(item.id));
+    const chosen = chosenWithSourceIndex.map(({ item }) => item);
     try {
       const saved = await addItems(chosen, source);
-      const savedIndexes = new Set(saved.map((record) => record.index));
+      const savedIndexes = new Set(
+        saved.map((record) => chosenWithSourceIndex[record.index]?.sourceIndex).filter(
+          (index): index is number => typeof index === "number",
+        ),
+      );
       setDrafts((list) => list.filter((_, index) => !savedIndexes.has(index)));
       setSelected([]);
       if (saved.length) toast.success(`${saved.length} item${saved.length === 1 ? "" : "s"} saved`);
