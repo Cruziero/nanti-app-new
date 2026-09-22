@@ -441,21 +441,41 @@ export function NantiProvider({ children }: { children: ReactNode }) {
       editItem: async (id, patch) => {
         const item = state.items.find((i) => i.id === id);
         if (!item || item.status === "inbox") return false;
+
+        const resolvedPatch: Partial<Item> = { ...patch };
+        let resolvedPerson: Person | undefined;
+        let resolvedProject: Project | undefined;
+
         if (useSupabase) {
           try {
+            if (patch.personName?.trim() && patch.personId === undefined) {
+              const person = await resolvePersonMemory({ data: { name: patch.personName.trim() } });
+              resolvedPerson = personToPerson(person);
+              resolvedPatch.personId = resolvedPerson.id;
+              resolvedPatch.personName = resolvedPerson.name;
+            }
+            if (patch.projectName?.trim() && patch.projectId === undefined) {
+              const project = await resolveProjectMemory({ data: { name: patch.projectName.trim() } });
+              resolvedProject = projectToProject(project);
+              resolvedPatch.projectId = resolvedProject.id;
+              resolvedPatch.projectName = resolvedProject.name;
+            }
+
             if (item.kind === "waiting") {
               await updateWaitingItemFn({
                 data: {
                   id,
-                  title: patch.title,
-                  person_id: patch.personId === undefined ? undefined : patch.personId || null,
-                  project_id: patch.projectId === undefined ? undefined : patch.projectId || null,
-                  follow_up_at: patch.followUpAt,
-                  auto_follow_up_enabled: patch.autoFollowUpEnabled,
+                  title: resolvedPatch.title,
+                  person_id:
+                    resolvedPatch.personId === undefined ? undefined : resolvedPatch.personId || null,
+                  project_id:
+                    resolvedPatch.projectId === undefined ? undefined : resolvedPatch.projectId || null,
+                  follow_up_at: resolvedPatch.followUpAt,
+                  auto_follow_up_enabled: resolvedPatch.autoFollowUpEnabled,
                   status:
-                    patch.status === "received"
+                    resolvedPatch.status === "received"
                       ? "received"
-                      : patch.status === "open"
+                      : resolvedPatch.status === "open"
                         ? "waiting"
                         : undefined,
                 },
@@ -464,31 +484,40 @@ export function NantiProvider({ children }: { children: ReactNode }) {
               await updateTaskFn({
                 data: {
                   id,
-                  title: patch.title,
-                  description: patch.description,
-                  type: patch.kind && patch.kind !== "invoice" ? patch.kind : undefined,
+                  title: resolvedPatch.title,
+                  description: resolvedPatch.description,
+                  type:
+                    resolvedPatch.kind && resolvedPatch.kind !== "invoice"
+                      ? resolvedPatch.kind
+                      : undefined,
                   status:
-                    patch.status === "done"
+                    resolvedPatch.status === "done"
                       ? "completed"
-                      : patch.status === "ignored"
+                      : resolvedPatch.status === "ignored"
                         ? "dismissed"
-                        : patch.status === "open"
+                        : resolvedPatch.status === "open"
                           ? "pending"
                           : undefined,
                   priority:
-                    patch.priority === "critical" ? "urgent" : patch.priority,
-                  due_date: patch.due,
-                  time: patch.time,
-                  person_id: patch.personId === undefined ? undefined : patch.personId || null,
-                  project_id: patch.projectId === undefined ? undefined : patch.projectId || null,
-                  person_name: patch.personName,
-                  project_name: patch.projectName,
-                  reminder_enabled: patch.reminderEnabled,
+                    resolvedPatch.priority === "critical" ? "urgent" : resolvedPatch.priority,
+                  due_date: resolvedPatch.due,
+                  time: resolvedPatch.time,
+                  person_id:
+                    resolvedPatch.personId === undefined ? undefined : resolvedPatch.personId || null,
+                  project_id:
+                    resolvedPatch.projectId === undefined ? undefined : resolvedPatch.projectId || null,
+                  person_name: resolvedPatch.personName,
+                  project_name: resolvedPatch.projectName,
+                  reminder_enabled: resolvedPatch.reminderEnabled,
                   reminder_time:
-                    patch.reminderTime === undefined ? undefined : patch.reminderTime || null,
-                  reminder_channels: patch.reminderChannels,
+                    resolvedPatch.reminderTime === undefined
+                      ? undefined
+                      : resolvedPatch.reminderTime || null,
+                  reminder_channels: resolvedPatch.reminderChannels,
                   reminder_intensity:
-                    patch.reminderIntensity === undefined ? undefined : patch.reminderIntensity || null,
+                    resolvedPatch.reminderIntensity === undefined
+                      ? undefined
+                      : resolvedPatch.reminderIntensity || null,
                 },
               });
             }
@@ -498,16 +527,25 @@ export function NantiProvider({ children }: { children: ReactNode }) {
             return false;
           }
         }
+
         mutate((current) => ({
           ...current,
-          items: current.items.map((i) => (i.id === id ? { ...i, ...patch } : i)),
+          items: current.items.map((i) => (i.id === id ? { ...i, ...resolvedPatch } : i)),
+          people:
+            resolvedPerson && !current.people.some((person) => person.id === resolvedPerson!.id)
+              ? [resolvedPerson, ...current.people]
+              : current.people,
+          projects:
+            resolvedProject && !current.projects.some((project) => project.id === resolvedProject!.id)
+              ? [resolvedProject, ...current.projects]
+              : current.projects,
         }));
         void logProductEvent({
           data: {
             event_name: "item_edited",
             item_id: id,
             source: "assistant",
-            properties: { fields: Object.keys(patch) },
+            properties: { fields: Object.keys(resolvedPatch) },
           },
         }).catch(() => {});
         return true;

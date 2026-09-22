@@ -498,6 +498,7 @@ export function DashboardAssistant() {
             time: item.time,
             kind: item.kind,
             person: people.find((person) => person.id === item.personId)?.name || item.personName,
+            project: projects.find((project) => project.id === item.projectId)?.name || item.projectName,
           }),
         )
         .join("\n")
@@ -506,7 +507,15 @@ export function DashboardAssistant() {
         .slice(-8)
         .map((message) => `${message.role}: ${message.text.slice(0, 800)}`)
         .join("\n");
-      const context = `Today (Asia/Jakarta): ${todayISO()}\nSaved items:\n${taskContext}\nRecent conversation:\n${history}`;
+      const peopleMemory = people
+        .slice(0, 50)
+        .map((person) => `${person.name}${person.org ? ` — ${person.org}` : ""}`)
+        .join("\n");
+      const projectMemory = projects
+        .slice(0, 50)
+        .map((project) => `${project.name}${project.description ? ` — ${project.description}` : ""}`)
+        .join("\n");
+      const context = `Today (Asia/Jakarta): ${todayISO()}\nSaved items:\n${taskContext}\nPeople memory:\n${peopleMemory}\nProject memory:\n${projectMemory}\nRecent conversation:\n${history}`;
 
       const commandItems = recentItems.map((item) => ({
         id: item.id,
@@ -516,6 +525,7 @@ export function DashboardAssistant() {
         due: item.due,
         time: item.time,
         person: people.find((person) => person.id === item.personId)?.name || item.personName,
+        project: projects.find((project) => project.id === item.projectId)?.name || item.projectName,
         updatedAt: item.createdAt,
       }));
 

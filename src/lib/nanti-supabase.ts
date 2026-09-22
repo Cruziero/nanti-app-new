@@ -152,7 +152,9 @@ export const resolvePersonMemory = createServerFn({ method: "POST" })
       p_company: data.company ?? null,
     });
     if (error) throw error;
-    return person as Record<string, unknown>;
+    const row = Array.isArray(person) ? person[0] : person;
+    if (!row) throw new Error("Person memory could not be resolved.");
+    return row as Record<string, unknown>;
   });
 
 export const resolveProjectMemory = createServerFn({ method: "POST" })
@@ -166,7 +168,9 @@ export const resolveProjectMemory = createServerFn({ method: "POST" })
       p_name: data.name,
     });
     if (error) throw error;
-    return project as Record<string, unknown>;
+    const row = Array.isArray(project) ? project[0] : project;
+    if (!row) throw new Error("Project memory could not be resolved.");
+    return row as Record<string, unknown>;
   });
 
 // Tasks
@@ -605,6 +609,46 @@ export const createAiMessage = createServerFn({ method: "POST" }).middleware([re
       .single();
     if (error) throw error;
     return msg;
+  });
+
+// Notifications
+export const fetchNotifications = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId, supabase } = context;
+    const { data, error } = await supabase
+      .from("notifications")
+      .select("*")
+      .eq("user_id", userId)
+      .neq("status", "dismissed")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    return data;
+  });
+
+export const updateNotification = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({
+      id: z.string().uuid(),
+      status: z.enum(["read", "dismissed"]),
+    }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId, supabase } = context;
+    const { data: updated, error } = await supabase
+      .from("notifications")
+      .update({
+        status: data.status,
+        read_at: data.status === "read" ? new Date().toISOString() : null,
+      })
+      .eq("id", data.id)
+      .eq("user_id", userId)
+      .select("*")
+      .single();
+    if (error) throw error;
+    return updated;
   });
 
 // Seed demo data for new users

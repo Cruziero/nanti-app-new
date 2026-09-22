@@ -108,6 +108,10 @@ Jika aksi jelas tetapi detail penting hilang, set needsClarification=true dan ta
 
 export interface ExtractedItem {
   title: string;
+  what?: string;
+  action?: string;
+  who?: string | null;
+  due?: string | null;
   kind: "task" | "commitment" | "deadline" | "waiting" | "followup";
   priority: "high" | "medium" | "low";
   dueOffsetDays: number | null;
@@ -298,6 +302,7 @@ export async function interpretAssistantCommand(
     due?: string;
     time?: string;
     person?: string;
+    project?: string;
     updatedAt?: string;
   }>,
 ): Promise<AssistantCommand> {

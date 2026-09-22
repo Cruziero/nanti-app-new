@@ -187,6 +187,21 @@ async function handleMessage(message: IncomingMessage) {
       return;
     }
 
+    const { data: phoneOwner, error: phoneOwnerError } = await supabase
+      .from("whatsapp_user_links")
+      .select("user_id")
+      .eq("phone_number", phone)
+      .not("verified_at", "is", null)
+      .maybeSingle();
+    if (phoneOwnerError) throw phoneOwnerError;
+    if (phoneOwner && phoneOwner.user_id !== link.user_id) {
+      await sendText(
+        message.from,
+        "Nomor WhatsApp ini sudah terhubung ke akun NANTI lain. Putuskan koneksi lama dulu.",
+      );
+      return;
+    }
+
     const { error: updateError } = await supabase
       .from("whatsapp_user_links")
       .update({
@@ -199,7 +214,8 @@ async function handleMessage(message: IncomingMessage) {
       .eq("user_id", link.user_id);
     if (updateError) throw updateError;
 
-    await storeInboundMessage(supabase, link.user_id, message, content, "processed");
+    const linkClaimed = await claimInboundMessage(supabase, link.user_id, message, content);
+    if (linkClaimed) await updateMessageStatus(supabase, message.id, "processed");
     await supabase.from("product_events").insert({
       user_id: link.user_id,
       event_name: "whatsapp_connected",
@@ -226,8 +242,8 @@ async function handleMessage(message: IncomingMessage) {
     return;
   }
 
-  const inserted = await storeInboundMessage(supabase, link.user_id, message, content, "processing");
-  if (!inserted) return; // Meta retry / duplicate delivery.
+  const claimed = await claimInboundMessage(supabase, link.user_id, message, content);
+  if (!claimed) return; // Already processed, or another delivery is actively processing it.
 
   try {
     if (link.pending_inbox_id && message.type === "text" && content) {
@@ -253,12 +269,16 @@ async function handleMessage(message: IncomingMessage) {
 
     const { data: conversation, error: conversationError } = await supabase
       .from("conversations")
-      .insert({
-        user_id: link.user_id,
-        source: "WhatsApp",
-        participant: phone,
-        message_text: content.slice(0, 20000),
-      })
+      .upsert(
+        {
+          user_id: link.user_id,
+          source: "WhatsApp",
+          participant: phone,
+          message_text: content.slice(0, 20000),
+          source_external_id: message.id,
+        },
+        { onConflict: "user_id,source_external_id" },
+      )
       .select("id")
       .single();
     if (conversationError) throw conversationError;
@@ -267,13 +287,15 @@ async function handleMessage(message: IncomingMessage) {
     const created = [];
     let clarification: { id: string; question: string } | null = null;
 
-    for (const item of extraction.items) {
+    for (let index = 0; index < extraction.items.length; index++) {
+      const item = extraction.items[index]!;
       const result = await persistExtractedItem(
         supabase,
         link.user_id,
         conversation.id,
         item,
         content,
+        `${message.id}:${index}`,
       );
       created.push(result);
       if (result.entity === "inbox" && !clarification) {
@@ -329,35 +351,59 @@ async function handleMessage(message: IncomingMessage) {
   }
 }
 
-async function storeInboundMessage(
+async function claimInboundMessage(
   supabase: ReturnType<typeof adminClient>,
   userId: string,
   message: IncomingMessage,
   content: string,
-  status: "processing" | "processed",
 ) {
-  const { data, error } = await supabase
+  const { data: existing, error: existingError } = await supabase
     .from("whatsapp_messages")
-    .upsert(
-      {
-        user_id: userId,
-        external_message_id: message.id,
-        direction: "inbound",
-        message_type: ["text", "image", "document"].includes(message.type || "")
-          ? message.type
-          : "unknown",
+    .select("id,user_id,status,updated_at")
+    .eq("external_message_id", message.id)
+    .maybeSingle();
+  if (existingError) throw existingError;
+
+  if (existing) {
+    if (existing.user_id !== userId) {
+      throw new Error("WhatsApp message ID is already associated with another user.");
+    }
+    if (existing.status === "processed" || existing.status === "ignored") return false;
+    if (existing.status === "processing") {
+      const updatedAt = new Date(existing.updated_at || 0).getTime();
+      if (Date.now() - updatedAt < 5 * 60_000) return false;
+    }
+
+    const { error } = await supabase
+      .from("whatsapp_messages")
+      .update({
+        status: "processing",
+        error: null,
         content: content.slice(0, 20000),
-        from_number: normalizePhone(message.from),
-        status,
         raw_payload: message,
         updated_at: new Date().toISOString(),
-      },
-      { onConflict: "external_message_id", ignoreDuplicates: true },
-    )
-    .select("id")
-    .maybeSingle();
+      })
+      .eq("id", existing.id)
+      .eq("user_id", userId);
+    if (error) throw error;
+    return true;
+  }
+
+  const { error } = await supabase.from("whatsapp_messages").insert({
+    user_id: userId,
+    external_message_id: message.id,
+    direction: "inbound",
+    message_type: ["text", "image", "document"].includes(message.type || "")
+      ? message.type
+      : "unknown",
+    content: content.slice(0, 20000),
+    from_number: normalizePhone(message.from),
+    status: "processing",
+    raw_payload: message,
+    updated_at: new Date().toISOString(),
+  });
   if (error) throw error;
-  return Boolean(data);
+  return true;
 }
 
 async function updateMessageStatus(
@@ -379,6 +425,7 @@ async function persistExtractedItem(
   conversationId: string,
   item: ExtractedItem,
   original: string,
+  sourceExternalId: string,
 ): Promise<{ entity: "task" | "waiting" | "inbox"; id: string; title: string; question?: string }> {
   const { date, time } = extractedDate(item, original);
   const needsClarification = Boolean(item.needsClarification) || item.confidence < 0.72;
@@ -392,8 +439,9 @@ async function persistExtractedItem(
         : "Mau NANTI simpan ini sebagai tugas?");
     const { data, error } = await supabase
       .from("inbox_items")
-      .insert({
+      .upsert({
         user_id: userId,
+        source_external_id: sourceExternalId,
         type: item.kind,
         title: item.title,
         person_name: item.person,
@@ -405,7 +453,7 @@ async function persistExtractedItem(
         clarification_type: type,
         clarification_question: question,
         status: "pending",
-      })
+      }, { onConflict: "user_id,source_external_id" })
       .select("id,title")
       .single();
     if (error) throw error;
@@ -415,8 +463,9 @@ async function persistExtractedItem(
   if (item.kind === "waiting") {
     const { data, error } = await supabase
       .from("waiting_items")
-      .insert({
+      .upsert({
         user_id: userId,
+        source_external_id: sourceExternalId,
         title: item.title,
         person_name: item.person,
         project_name: item.project,
@@ -430,7 +479,7 @@ async function persistExtractedItem(
         ai_note: item.aiNote || "",
         confidence: item.confidence,
         conversation_id: conversationId,
-      })
+      }, { onConflict: "user_id,source_external_id" })
       .select("id,title")
       .single();
     if (error) throw error;
@@ -440,8 +489,9 @@ async function persistExtractedItem(
   const enableReminder = Boolean(date) || Boolean(item.reminderRequired);
   const { data, error } = await supabase
     .from("tasks")
-    .insert({
+    .upsert({
       user_id: userId,
+      source_external_id: sourceExternalId,
       title: item.title,
       type: item.kind,
       status: "pending",
@@ -460,7 +510,7 @@ async function persistExtractedItem(
       reminder_time: enableReminder ? reminderAt(date, time) : null,
       reminder_channels: enableReminder ? ["in_app", "push"] : [],
       reminder_intensity: "normal",
-    })
+    }, { onConflict: "user_id,source_external_id" })
     .select("id,title")
     .single();
   if (error) throw error;
