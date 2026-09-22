@@ -20,7 +20,9 @@ function PeoplePage() {
   const { people, items } = useNanti();
   const [q, setQ] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
-  const list = people.filter((p) => (p.name + p.org).toLowerCase().includes(q.toLowerCase()));
+  const list = [...people]
+    .filter((p) => (p.name + p.org).toLowerCase().includes(q.toLowerCase()))
+    .sort((a, b) => String(b.lastConversation || "").localeCompare(String(a.lastConversation || "")));
 
   return (
     <div>
@@ -56,6 +58,9 @@ function PeoplePage() {
                       {p.org}
                       {p.role ? ` - ${p.role}` : ""}
                     </p>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground/60">
+                      Last interaction {formatDate(p.lastConversation)}
+                    </p>
                   </div>
                   <div className="flex items-center gap-3 text-[11.5px] text-muted-foreground">
                     <span>{commitments.length} open</span>
@@ -71,14 +76,20 @@ function PeoplePage() {
 
                 {expanded && (
                   <div className="space-y-1 border-l-2 border-border/50 py-2 pl-4">
-                    {p.activity.map((a) => (
-                      <div key={a.date} className="flex gap-3 text-[12.5px]">
-                        <span className="w-16 shrink-0 text-muted-foreground/60">
-                          {formatDate(a.date).slice(0, 8)}
-                        </span>
-                        <span className="text-muted-foreground">{a.text}</span>
-                      </div>
-                    ))}
+                    {p.activity.length ? (
+                      p.activity.map((a, index) => (
+                        <div key={`${a.date}-${index}-${a.text}`} className="flex gap-3 text-[12.5px]">
+                          <span className="w-20 shrink-0 text-muted-foreground/60">
+                            {formatDate(a.date).slice(0, 10)}
+                          </span>
+                          <span className="text-muted-foreground">{a.text}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-[12.5px] text-muted-foreground">
+                        No recorded relationship activity yet.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
