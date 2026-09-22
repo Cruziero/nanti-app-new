@@ -444,8 +444,6 @@ async function persistExtractedItem(
         source_external_id: sourceExternalId,
         type: item.kind,
         title: item.title,
-        person_id: person?.id || null,
-        project_id: project?.id || null,
         person_name: item.person,
         project_name: item.project,
         due_date: date,
@@ -456,7 +454,7 @@ async function persistExtractedItem(
         clarification_question: question,
         status: "pending",
       }, { onConflict: "user_id,source_external_id" })
-.select("*")
+      .select("*")
       .single();
     if (error) throw error;
     return { entity: "inbox", id: data.id, title: data.title, question };
@@ -476,6 +474,8 @@ async function persistExtractedItem(
         user_id: userId,
         source_external_id: sourceExternalId,
         title: item.title,
+        person_id: person?.id || null,
+        project_id: project?.id || null,
         person_name: item.person,
         project_name: item.project,
         status: "waiting",
