@@ -36,6 +36,8 @@ import {
   createInboxItem as createInboxItemFn,
   updateInboxItem as updateInboxItemFn,
   promoteInboxItem as promoteInboxItemFn,
+  resolvePersonMemory,
+  resolveProjectMemory,
   markWaitingFollowedUp as markWaitingFollowedUpFn,
   logProductEvent,
   createConversation as createConversationFn,
@@ -515,17 +517,61 @@ export function NantiProvider({ children }: { children: ReactNode }) {
           mutate((s) => ({ ...s, items: [...newItems, ...s.items] }));
           return newItems.map((item, index) => ({ index, id: item.id }));
         }
+        const newPeople: Person[] = [];
+        const newProjects: Project[] = [];
+        const resolvedPeople = new Map<string, string>();
+        const resolvedProjects = new Map<string, string>();
+
+        for (const item of newItems) {
+          if (!item.personId && item.personName) {
+            const key = item.personName.trim().toLowerCase();
+            if (key && !resolvedPeople.has(key)) {
+              try {
+                const person = await resolvePersonMemory({ data: { name: item.personName } });
+                const mapped = personToPerson(person);
+                resolvedPeople.set(key, mapped.id);
+                newPeople.push(mapped);
+              } catch (error) {
+                console.error("Failed to resolve person memory:", error);
+              }
+            }
+          }
+          if (!item.projectId && item.projectName) {
+            const key = item.projectName.trim().toLowerCase();
+            if (key && !resolvedProjects.has(key)) {
+              try {
+                const project = await resolveProjectMemory({ data: { name: item.projectName } });
+                const mapped = projectToProject(project);
+                resolvedProjects.set(key, mapped.id);
+                newProjects.push(mapped);
+              } catch (error) {
+                console.error("Failed to resolve project memory:", error);
+              }
+            }
+          }
+        }
+
+        const resolvedItems = newItems.map((item) => ({
+          ...item,
+          personId:
+            item.personId ||
+            (item.personName ? resolvedPeople.get(item.personName.trim().toLowerCase()) : undefined),
+          projectId:
+            item.projectId ||
+            (item.projectName ? resolvedProjects.get(item.projectName.trim().toLowerCase()) : undefined),
+        }));
+
         let conversationId: string | undefined;
         if (conversationText) {
           const conversation = await createConversationFn({ data: {
-            source: newItems.some((item) => item.sourceType === "chat")
+            source: resolvedItems.some((item) => item.sourceType === "chat")
               ? "Chat dengan NANTI"
               : "Impor percakapan",
             message_text: conversationText.slice(0, 20000),
           } });
           conversationId = conversation.id;
         }
-        const results = await Promise.allSettled(newItems.map(async (item) => {
+        const results = await Promise.allSettled(resolvedItems.map(async (item) => {
           if (item.status === "inbox") {
             const saved = await createInboxItemFn({ data: {
               type: item.kind, title: item.title, person_name: item.personName,
@@ -577,7 +623,22 @@ export function NantiProvider({ children }: { children: ReactNode }) {
             console.error("Failed to save imported item:", result.reason);
           }
         });
-        mutate((s) => ({ ...s, items: [...savedItems, ...s.items] }));
+        mutate((current) => ({
+          ...current,
+          items: [...savedItems, ...current.items],
+          people: [
+            ...newPeople.filter(
+              (person) => !current.people.some((existing) => existing.id === person.id),
+            ),
+            ...current.people,
+          ],
+          projects: [
+            ...newProjects.filter(
+              (project) => !current.projects.some((existing) => existing.id === project.id),
+            ),
+            ...current.projects,
+          ],
+        }));
         for (const savedItem of savedItems) {
           void logProductEvent({
             data: {
