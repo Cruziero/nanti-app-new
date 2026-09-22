@@ -43,7 +43,7 @@ export const interpretTaskCommand = createServerFn({ method: "POST" }).middlewar
       message: z.string().min(1).max(2000),
       items: z.array(
         z.object({
-          id: z.string().uuid(),
+          id: z.string().min(1).max(120),
           title: z.string().max(500),
           kind: z.string().max(40),
           status: z.string().max(40),
