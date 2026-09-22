@@ -196,7 +196,7 @@ function waitingToItem(item: Record<string, unknown>): Item {
     id: item.id as string,
     title: item.title as string,
     kind: "waiting",
-    status: "open",
+    status: item.status === "received" ? "received" : "open",
     priority: "medium",
     since: (item.started_at as string)?.slice(0, 10),
     personId: (item.person_id as string) || undefined,
@@ -257,8 +257,8 @@ function personToPerson(person: Record<string, unknown>): Person {
 interface Ctx extends State {
   hydrated: boolean;
   update: (id: string, patch: Partial<Item>) => void;
-  addItems: (items: Item[], conversationText?: string) => void;
-  complete: (id: string) => void;
+  addItems: (items: Item[], conversationText?: string) => Promise<number[]>;
+  complete: (id: string) => Promise<void>;
   snooze: (id: string, days: number) => void;
   track: (id: string) => void;
   ignore: (id: string) => void;
@@ -416,81 +416,69 @@ export function NantiProvider({ children }: { children: ReactNode }) {
           items: s.items.map((i) => (i.id === id ? { ...i, ...patch } : i)),
         }));
       },
-      addItems: (newItems, conversationText?: string) => {
-        if (useSupabase) {
-          // Save conversation text if provided
-          let conversationPromise: Promise<string | null> = Promise.resolve(null);
-          if (conversationText) {
-            conversationPromise = createConversationFn({
-              data: {
-                source: "Impor percakapan",
-                message_text: conversationText.slice(0, 20000),
-              },
-            })
-              .then((conv) => conv?.id ?? null)
-              .catch((e) => {
-                console.error("Failed to save conversation:", e);
-                return null;
-              });
-          }
-
-          conversationPromise.then((conversationId) => {
-            for (const item of newItems) {
-              if (item.kind === "waiting") {
-                createWaitingItemFn({
-                  data: {
-                    title: item.title,
-                    person_id: item.personId,
-                    project_id: item.projectId,
-                    started_at: item.since || new Date().toISOString(),
-                  },
-                }).catch(console.error);
-              } else if (item.status === "inbox") {
-                // Items needing clarification → save to inbox_items table
-                createInboxItemFn({
-                  data: {
-                    type: item.kind,
-                    title: item.title,
-                    person_name: item.personName,
-                    project_name: item.projectName,
-                    due_date: item.due,
-                    conversation_text: conversationText?.slice(0, 5000),
-                    status: "pending",
-                  },
-                }).catch(console.error);
-              } else {
-                createTaskFn({
-                  data: {
-                    title: item.title,
-                    description: item.description,
-                    type: item.kind,
-                    status: "pending",
-                    priority: item.priority,
-                    due_date: item.due,
-                    project_id: item.projectId,
-                    person_id: item.personId,
-                    source: item.source,
-                    quote: item.quote,
-                    ai_note: item.aiNote,
-                    confidence: item.confidence,
-                    source_type: item.sourceType,
-                    time: item.time,
-                    ...(conversationId ? { conversation_id: conversationId } : {}),
-                  },
-                }).catch(console.error);
-              }
-            }
-          });
+      addItems: async (newItems, conversationText?: string) => {
+        if (!useSupabase) {
+          mutate((s) => ({ ...s, items: [...newItems, ...s.items] }));
+          return newItems.map((_, index) => index);
         }
-        mutate((s) => ({ ...s, items: [...newItems, ...s.items] }));
+        let conversationId: string | undefined;
+        if (conversationText) {
+          const conversation = await createConversationFn({ data: {
+            source: "Impor percakapan", message_text: conversationText.slice(0, 20000),
+          } });
+          conversationId = conversation.id;
+        }
+        const results = await Promise.allSettled(newItems.map(async (item) => {
+          if (item.status === "inbox") {
+            const saved = await createInboxItemFn({ data: {
+              type: item.kind, title: item.title, person_name: item.personName,
+              project_name: item.projectName, due_date: item.due,
+              conversation_text: conversationText?.slice(0, 5000), status: "pending",
+            } });
+            return inboxToItem(saved);
+          }
+          if (item.kind === "waiting") {
+            const saved = await createWaitingItemFn({ data: {
+              title: item.title, person_id: item.personId, project_id: item.projectId,
+              started_at: item.since || new Date().toISOString(),
+            } });
+            return waitingToItem(saved);
+          }
+          const saved = await createTaskFn({ data: {
+            title: item.title, description: item.description, type: item.kind,
+            status: "pending", priority: item.priority, due_date: item.due,
+            project_id: item.projectId, person_id: item.personId, source: item.source,
+            quote: item.quote, ai_note: item.aiNote, confidence: item.confidence,
+            source_type: item.sourceType, time: item.time, conversation_id: conversationId,
+          } });
+          return taskToItem(saved);
+        }));
+        const savedItems: Item[] = [];
+        const savedIndexes: number[] = [];
+        results.forEach((result, index) => {
+          if (result.status === "fulfilled") {
+            savedItems.push(result.value);
+            savedIndexes.push(index);
+          } else {
+            console.error("Failed to save imported item:", result.reason);
+          }
+        });
+        mutate((s) => ({ ...s, items: [...savedItems, ...s.items] }));
+        return savedIndexes;
       },
-      complete: (id) => {
+      complete: async (id) => {
         if (useSupabase) {
           const item = state.items.find((i) => i.id === id);
-          if (item?.kind === "waiting") {
-            updateWaitingItemFn({ data: { id, status: "received" } }).catch(console.error);
-          } else {
-            updateTaskFn({ data: { id, status: "completed" } }).catch(console.error);
+          try {
+            if (item?.kind === "waiting") {
+              await updateWaitingItemFn({ data: { id, status: "received" } });
+            } else {
+              await updateTaskFn({ data: { id, status: "completed" } });
+            }
+          } catch (error) {
+            console.error("Failed to complete item:", error);
+            toast.error("Tugas belum ditandai selesai. Coba lagi.");
+            return;
           }
         }
         mutate((s) => ({
