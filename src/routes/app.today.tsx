@@ -1,4 +1,4 @@
-﻿import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ArrowRight, Hourglass, Clock, AlertTriangle, Plus } from "lucide-react";
@@ -109,8 +109,8 @@ function Today() {
               </div>
               <div className="flex items-center gap-1.5">
                 <button
-                  onClick={() => {
-                    complete(item.id);
+                  onClick={async () => {
+                    if (!await complete(item.id)) return;
                     toast.success("Done");
                   }}
                   className="rounded-md border border-border px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground transition-colors hover:bg-secondary"
@@ -118,8 +118,8 @@ function Today() {
                   Done
                 </button>
                 <button
-                  onClick={() => {
-                    snooze(item.id, 1);
+                  onClick={async () => {
+                    if (!await snooze(item.id, 1)) return;
                     toast("Snoozed");
                   }}
                   className="rounded-md px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground/60 transition-colors hover:text-muted-foreground"
@@ -145,8 +145,8 @@ function Today() {
               </div>
               <div className="flex items-center gap-1.5">
                 <button
-                  onClick={() => {
-                    complete(item.id);
+                  onClick={async () => {
+                    if (!await complete(item.id)) return;
                     toast.success("Done");
                   }}
                   className="rounded-md border border-border px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground transition-colors hover:bg-secondary"
@@ -154,8 +154,8 @@ function Today() {
                   Done
                 </button>
                 <button
-                  onClick={() => {
-                    snooze(item.id, 1);
+                  onClick={async () => {
+                    if (!await snooze(item.id, 1)) return;
                     toast("Snoozed");
                   }}
                   className="rounded-md px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground/60 transition-colors hover:text-muted-foreground"

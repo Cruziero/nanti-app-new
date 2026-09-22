@@ -138,8 +138,8 @@ export function ItemDetailProvider({ children }: { children: ReactNode }) {
                 <div className="mt-6 flex flex-wrap gap-2 pb-8">
                   <Button
                     size="sm"
-                    onClick={() => {
-                      complete(item.id);
+                    onClick={async () => {
+                      if (!await complete(item.id)) return;
                       setId(null);
                       toast.success("Ditandai selesai");
                     }}
@@ -149,8 +149,8 @@ export function ItemDetailProvider({ children }: { children: ReactNode }) {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      snooze(item.id, 1);
+                    onClick={async () => {
+                      if (!await snooze(item.id, 1)) return;
                       toast("Ditunda ke besok");
                     }}
                   >
@@ -170,8 +170,8 @@ export function ItemDetailProvider({ children }: { children: ReactNode }) {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      snooze(item.id, 7);
+                    onClick={async () => {
+                      if (!await snooze(item.id, 7)) return;
                       toast("Dijadwalkan ulang");
                     }}
                   >
@@ -195,8 +195,8 @@ export function ItemDetailProvider({ children }: { children: ReactNode }) {
                     variant="ghost"
                     size="sm"
                     className="text-destructive hover:text-destructive"
-                    onClick={() => {
-                      remove(item.id);
+                    onClick={async () => {
+                      if (!await remove(item.id)) return;
                       setId(null);
                       toast("Dihapus");
                     }}
