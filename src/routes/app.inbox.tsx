@@ -86,7 +86,16 @@ function InboxItem({
         )}
       </div>
       <div className="flex items-center gap-1.5">
-        {item.confidence >= 0.8 ? (
+        {item.clarificationQuestion ? (
+          <>
+            <Button size="sm" variant="outline" onClick={onClarify}>
+              Answer
+            </Button>
+            <Button size="sm" variant="ghost" onClick={onIgnore}>
+              Skip
+            </Button>
+          </>
+        ) : item.confidence >= 0.8 ? (
           <Button size="sm" onClick={onTrack}>
             Remember
           </Button>
@@ -117,61 +126,64 @@ function InboxItem({
 function ClarifyDialog({
   item,
   onSave,
+  onIgnore,
   onCancel,
 }: {
   item: Item;
-  onSave: (person?: string, due?: string) => void;
+  onSave: (answer: string) => void;
+  onIgnore: () => void;
   onCancel: () => void;
 }) {
-  const [person, setPerson] = useState(item.personName || "");
-  const [due, setDue] = useState("");
+  const [answer, setAnswer] = useState(item.personName || "");
+  const type = item.clarificationType || "confirmation";
+  const question =
+    item.clarificationQuestion ||
+    (type === "person"
+      ? "Kamu sedang menunggu siapa?"
+      : type === "date" || type === "time"
+        ? "Kapan ini harus dilakukan?"
+        : "Mau NANTI simpan ini sebagai tugas?");
 
   return (
     <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-4">
-      <p className="mb-3 text-[13px] font-medium text-amber-800">
-        Missing info for: {item.title}
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+        One thing I need
       </p>
-      <div className="space-y-2">
-        {!item.personName && (
-          <div>
-            <label className="text-[11px] text-amber-700">Who is involved?</label>
-            <Input
-              className="mt-1 border-amber-200 bg-white"
-              placeholder="Person name"
-              value={person}
-              onChange={(e) => setPerson(e.target.value)}
-            />
+      <p className="mt-1 text-[13px] font-medium text-amber-900">{question}</p>
+      <p className="mt-1 text-[11.5px] text-amber-800/70">For: {item.title}</p>
+
+      {type === "confirmation" ? (
+        <div className="mt-3 flex gap-2">
+          <Button size="sm" onClick={() => onSave("yes")}>Yes, remember it</Button>
+          <Button size="sm" variant="outline" onClick={onIgnore}>No, ignore it</Button>
+          <Button size="sm" variant="ghost" onClick={onCancel}>Later</Button>
+        </div>
+      ) : (
+        <>
+          <Input
+            autoFocus
+            className="mt-3 border-amber-200 bg-white"
+            placeholder={
+              type === "person"
+                ? "Person name"
+                : type === "time"
+                  ? "e.g. tomorrow at 10am"
+                  : "e.g. Friday or 28 September"
+            }
+            value={answer}
+            onChange={(event) => setAnswer(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && answer.trim()) onSave(answer.trim());
+            }}
+          />
+          <div className="mt-3 flex gap-2">
+            <Button size="sm" disabled={!answer.trim()} onClick={() => onSave(answer.trim())}>
+              Save answer
+            </Button>
+            <Button size="sm" variant="ghost" onClick={onCancel}>Cancel</Button>
           </div>
-        )}
-        {item.kind !== "waiting" && !item.due && (
-          <div>
-            <label className="text-[11px] text-amber-700">When?</label>
-            <div className="mt-1 flex gap-1.5">
-              {["Today", "Tomorrow", "Next week"].map((opt) => (
-                <button
-                  key={opt}
-                  onClick={() => setDue(opt)}
-                  className={`rounded-md border px-2 py-1 text-[11px] ${
-                    due === opt
-                      ? "border-amber-400 bg-amber-100 text-amber-800"
-                      : "border-amber-200 bg-white text-amber-700 hover:bg-amber-100"
-                  }`}
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="mt-3 flex gap-2">
-        <Button size="sm" onClick={() => onSave(person || undefined, due || undefined)}>
-          Save & Track
-        </Button>
-        <Button size="sm" variant="ghost" onClick={onCancel}>
-          Cancel
-        </Button>
-      </div>
+        </>
+      )}
     </div>
   );
 }
@@ -191,12 +203,27 @@ function InboxPage() {
     toast("Skipped");
   };
 
-  const handleClarifySave = async (person?: string, due?: string) => {
+  const handleClarifySave = async (answer: string) => {
     if (!clarifyingId) return;
-    const item = items.find((i) => i.id === clarifyingId);
+    const item = items.find((candidate) => candidate.id === clarifyingId);
     if (!item) return;
-    const parsedDue = due ? parseSmartDate(due).date ?? undefined : undefined;
-    if (!await track(clarifyingId, { personName: person, due: parsedDue })) return;
+
+    if ((item.clarificationType || "confirmation") === "confirmation") {
+      if (!await track(clarifyingId)) return;
+    } else if (item.clarificationType === "person") {
+      if (!await track(clarifyingId, { personName: answer.trim() })) return;
+    } else {
+      const parsed = parseSmartDate(answer);
+      if (!parsed.date && !parsed.time) {
+        toast.error('I could not read that time. Try "tomorrow at 10am".');
+        return;
+      }
+      if (!await track(clarifyingId, {
+        due: parsed.date ?? undefined,
+        time: parsed.time ?? undefined,
+      })) return;
+    }
+
     toast.success("Remembered with details");
     setClarifyingId(null);
   };
@@ -220,7 +247,8 @@ function InboxPage() {
               <ClarifyDialog
                 key={item.id}
                 item={item}
-                onSave={handleClarifySave}
+                onSave={(answer) => void handleClarifySave(answer)}
+                onIgnore={() => void handleIgnore(item.id)}
                 onCancel={() => setClarifyingId(null)}
               />
             ) : (
