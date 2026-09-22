@@ -37,7 +37,7 @@ function WorkspaceLayout() {
   if (!settings.onboarded) return null;
 
   return (
-    <AppShell>
+    <AppShell key={user.id}>
       {/* Nested workspace routes render here. */}
       <Outlet />
     </AppShell>

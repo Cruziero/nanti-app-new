@@ -356,3 +356,39 @@
 @utility animate-editorial-toast {
   animation: editorial-slide-toast 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* Workspace colors follow the approved forest-green dashboard; marketing stays unchanged. */
+.nanti-workspace {
+  --primary: #175c40;
+  --primary-foreground: #ffffff;
+  --sidebar: #edf3ee;
+  --sidebar-accent: #dfeae2;
+  --background: #fdfefd;
+  --foreground: #182521;
+  --muted-foreground: #5c6a63;
+  --border: #dce4de;
+  --secondary: #eef3ef;
+}
+.dark .nanti-workspace {
+  --primary: #86d3aa;
+  --primary-foreground: #10291d;
+  --sidebar: #15231c;
+  --sidebar-accent: #263a2e;
+  --background: #101b15;
+  --foreground: #edf5ef;
+  --muted-foreground: #aabdb0;
+  --border: #32483a;
+  --secondary: #203328;
+}
+.nanti-workspace :is(button, a, input, textarea):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+.nanti-workspace section[id] { scroll-margin-top: 5rem; }
+@media (prefers-reduced-motion: reduce) {
+  .nanti-workspace *, .nanti-workspace *::before, .nanti-workspace *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

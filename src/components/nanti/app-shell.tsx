@@ -1,182 +1,197 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Plus,
-  Sparkles,
-  Sun,
+  MessageSquare,
+  CalendarDays,
   Inbox,
   Hourglass,
-  Settings as Cog,
+  Settings,
   LogOut,
+  ListTodo,
+  Link2,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { Logo } from "./logo";
-import { NotificationCenter } from "./notification-center";
 import { useNanti } from "@/lib/nanti-store";
-import { isOverdue, openItems } from "@/lib/nanti-utils";
 import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
 
-const navGroups = [
-  {
-    label: "NANTI",
-    items: [
-      { to: "/app/today", label: "Today", icon: Sun },
-      { to: "/app", label: "Ask NANTI", icon: Sparkles, exact: true },
-      { to: "/app/inbox", label: "Inbox", icon: Inbox, countKey: "/app/inbox" },
-      { to: "/app/waiting", label: "Waiting", icon: Hourglass, countKey: "/app/waiting" },
-    ],
-  },
-] as const;
-
-const mobileNav = [
-  { to: "/app/today", label: "Today", icon: Sun },
-  { to: "/app", label: "Ask", icon: Sparkles, exact: true },
-  { to: "__plus__", label: "", icon: Plus },
-  { to: "/app/waiting", label: "Waiting", icon: Hourglass },
+const destinations = [
+  { to: "/app/today", label: "Today", icon: CalendarDays },
   { to: "/app/inbox", label: "Inbox", icon: Inbox },
+  { to: "/app/today", label: "Tasks", icon: ListTodo, view: "all" },
+  { to: "/app/waiting", label: "Waiting for", icon: Hourglass },
+  { to: "/app", label: "NANTI AI", icon: MessageSquare },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { items, hydrated } = useNanti();
+  const { items, hydrated, settings } = useNanti();
   const { user, signOut } = useSupabaseAuth();
-  const path = useRouterState({ select: (s) => s.location.pathname });
-
-  const counts: Record<string, number> = hydrated
-    ? {
-        "/app/inbox": items.filter((i) => i.status === "inbox").length,
-        "/app/waiting": openItems(items).filter((i) => i.kind === "waiting").length,
-        "/app/today": items.filter(isOverdue).length,
-        "/app/reminders": openItems(items).filter((i) => i.reminderEnabled).length,
-      }
-    : {};
-
-  const isActive = (to: string, exact?: boolean) =>
-    exact ? path === to || path === `${to}/` : path.startsWith(to);
-
+  const location = useRouterState({ select: (state) => state.location });
+  const [leaving, setLeaving] = useState(false);
+  const inbox = hydrated ? items.filter((i) => i.status === "inbox").length : 0;
+  const allTasks = (location.search as { view?: string }).view === "all";
+  const active = (label: string, to: string) =>
+    label === "Tasks"
+      ? location.pathname === to && allTasks
+      : label === "Today"
+        ? location.pathname === to && !allTasks
+        : location.pathname.replace(/\/$/, "") === to;
+  const logout = async () => {
+    setLeaving(true);
+    try {
+      await signOut();
+    } catch {
+      toast.error("Couldn’t sign out. Please try again.");
+    } finally {
+      setLeaving(false);
+    }
+  };
   return (
-    <div className="min-h-screen bg-background">
-      {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 hidden w-[200px] flex-col border-r border-border bg-sidebar lg:flex">
-        <div className="flex items-center gap-2 px-4 py-4">
-          <Logo />
-        </div>
-
-        <nav className="flex-1 overflow-y-auto px-3 pb-4">
-          {navGroups.map((group) => (
-            <div key={group.label} className="mb-5">
-              <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/60">
-                {group.label}
-              </p>
-              <div className="space-y-0.5">
-                {group.items.map((n) => {
-                  const active = isActive(n.to, "exact" in n ? n.exact : false);
-                  const count = "countKey" in n ? counts[n.countKey] : undefined;
-                  return (
-                    <Link
-                      key={n.to}
-                      to={n.to}
-                      className={cn(
-                        "flex items-center gap-2 rounded-md px-2 py-1.5 text-[12.5px] font-medium transition-colors",
-                        active
-                          ? "bg-sidebar-accent text-foreground"
-                          : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-                      )}
-                    >
-                      <n.icon className="size-4 shrink-0" />
-                      <span className="flex-1">{n.label}</span>
-                      {!!count && count > 0 && (
-                        <span className="text-[11px] text-muted-foreground/70">{count}</span>
-                      )}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
+    <div className="nanti-workspace min-h-screen bg-background text-foreground">
+      <a
+        href="#workspace-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-background focus:p-3"
+      >
+        Skip to content
+      </a>
+      <aside className="fixed inset-y-0 left-0 hidden w-[224px] flex-col border-r border-border bg-sidebar px-4 py-8 lg:flex">
+        <Link to="/app/today" className="px-3 font-serif text-3xl font-semibold text-primary">
+          NANTI
+        </Link>
+        <p className="mb-8 mt-4 break-words px-3 text-sm text-muted-foreground">
+          {settings.name ? `${settings.name}’s workspace` : "Your workspace"}
+        </p>
+        <nav aria-label="Main navigation" className="space-y-2">
+          {destinations.map((item) => (
+            <Link
+              key={item.label}
+              to={item.to}
+              search={"view" in item ? { view: "all" } : { view: undefined }}
+              aria-current={active(item.label, item.to) ? "page" : undefined}
+              className={cn(
+                "flex min-h-12 items-center gap-3 rounded-lg px-3 text-sm transition-colors",
+                active(item.label, item.to)
+                  ? "bg-primary font-medium text-primary-foreground"
+                  : "text-foreground hover:bg-sidebar-accent",
+              )}
+            >
+              <item.icon aria-hidden="true" className="size-5 shrink-0" />
+              <span>{item.label}</span>
+              {item.label === "Inbox" && inbox > 0 && (
+                <span className="ml-auto text-xs">{inbox}</span>
+              )}
+            </Link>
           ))}
         </nav>
-
-        <div className="border-t border-border px-3 py-3">
+        <div className="mt-8 space-y-2 border-t border-border pt-5">
           <Link
-            to="/app/import"
-            className="flex items-center gap-2.5 rounded-md bg-primary/10 px-2.5 py-2 text-[13px] font-medium text-primary transition-colors hover:bg-primary/20"
+            to="/app/today"
+            hash="connections"
+            className="flex min-h-12 items-center gap-3 rounded-lg px-3 text-sm hover:bg-sidebar-accent"
           >
-            <Plus className="size-4" /> Bring to NANTI
+            <Link2 aria-hidden="true" className="size-5" />
+            Integrations
           </Link>
           <Link
             to="/app/settings"
-            className={cn(
-              "mt-1 flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors",
-              path.startsWith("/app/settings")
-                ? "bg-sidebar-accent text-foreground"
-                : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-            )}
+            className="flex min-h-12 items-center gap-3 rounded-lg px-3 text-sm hover:bg-sidebar-accent"
+            aria-current={location.pathname === "/app/settings" ? "page" : undefined}
           >
-            <Cog className="size-4" /> Settings
+            <Settings aria-hidden="true" className="size-5" />
+            Settings
           </Link>
+        </div>
+        <div className="mt-auto pt-10">
+          <p className="px-3 text-xs leading-6 text-muted-foreground">
+            A place for everything
+            <br />
+            you need to remember.
+          </p>
           {user && (
-            <div className="mt-2 flex items-center gap-2.5 px-2.5 py-1.5">
-              <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
-                {(user.email ?? "U")[0].toUpperCase()}
-              </div>
-              <span className="flex-1 truncate text-[12px] text-muted-foreground">
+            <div className="mt-4 flex items-center gap-2 border-t border-border pt-3">
+              <span className="min-w-0 flex-1 truncate px-2 text-xs text-muted-foreground">
                 {user.email}
               </span>
               <button
-                onClick={() => signOut()}
-                className="text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+                aria-label="Sign out"
+                disabled={leaving}
+                onClick={() => void logout()}
+                className="flex size-11 items-center justify-center rounded-lg hover:bg-secondary disabled:opacity-50"
               >
-                <LogOut className="size-3.5" />
+                <LogOut className="size-4" />
               </button>
             </div>
           )}
         </div>
       </aside>
-
-      {/* Mobile header */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/90 px-4 py-2.5 backdrop-blur-sm lg:hidden">
-        <Logo />
-        <NotificationCenter notifications={[]} onMarkRead={() => {}} />
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background px-4 py-2 lg:hidden">
+        <Link to="/app/today" className="font-serif text-2xl font-semibold text-primary">
+          NANTI
+        </Link>
+        <div className="flex gap-2">
+          <Link
+            to="/app/today"
+            search={{ view: "all" }}
+            className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm hover:bg-secondary"
+          >
+            All tasks
+          </Link>
+          <Link
+            to="/app/settings"
+            aria-label="Settings"
+            className="flex size-11 items-center justify-center rounded-lg hover:bg-secondary"
+          >
+            <Settings className="size-5" />
+          </Link>
+        </div>
       </header>
-
-      {/* Main content */}
-      <main className="pb-24 lg:pb-8 lg:pl-[200px]">
-        <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-8">{children}</div>
+      <main
+        id="workspace-content"
+        className="pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-12 lg:pl-[224px]"
+      >
+        <div
+          className={cn(
+            "mx-auto w-full px-4 py-7 sm:px-8 sm:py-10 xl:px-10",
+            location.pathname === "/app/today" ? "max-w-[1440px]" : "max-w-4xl",
+          )}
+        >
+          {children}
+        </div>
       </main>
-
-      {/* Mobile bottom nav */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm lg:hidden">
-        {mobileNav.map((n) => {
-          if (n.to === "__plus__") {
-            return (
-              <Link
-                key="plus"
-                to="/app/import"
-                className="flex -mt-4 size-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm"
-              >
-                <Plus className="size-5" />
-              </Link>
-            );
-          }
-          const active = isActive(n.to, "exact" in n ? n.exact : false);
-          return (
-            <Link
-              key={n.to}
-              to={n.to}
-              className={cn(
-                "flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors",
-                active ? "text-foreground" : "text-muted-foreground",
-              )}
-            >
-              <n.icon className="size-[18px]" />
-              {n.label}
-            </Link>
-          );
-        })}
+      <nav
+        aria-label="Mobile navigation"
+        className="fixed inset-x-0 bottom-0 z-30 flex justify-around gap-1 border-t border-border bg-background px-2 pb-[env(safe-area-inset-bottom)] lg:hidden"
+      >
+        {[
+          destinations[0],
+          destinations[1],
+          { to: "/app/import", label: "Import", icon: Plus },
+          destinations[3],
+          destinations[4],
+        ].map((item) => (
+          <Link
+            key={item.label}
+            to={item.to}
+            search={{ view: undefined }}
+            aria-current={active(item.label, item.to) ? "page" : undefined}
+            className={cn(
+              "flex min-h-16 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg text-[11px]",
+              active(item.label, item.to) ? "font-semibold text-primary" : "text-muted-foreground",
+            )}
+          >
+            <item.icon aria-hidden="true" className="size-5" />
+            {item.label === "Waiting for"
+              ? "Waiting"
+              : item.label === "NANTI AI"
+                ? "Ask"
+                : item.label}
+          </Link>
+        ))}
       </nav>
     </div>
   );
 }
-
 export function PageHeader({
   title,
   subtitle,
