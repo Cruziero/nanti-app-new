@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNanti } from "@/lib/nanti-store";
 import { dueLabel } from "@/lib/nanti-utils";
+import { parseSmartDate } from "@/lib/nanti-dates";
 import type { Item, ItemKind } from "@/lib/nanti-types";
 
 export const Route = createFileRoute("/app/inbox")({
@@ -180,22 +181,22 @@ function InboxPage() {
   const [clarifyingId, setClarifyingId] = useState<string | null>(null);
   const list = items.filter((i) => i.status === "inbox");
 
-  const handleTrack = (id: string) => {
-    track(id);
+  const handleTrack = async (id: string) => {
+    if (!await track(id)) return;
     toast.success("Remembered");
   };
 
-  const handleIgnore = (id: string) => {
-    ignore(id);
+  const handleIgnore = async (id: string) => {
+    if (!await ignore(id)) return;
     toast("Skipped");
   };
 
-  const handleClarifySave = (person?: string, due?: string) => {
+  const handleClarifySave = async (person?: string, due?: string) => {
     if (!clarifyingId) return;
     const item = items.find((i) => i.id === clarifyingId);
     if (!item) return;
-    // Update the item with clarified info and track it
-    track(clarifyingId);
+    const parsedDue = due ? parseSmartDate(due).date ?? undefined : undefined;
+    if (!await track(clarifyingId, { personName: person, due: parsedDue })) return;
     toast.success("Remembered with details");
     setClarifyingId(null);
   };
@@ -226,8 +227,8 @@ function InboxPage() {
               <InboxItem
                 key={item.id}
                 item={item}
-                onTrack={() => handleTrack(item.id)}
-                onIgnore={() => handleIgnore(item.id)}
+                onTrack={() => void handleTrack(item.id)}
+                onIgnore={() => void handleIgnore(item.id)}
                 onClarify={() => setClarifyingId(item.id)}
               />
             ),

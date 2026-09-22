@@ -5,148 +5,157 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        try {
-          const authHeader = request.headers.get("Authorization");
-          if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-            return new Response(JSON.stringify({ error: "Unauthorized" }), {
-              status: 401,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
+        if (request.headers.get("Authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
+          return json({ error: "Unauthorized" }, 401);
+        }
 
+        try {
           const supabase = createClient(
             process.env.VITE_SUPABASE_URL || "",
             process.env.SUPABASE_SERVICE_ROLE_KEY || "",
           );
-
           const now = new Date();
-          const jakartaTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Jakarta" }));
-          const currentHour = jakartaTime.getHours();
-          const currentMinutes = jakartaTime.getMinutes();
 
-          const { data: users } = await supabase
-            .from("user_preferences")
-            .select("user_id, quiet_hours_start, quiet_hours_end, reminder_channels");
+          const [{ data: tasks, error: taskError }, { data: settingsRows, error: settingsError }] =
+            await Promise.all([
+              supabase
+                .from("tasks")
+                .select("id,user_id,title,due_date,time,reminder_time,reminder_channels,reminder_intensity,last_reminded_at,reminder_count")
+                .eq("status", "pending")
+                .eq("reminder_enabled", true)
+                .not("due_date", "is", null)
+                .lte("due_date", now.toISOString()),
+              supabase.from("user_settings").select("user_id,settings"),
+            ]);
 
-          if (!users)
-            return new Response(JSON.stringify({ processed: 0 }), {
-              status: 200,
-              headers: { "Content-Type": "application/json" },
-            });
+          if (taskError) throw taskError;
+          if (settingsError) throw settingsError;
+
+          const settingsByUser = new Map(
+            (settingsRows || []).map((row) => [row.user_id, (row.settings || {}) as Record<string, unknown>]),
+          );
 
           let processed = 0;
+          let attempted = 0;
 
-          for (const user of users) {
-            const isQuietHours = checkQuietHours(
-              user.quiet_hours_start,
-              user.quiet_hours_end,
-              currentHour,
-              currentMinutes,
-            );
+          for (const task of tasks || []) {
+            const settings = settingsByUser.get(task.user_id) || {};
+            if (isQuietHours(settings, now)) continue;
+            if (!isReminderDue(task, now)) continue;
 
-            if (isQuietHours) continue;
+            const intensity = task.reminder_intensity || "normal";
+            const minHours = intensity === "persistent" ? 2 : intensity === "gentle" ? 24 : 8;
+            if (task.last_reminded_at) {
+              const elapsed = (now.getTime() - new Date(task.last_reminded_at).getTime()) / 3_600_000;
+              if (elapsed < minHours) continue;
+            }
 
-            const { data: tasks } = await supabase
-              .from("tasks")
-              .select("*")
-              .eq("user_id", user.user_id)
-              .eq("status", "pending")
-              .eq("reminder_enabled", true)
-              .lte("due_date", now.toISOString().slice(0, 10));
+            const channels =
+              Array.isArray(task.reminder_channels) && task.reminder_channels.length
+                ? task.reminder_channels
+                : Array.isArray(settings.reminderChannels)
+                  ? settings.reminderChannels
+                  : ["push", "in_app"];
 
-            if (!tasks) continue;
+            if (!channels.includes("push")) continue;
+            attempted++;
 
-            for (const task of tasks) {
-              const dueDate = new Date(task.due_date);
-              const diffDays = Math.floor(
-                (now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24),
-              );
+            const dueDay = String(task.due_date).slice(0, 10);
+            const today = jakartaDate(now);
+            const overdue = dueDay < today;
+            const sent = await sendPushNotification(supabase, task.user_id, {
+              title: overdue ? "Tugas terlambat" : "Pengingat NANTI",
+              body: task.title,
+              tag: `nanti-task-${task.id}`,
+              data: { itemId: task.id, url: "/app/today" },
+            });
 
-              const shouldRemind =
-                diffDays >= 0 ||
-                (diffDays === -1 && task.reminder_intensity === "persistent") ||
-                (diffDays === 0 && task.reminder_intensity !== "gentle");
-
-              if (!shouldRemind) continue;
-
-              const lastReminded = task.last_reminded_at ? new Date(task.last_reminded_at) : null;
-              const hoursSinceLastRemind = lastReminded
-                ? (now.getTime() - lastReminded.getTime()) / (1000 * 60 * 60)
-                : Infinity;
-
-              const minInterval = task.reminder_intensity === "persistent" ? 2 : 6;
-              if (hoursSinceLastRemind < minInterval) continue;
-
-              const channels = user.reminder_channels || ["push"];
-
-              for (const channel of channels) {
-                if (channel === "push") {
-                  await sendPushNotification(supabase, user.user_id, {
-                    title: diffDays > 0 ? "Tugas terlambat!" : "Pengingat tugas",
-                    body: `${task.title}${diffDays > 0 ? ` (${diffDays} hari terlambat)` : ""}`,
-                    tag: `reminder-${task.id}`,
-                    data: { itemId: task.id, url: `/app` },
-                  });
-                }
-
-                if (channel === "whatsapp") {
-                  await supabase.from("whatsapp_outbound_queue").insert({
-                    user_id: user.user_id,
-                    phone_number: task.user_phone,
-                    message_type: "reminder",
-                    content: `NANTI: ${task.title}${diffDays > 0 ? ` sudah terlambat ${diffDays} hari` : " jatuh tempo hari ini"}`,
-                    item_id: task.id,
-                  });
-                }
-              }
-
+            if (sent > 0) {
               await supabase
                 .from("tasks")
                 .update({
                   last_reminded_at: now.toISOString(),
                   reminder_count: (task.reminder_count || 0) + 1,
                 })
-                .eq("id", task.id);
-
+                .eq("id", task.id)
+                .eq("user_id", task.user_id);
               processed++;
             }
           }
 
-          return new Response(JSON.stringify({ processed, timestamp: now.toISOString() }), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
+          return json({ processed, attempted, timestamp: now.toISOString() });
         } catch (error) {
           console.error("Reminder check error:", error);
-          return new Response(JSON.stringify({ error: "Internal error" }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
+          return json({ error: "Internal error" }, 500);
         }
       },
     },
   },
 });
 
-function checkQuietHours(
-  start: string | null,
-  end: string | null,
-  currentHour: number,
-  currentMinutes: number,
-): boolean {
-  if (!start || !end) return false;
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
 
-  const [startH, startM] = start.split(":").map(Number);
-  const [endH, endM] = end.split(":").map(Number);
-  const currentTime = currentHour * 60 + currentMinutes;
-  const startTime = startH * 60 + startM;
-  const endTime = endH * 60 + endM;
+function jakartaDate(now: Date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${value.year}-${value.month}-${value.day}`;
+}
 
-  if (startTime <= endTime) {
-    return currentTime >= startTime && currentTime <= endTime;
-  } else {
-    return currentTime >= startTime || currentTime <= endTime;
+function jakartaMinutes(now: Date) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Jakarta",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(now);
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return Number(value.hour) * 60 + Number(value.minute);
+}
+
+function isQuietHours(settings: Record<string, unknown>, now: Date) {
+  if (settings.quietHoursEnabled === false) return false;
+  const start = typeof settings.quietHoursStart === "string" ? settings.quietHoursStart : "22:00";
+  const end = typeof settings.quietHoursEnd === "string" ? settings.quietHoursEnd : "07:00";
+  const toMinutes = (value: string) => {
+    const [h, m] = value.split(":").map(Number);
+    return (h || 0) * 60 + (m || 0);
+  };
+  const current = jakartaMinutes(now);
+  const startMinutes = toMinutes(start);
+  const endMinutes = toMinutes(end);
+  return startMinutes <= endMinutes
+    ? current >= startMinutes && current < endMinutes
+    : current >= startMinutes || current < endMinutes;
+}
+
+function isReminderDue(
+  task: { due_date: string; time?: string | null; reminder_time?: string | null },
+  now: Date,
+) {
+  if (task.reminder_time) return new Date(task.reminder_time).getTime() <= now.getTime();
+
+  const dueDay = String(task.due_date).slice(0, 10);
+  const today = jakartaDate(now);
+  if (dueDay < today) return true;
+  if (dueDay > today) return false;
+
+  if (task.time) {
+    const dueAt = new Date(`${dueDay}T${task.time}:00+07:00`);
+    const remindAt = new Date(dueAt.getTime() - 60 * 60 * 1000);
+    return now.getTime() >= remindAt.getTime();
   }
+
+  return jakartaMinutes(now) >= 9 * 60;
 }
 
 async function sendPushNotification(
@@ -154,45 +163,36 @@ async function sendPushNotification(
   userId: string,
   payload: { title: string; body: string; tag: string; data: Record<string, unknown> },
 ) {
-  const { data: subscriptions } = await supabase
+  const { data: subscriptions, error } = await supabase
     .from("push_subscriptions")
-    .select("*")
+    .select("endpoint,p256dh,auth")
     .eq("user_id", userId);
+  if (error) throw error;
+  if (!subscriptions?.length) return 0;
 
-  if (!subscriptions || subscriptions.length === 0) return;
+  const webpush = await import("web-push");
+  webpush.setVapidDetails(
+    "mailto:noreply@nanti-app.com",
+    process.env.VAPID_PUBLIC_KEY || "",
+    process.env.VAPID_PRIVATE_KEY || "",
+  );
 
-  try {
-    const webpush = await import("web-push");
-    webpush.setVapidDetails(
-      "mailto:noreply@nanti-app.com",
-      process.env.VAPID_PUBLIC_KEY || "",
-      process.env.VAPID_PRIVATE_KEY || "",
-    );
-
-    for (const sub of subscriptions) {
-      try {
-        await webpush.sendNotification(
-          {
-            endpoint: sub.endpoint,
-            keys: { p256dh: sub.p256dh, auth: sub.auth },
-          },
-          JSON.stringify({
-            ...payload,
-            actions: [
-              { action: "open", title: "Buka" },
-              { action: "snooze", title: "Tunda 1 jam" },
-              { action: "done", title: "Selesai" },
-            ],
-          }),
-        );
-      } catch (err: unknown) {
-        const error = err as { statusCode?: number };
-        if (error.statusCode === 404 || error.statusCode === 410) {
-          await supabase.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
-        }
+  let sent = 0;
+  for (const sub of subscriptions) {
+    try {
+      await webpush.sendNotification(
+        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+        JSON.stringify(payload),
+      );
+      sent++;
+    } catch (err: unknown) {
+      const statusCode = (err as { statusCode?: number }).statusCode;
+      if (statusCode === 404 || statusCode === 410) {
+        await supabase.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
+      } else {
+        console.error("Push delivery failed:", err);
       }
     }
-  } catch {
-    console.error("web-push not available");
   }
+  return sent;
 }
