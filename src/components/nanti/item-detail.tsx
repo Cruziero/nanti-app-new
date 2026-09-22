@@ -43,7 +43,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 
 export function ItemDetailProvider({ children }: { children: ReactNode }) {
   const [id, setId] = useState<string | null>(null);
-  const { items, personOf, projectOf, complete, snooze, remove, update, projects } = useNanti();
+  const { items, personOf, projectOf, complete, snooze, followUp, remove, update, projects } = useNanti();
   const item = items.find((i) => i.id === id);
   const person = personOf(item?.personId);
   const project = projectOf(item?.projectId);
@@ -136,47 +136,52 @@ export function ItemDetailProvider({ children }: { children: ReactNode }) {
                 </div>
 
                 <div className="mt-6 flex flex-wrap gap-2 pb-8">
-                  <Button
-                    size="sm"
-                    onClick={async () => {
-                      if (!await complete(item.id)) return;
-                      setId(null);
-                      toast.success("Ditandai selesai");
-                    }}
-                  >
-                    Tandai selesai
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={async () => {
-                      if (!await snooze(item.id, 1)) return;
-                      toast("Ditunda ke besok");
-                    }}
-                  >
-                    Tunda 1 hari
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      update(item.id, { kind: "followup", status: "open" });
-                      snooze(item.id, 1);
-                      toast("Dijadwalkan untuk ditindaklanjuti besok");
-                    }}
-                  >
-                    Tindak lanjut
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={async () => {
-                      if (!await snooze(item.id, 7)) return;
-                      toast("Dijadwalkan ulang");
-                    }}
-                  >
-                    Ubah ke minggu depan
-                  </Button>
+                  {item.status !== "inbox" && (
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        if (!await complete(item.id)) return;
+                        setId(null);
+                        toast.success(item.kind === "waiting" ? "Ditandai diterima" : "Ditandai selesai");
+                      }}
+                    >
+                      {item.kind === "waiting" ? "Tandai diterima" : "Tandai selesai"}
+                    </Button>
+                  )}
+                  {item.kind !== "waiting" && item.status !== "inbox" && (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          if (!await snooze(item.id, 1)) return;
+                          toast("Ditunda ke besok");
+                        }}
+                      >
+                        Tunda 1 hari
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          if (!await followUp(item.id, 1)) return;
+                          toast("Dijadwalkan untuk ditindaklanjuti besok");
+                        }}
+                      >
+                        Tindak lanjut
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          if (!await snooze(item.id, 7)) return;
+                          toast("Dijadwalkan ulang");
+                        }}
+                      >
+                        Ubah ke minggu depan
+                      </Button>
+                    </>
+                  )}
                   <select
                     className="h-8 rounded-md border border-input bg-surface px-2 text-[13px]"
                     value={item.projectId ?? ""}
