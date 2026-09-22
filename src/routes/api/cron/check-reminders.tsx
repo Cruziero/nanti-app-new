@@ -16,19 +16,28 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
           );
           const now = new Date();
 
-          const [{ data: tasks, error: taskError }, { data: settingsRows, error: settingsError }] =
-            await Promise.all([
-              supabase
-                .from("tasks")
-                .select("id,user_id,title,due_date,time,reminder_time,reminder_channels,reminder_intensity,last_reminded_at,reminder_count")
-                .eq("status", "pending")
-                .eq("reminder_enabled", true)
-                .not("due_date", "is", null)
-                .lte("due_date", now.toISOString()),
-              supabase.from("user_settings").select("user_id,settings"),
-            ]);
+          const [
+            { data: tasks, error: taskError },
+            { data: waitingItems, error: waitingError },
+            { data: settingsRows, error: settingsError },
+          ] = await Promise.all([
+            supabase
+              .from("tasks")
+              .select("id,user_id,title,due_date,time,reminder_time,reminder_channels,reminder_intensity,last_reminded_at,reminder_count")
+              .eq("status", "pending")
+              .eq("reminder_enabled", true),
+            supabase
+              .from("waiting_items")
+              .select("id,user_id,title,person_name,follow_up_at,follow_up_count")
+              .eq("status", "waiting")
+              .eq("auto_follow_up_enabled", true)
+              .not("follow_up_at", "is", null)
+              .lte("follow_up_at", now.toISOString()),
+            supabase.from("user_settings").select("user_id,settings"),
+          ]);
 
           if (taskError) throw taskError;
+          if (waitingError) throw waitingError;
           if (settingsError) throw settingsError;
 
           const settingsByUser = new Map(
@@ -57,18 +66,29 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
                   ? settings.reminderChannels
                   : ["push", "in_app"];
 
-            if (!channels.includes("push")) continue;
-            attempted++;
-
-            const dueDay = String(task.due_date).slice(0, 10);
+            const dueDay = task.due_date ? String(task.due_date).slice(0, 10) : "";
             const today = jakartaDate(now);
-            const overdue = dueDay < today;
-            const sent = await sendPushNotification(supabase, task.user_id, {
-              title: overdue ? "Tugas terlambat" : "Pengingat NANTI",
-              body: task.title,
-              tag: `nanti-task-${task.id}`,
-              data: { itemId: task.id, url: "/app/today" },
-            });
+            const overdue = Boolean(dueDay && dueDay < today);
+            const title = overdue ? "Tugas terlambat" : "Pengingat NANTI";
+            let sent = 0;
+
+            if (channels.includes("push")) {
+              attempted++;
+              sent += await sendPushNotification(supabase, task.user_id, {
+                title,
+                body: task.title,
+                tag: `nanti-task-${task.id}`,
+                data: { itemId: task.id, url: "/app/today" },
+              });
+            }
+            if (channels.includes("whatsapp")) {
+              attempted++;
+              sent += await sendWhatsAppNotification(
+                supabase,
+                task.user_id,
+                `${title}: ${task.title}`,
+              );
+            }
 
             if (sent > 0) {
               await supabase
@@ -83,7 +103,40 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
             }
           }
 
-          return json({ processed, attempted, timestamp: now.toISOString() });
+          for (const waiting of waitingItems || []) {
+            const settings = settingsByUser.get(waiting.user_id) || {};
+            if (isQuietHours(settings, now)) continue;
+            const channels = Array.isArray(settings.reminderChannels)
+              ? settings.reminderChannels
+              : ["push", "in_app"];
+            const who = waiting.person_name ? ` dari ${waiting.person_name}` : "";
+            const body = `Masih menunggu “${waiting.title}”${who}. Sudah waktunya follow up.`;
+            let sent = 0;
+
+            if (channels.includes("push")) {
+              attempted++;
+              sent += await sendPushNotification(supabase, waiting.user_id, {
+                title: "Waktunya follow up",
+                body,
+                tag: `nanti-waiting-${waiting.id}`,
+                data: { itemId: waiting.id, url: "/app/waiting" },
+              });
+            }
+            if (channels.includes("whatsapp")) {
+              attempted++;
+              sent += await sendWhatsAppNotification(supabase, waiting.user_id, body);
+            }
+
+            if (sent > 0) processed++;
+          }
+
+          return json({
+            processed,
+            attempted,
+            taskCandidates: tasks?.length || 0,
+            waitingCandidates: waitingItems?.length || 0,
+            timestamp: now.toISOString(),
+          });
         } catch (error) {
           console.error("Reminder check error:", error);
           return json({ error: "Internal error" }, 500);
@@ -139,11 +192,12 @@ function isQuietHours(settings: Record<string, unknown>, now: Date) {
 }
 
 function isReminderDue(
-  task: { due_date: string; time?: string | null; reminder_time?: string | null },
+  task: { due_date?: string | null; time?: string | null; reminder_time?: string | null },
   now: Date,
 ) {
   if (task.reminder_time) return new Date(task.reminder_time).getTime() <= now.getTime();
 
+  if (!task.due_date) return false;
   const dueDay = String(task.due_date).slice(0, 10);
   const today = jakartaDate(now);
   if (dueDay < today) return true;
@@ -195,4 +249,49 @@ async function sendPushNotification(
     }
   }
   return sent;
+}
+
+
+async function sendWhatsAppNotification(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  body: string,
+) {
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+  const version = process.env.WHATSAPP_GRAPH_VERSION || "v26.0";
+  if (!phoneNumberId || !accessToken) return 0;
+
+  const { data: link, error } = await supabase
+    .from("whatsapp_user_links")
+    .select("phone_number")
+    .eq("user_id", userId)
+    .not("verified_at", "is", null)
+    .maybeSingle();
+  if (error) throw error;
+  if (!link?.phone_number) return 0;
+
+  const response = await fetch(
+    `https://graph.facebook.com/${version}/${phoneNumberId}/messages`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: String(link.phone_number).replace(/\D/g, ""),
+        type: "text",
+        text: { body: body.slice(0, 4096), preview_url: false },
+      }),
+    },
+  );
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    console.error("WhatsApp reminder failed", response.status, detail.slice(0, 300));
+    return 0;
+  }
+  return 1;
 }
