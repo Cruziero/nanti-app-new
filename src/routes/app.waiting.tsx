@@ -17,7 +17,7 @@ export const Route = createFileRoute("/app/waiting")({
 });
 
 function WaitingPage() {
-  const { items, personOf, complete } = useNanti();
+  const { items, personOf, complete, markWaitingFollowedUp } = useNanti();
   const openDetail = useItemDetail();
   const list = openItems(items)
     .filter((i) => i.kind === "waiting")
@@ -35,6 +35,9 @@ function WaitingPage() {
             const person = personOf(item.personId);
             const days = waitingDays(item);
             const stale = days >= 4;
+            const followUpDue = item.followUpAt
+              ? new Date(item.followUpAt).getTime() <= Date.now()
+              : days >= 2;
             return (
               <div key={item.id} className="flex items-start gap-3 px-1 py-3">
                 <Hourglass className="mt-0.5 size-3.5 shrink-0 text-muted-foreground/60" />
@@ -49,14 +52,28 @@ function WaitingPage() {
                   </p>
                   <p className="mt-0.5 text-[11.5px] text-muted-foreground/60">
                     Since {formatDate(item.since)} - {days} days
+                    {item.followUpAt
+                      ? ` · next check ${formatDate(item.followUpAt.slice(0, 10))}`
+                      : ""}
+                    {item.followUpCount ? ` · followed up ${item.followUpCount}×` : ""}
                   </p>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  {stale && (
+                  {followUpDue ? (
+                    <button
+                      onClick={async () => {
+                        if (!await markWaitingFollowedUp(item.id, 2)) return;
+                        toast.success("Follow-up recorded · checking again in 2 days");
+                      }}
+                      className="rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1 text-[11.5px] font-medium text-amber-700 transition-colors hover:bg-amber-100"
+                    >
+                      I followed up
+                    </button>
+                  ) : stale ? (
                     <span className="flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-600">
                       <AlertTriangle className="size-3" /> Stale
                     </span>
-                  )}
+                  ) : null}
                   <button
                     onClick={async () => {
                       if (!await complete(item.id)) return;
