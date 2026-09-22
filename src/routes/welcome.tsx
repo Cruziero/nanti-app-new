@@ -35,6 +35,7 @@ export function Welcome() {
   const { user, loading } = useSupabaseAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
+  const [saving, setSaving] = useState(false);
   const [name, setName] = useState("");
   const [tone, setTone] = useState<ConversationTone>("professional");
   const [showExtraction, setShowExtraction] = useState(false);
@@ -56,6 +57,17 @@ export function Welcome() {
       return () => clearTimeout(timer);
     }
   }, [step]);
+
+  const finishOnboarding = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      const saved = await setSettings({ name: name.trim() || "Friend", tone, onboarded: true });
+      if (saved) await navigate({ to: "/app/today" });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading || !hydrated || !user || settings.onboarded) return null;
 
@@ -152,12 +164,7 @@ export function Welcome() {
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === "Enter" && name.trim()) {
-                  setSettings({
-                    name: name.trim(),
-                    tone,
-                    onboarded: true,
-                  });
-                  navigate({ to: "/app/today" });
+                  void finishOnboarding();
                 }
               }}
             />
@@ -194,17 +201,11 @@ export function Welcome() {
             </div>
 
             <button
-              onClick={() => {
-                setSettings({
-                  name: name.trim() || "Friend",
-                  tone,
-                  onboarded: true,
-                });
-                navigate({ to: "/app/today" });
-              }}
+              onClick={() => { void finishOnboarding(); }}
+              disabled={saving}
               className="mt-6 w-full rounded-lg bg-primary py-3 text-[14px] font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              Start using NANTI
+              {saving ? "Saving..." : "Start using NANTI"}
             </button>
           </div>
         )}

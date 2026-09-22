@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { toast } from "sonner";
 import type {
   Item,
   Person,
@@ -41,7 +42,6 @@ import {
 } from "./nanti-supabase";
 
 const KEY = "nanti.state.v1";
-const SETTINGS_KEY = "nanti.settings.v1";
 
 export interface Settings {
   name: string;
@@ -263,7 +263,7 @@ interface Ctx extends State {
   track: (id: string) => void;
   ignore: (id: string) => void;
   remove: (id: string) => void;
-  setSettings: (patch: Partial<Settings>) => void;
+  setSettings: (patch: Partial<Settings>) => Promise<boolean>;
   reset: () => void;
   personOf: (id?: string) => Person | undefined;
   projectOf: (id?: string) => Project | undefined;
@@ -279,11 +279,17 @@ export function NantiProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<State>(emptyState);
   const [hydrated, setHydrated] = useState(false);
   const [useSupabase, setUseSupabase] = useState(false);
-  const { user, loading: authLoading } = useSupabaseAuth();
+  const { user, loading: authLoading, signOut } = useSupabaseAuth();
+  const [loadError, setLoadError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   // Load data from Supabase when authenticated
   useEffect(() => {
     if (authLoading) return;
+    let cancelled = false;
+    setHydrated(false);
+    setLoadError(false);
+    setState(emptyState);
 
     if (user) {
       setUseSupabase(true);
@@ -297,20 +303,9 @@ export function NantiProvider({ children }: { children: ReactNode }) {
             fetchInboxItems(),
           ]);
 
-          // Load settings from Supabase
-          let savedSettings = defaultSettings;
-          try {
-            const remoteSettings = await fetchUserSettings();
-            if (remoteSettings) {
-              savedSettings = { ...defaultSettings, ...remoteSettings };
-            } else {
-              // Fall back to localStorage
-              const raw = window.localStorage.getItem(SETTINGS_KEY);
-              if (raw) {
-                savedSettings = { ...defaultSettings, ...JSON.parse(raw) };
-              }
-            }
-          } catch { /* ignore */ }
+          const remoteSettings = await fetchUserSettings();
+          const savedSettings = { ...defaultSettings, ...remoteSettings };
+          if (cancelled) return;
 
           setState({
             projects: projectsData.map(projectToProject),
@@ -320,11 +315,9 @@ export function NantiProvider({ children }: { children: ReactNode }) {
           });
         } catch (err) {
           console.error("Failed to load from Supabase:", err);
-          // Fall back to localStorage
-          setUseSupabase(false);
-          loadFromLocalStorage();
+          if (!cancelled) setLoadError(true);
         } finally {
-          setHydrated(true);
+          if (!cancelled) setHydrated(true);
         }
       };
       loadFromSupabase();
@@ -332,7 +325,8 @@ export function NantiProvider({ children }: { children: ReactNode }) {
       setUseSupabase(false);
       loadFromLocalStorage();
     }
-  }, [user, authLoading]);
+    return () => { cancelled = true; };
+  }, [user?.id, authLoading, retryCount]);
 
   const loadFromLocalStorage = () => {
     let next = freshState();
@@ -565,19 +559,19 @@ export function NantiProvider({ children }: { children: ReactNode }) {
         }
         mutate((s) => ({ ...s, items: s.items.filter((i) => i.id !== id) }));
       },
-      setSettings: (patch) => {
-        mutate((s) => {
-          const newSettings = { ...s.settings, ...patch };
-          // Save to localStorage
+      setSettings: async (patch) => {
+        const newSettings = { ...state.settings, ...patch };
+        if (useSupabase) {
           try {
-            window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(newSettings));
-          } catch { /* ignore */ }
-          // Save to Supabase if available
-          if (useSupabase) {
-            upsertUserSettings({ data: { settings: newSettings } }).catch(console.error);
+            await upsertUserSettings({ data: { settings: newSettings } });
+          } catch (error) {
+            console.error("Failed to save settings:", error);
+            toast.error("Preferensi belum tersimpan. Periksa koneksi dan coba lagi.");
+            return false;
           }
-          return { ...s, settings: newSettings };
-        });
+        }
+        mutate((s) => ({ ...s, settings: newSettings }));
+        return true;
       },
       reset: () => {
         if (useSupabase) {
@@ -628,6 +622,19 @@ export function NantiProvider({ children }: { children: ReactNode }) {
     }),
     [state, hydrated, mutate, persist, useSupabase],
   );
+
+  if (user && loadError) {
+    return (
+      <main className="flex min-h-screen items-center justify-center p-6">
+        <div className="max-w-md space-y-4">
+          <h1 className="text-xl font-semibold">Data NANTI belum bisa dimuat</h1>
+          <p>Periksa koneksi Anda lalu coba lagi. Data akun Anda belum dimuat dari server.</p>
+          <button className="rounded-lg bg-primary px-4 py-2 text-primary-foreground" onClick={() => setRetryCount((count) => count + 1)}>Coba lagi</button>
+          <button className="ml-4 underline" onClick={() => { void signOut(); }}>Keluar</button>
+        </div>
+      </main>
+    );
+  }
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
