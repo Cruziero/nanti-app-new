@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useNanti } from "@/lib/nanti-store";
 import { askAssistant, analyzeConversation } from "@/lib/nanti-ai.functions";
-import { draftToItem } from "@/lib/nanti-import";
+import { chatMessageToFallbackItem, draftToItem } from "@/lib/nanti-import";
 import type { Item } from "@/lib/nanti-types";
 import { todayISO } from "@/lib/nanti-utils";
 
@@ -56,13 +56,43 @@ export function DashboardAssistant() {
           .map((m) => `${m.role}: ${m.text.slice(0, 800)}`)
           .join("\n");
         const context = `Today (Asia/Jakarta): ${todayISO()}\nSaved tasks (may be truncated):\n${taskContext}\nRecent conversation:\n${history}`;
-        const result = await askAssistant({ data: { question, context } });
+
+        const [answerResult, extractionResult] = await Promise.allSettled([
+          askAssistant({ data: { question, context } }),
+          analyzeConversation({ data: { text: question, source: "Chat dengan NANTI" } }),
+        ]);
+
+        const detected =
+          extractionResult.status === "fulfilled"
+            ? extractionResult.value.items.map((draft) =>
+                draftToItem(draft, { people, projects, sourceType: "chat", sourceName: "Chat dengan NANTI" }),
+              )
+            : [];
+
+        const fallback = detected.length ? null : chatMessageToFallbackItem(question, { people, projects });
+        const nextDrafts = detected.length ? detected : fallback ? [fallback] : [];
+
+        const answer =
+          answerResult.status === "fulfilled"
+            ? answerResult.value.answer
+            : nextDrafts.length
+              ? "I couldn’t generate a full reply just now, but I found something actionable in your message. Review it below and save it if it’s right."
+              : "I couldn’t answer just now. Your message is still here so you can try again.";
+
         setMessages((m) => [
           ...m,
           { role: "user", text: question },
-          { role: "assistant", text: result.answer },
+          { role: "assistant", text: answer },
         ]);
+        if (nextDrafts.length) {
+          setDrafts(nextDrafts);
+          setSelected(nextDrafts.map((i) => i.id));
+          setSource(question);
+        }
         setInput("");
+        if (answerResult.status === "rejected" && extractionResult.status === "rejected" && !nextDrafts.length) {
+          setError("NANTI couldn’t answer or detect a task from that message. Please try again.");
+        }
       }
     } catch {
       setError(
@@ -189,7 +219,7 @@ export function DashboardAssistant() {
             <div className="mt-2 flex items-center justify-between gap-3">
               <span className="text-xs text-muted-foreground">
                 {mode === "ask"
-                  ? "Answers use your saved tasks."
+                  ? "NANTI answers and detects tasks from the same message."
                   : "Review the extracted items before saving."}
               </span>
               <button
@@ -230,9 +260,11 @@ export function DashboardAssistant() {
         </>
       ) : (
         <div className="space-y-3">
-          <h3 className="font-semibold">Review before saving</h3>
+          <h3 className="font-semibold">{mode === "ask" ? "Task detected from this chat" : "Review before saving"}</h3>
           <p className="text-sm text-muted-foreground">
-            Unclear items go to your inbox for review.
+            {mode === "ask"
+              ? "Edit it if needed, then save it to NANTI. Clear but incomplete items can still be reviewed before saving."
+              : "Unclear items go to your inbox for review."}
           </p>
           {drafts.map((item) => (
             <div
@@ -301,7 +333,7 @@ export function DashboardAssistant() {
               }}
               className="min-h-11 rounded-lg border border-border px-4 text-sm"
             >
-              Back to conversation
+              {mode === "ask" ? "Keep chatting" : "Back to conversation"}
             </button>
           </div>
         </div>

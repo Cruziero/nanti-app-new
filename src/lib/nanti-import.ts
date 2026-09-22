@@ -77,3 +77,49 @@ export function draftToItem(
   };
   return item;
 }
+
+
+/**
+ * Best-effort local fallback when AI extraction is unavailable.
+ * Only creates a draft for explicit self-actions / reminders to avoid turning casual chat into tasks.
+ */
+export function chatMessageToFallbackItem(
+  text: string,
+  ctx: { people: Person[]; projects: Project[] },
+): Item | null {
+  const normalized = text.trim();
+  if (!normalized) return null;
+  const lower = normalized.toLowerCase();
+  const actionable =
+    /\b(harus|perlu|mesti|wajib|jangan\s+lupa|tolong\s+ingat|tolong\s+ingetin|ingatkan|remind|need\s+to|have\s+to|must)\b/i.test(
+      lower,
+    );
+  if (!actionable) return null;
+
+  const parsed = parseSmartDate(normalized);
+  const title = normalized
+    .replace(/^\s*(besok|bsk|hari ini|lusa)\s*[,.:;-]?\s*/i, "")
+    .replace(/^\s*(saya|sy|aku|gue|gw)\s+(harus|perlu|mesti|wajib)\s+/i, "")
+    .trim();
+
+  return {
+    id: newId("chat"),
+    title: title || normalized,
+    kind: "task",
+    status: "open",
+    priority: "medium",
+    ...(parsed.date ? { due: parsed.date } : {}),
+    ...(parsed.time ? { time: parsed.time } : {}),
+    source: "Chat dengan NANTI",
+    sourceType: "chat",
+    quote: normalized,
+    aiNote: "Dibuat dari pesan chat yang berisi tindakan eksplisit untuk Anda.",
+    confidence: parsed.date || parsed.time ? 0.9 : 0.75,
+    memoryStrength: 1,
+    createdBy: "ai",
+    createdAt: new Date().toISOString(),
+    reminderEnabled: Boolean(parsed.date || parsed.time),
+    reminderChannels: parsed.date || parsed.time ? ["in_app", "push"] : [],
+    reminderIntensity: "normal",
+  };
+}

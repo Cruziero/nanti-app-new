@@ -1,7 +1,7 @@
 export type ItemKind = "task" | "commitment" | "deadline" | "waiting" | "followup" | "invoice";
 export type ItemStatus = "inbox" | "open" | "done" | "ignored" | "received";
 export type Priority = "critical" | "high" | "medium" | "low";
-export type SourceType = "paste" | "screenshot" | "demo" | "manual" | "whatsapp" | "calendar";
+export type SourceType = "paste" | "screenshot" | "chat" | "demo" | "manual" | "whatsapp" | "calendar";
 export type ReminderChannel = "whatsapp" | "push" | "calendar" | "in_app";
 export type ReminderIntensity = "gentle" | "normal" | "persistent";
 export type ReminderStage = "preparation" | "due" | "checkin" | "overdue";

@@ -10,6 +10,7 @@ import type { Item } from "@/lib/nanti-types";
 const sourceTypeLabel: Record<string, string> = {
   paste: "Tempel percakapan",
   screenshot: "Screenshot",
+  chat: "Chat dengan NANTI",
   demo: "Contoh",
   manual: "Dibuat manual",
 };
