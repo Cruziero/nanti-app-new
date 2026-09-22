@@ -20,6 +20,9 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
             { data: tasks, error: taskError },
             { data: waitingItems, error: waitingError },
             { data: settingsRows, error: settingsError },
+            { data: briefingTasks, error: briefingTaskError },
+            { data: briefingWaiting, error: briefingWaitingError },
+            { data: briefingInbox, error: briefingInboxError },
           ] = await Promise.all([
             supabase
               .from("tasks")
@@ -34,11 +37,26 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
               .not("follow_up_at", "is", null)
               .lte("follow_up_at", now.toISOString()),
             supabase.from("user_settings").select("user_id,settings"),
+            supabase
+              .from("tasks")
+              .select("id,user_id,title,due_date,priority")
+              .eq("status", "pending"),
+            supabase
+              .from("waiting_items")
+              .select("id,user_id,title,follow_up_at,status")
+              .in("status", ["waiting", "snoozed"]),
+            supabase
+              .from("inbox_items")
+              .select("id,user_id,title")
+              .eq("status", "pending"),
           ]);
 
           if (taskError) throw taskError;
           if (waitingError) throw waitingError;
           if (settingsError) throw settingsError;
+          if (briefingTaskError) throw briefingTaskError;
+          if (briefingWaitingError) throw briefingWaitingError;
+          if (briefingInboxError) throw briefingInboxError;
 
           if (dryRun) {
             return json({
@@ -46,6 +64,9 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
               dryRun: true,
               taskCandidates: tasks?.length || 0,
               waitingCandidates: waitingItems?.length || 0,
+              briefingWindows: (settingsRows || []).filter((row) =>
+                isBriefingWindow((row.settings || {}) as Record<string, unknown>, now),
+              ).length,
               timestamp: now.toISOString(),
             });
           }
@@ -56,6 +77,83 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
 
           let processed = 0;
           let attempted = 0;
+          let briefingsSent = 0;
+
+          const today = jakartaDate(now);
+          for (const row of settingsRows || []) {
+            const settings = (row.settings || {}) as Record<string, unknown>;
+            const notificationPrefs =
+              settings.notifications && typeof settings.notifications === "object"
+                ? (settings.notifications as Record<string, unknown>)
+                : {};
+            if (notificationPrefs["Briefing harian"] === false) continue;
+            if (!isBriefingWindow(settings, now) || isQuietHours(settings, now)) continue;
+
+            const userTasks = (briefingTasks || []).filter((task) => task.user_id === row.user_id);
+            const userWaiting = (briefingWaiting || []).filter(
+              (item) => item.user_id === row.user_id,
+            );
+            const userInbox = (briefingInbox || []).filter((item) => item.user_id === row.user_id);
+            const overdue = userTasks.filter(
+              (task) => task.due_date && String(task.due_date).slice(0, 10) < today,
+            );
+            const dueToday = userTasks.filter(
+              (task) => task.due_date && String(task.due_date).slice(0, 10) === today,
+            );
+            const waitingDue = userWaiting.filter(
+              (item) => item.follow_up_at && new Date(item.follow_up_at).getTime() <= now.getTime(),
+            );
+            const ordered = [...userTasks].sort((a, b) => {
+              const aDay = a.due_date ? String(a.due_date).slice(0, 10) : "9999-12-31";
+              const bDay = b.due_date ? String(b.due_date).slice(0, 10) : "9999-12-31";
+              if (aDay !== bDay) return aDay.localeCompare(bDay);
+              const rank = (priority: string | null) =>
+                priority === "urgent" ? 4 : priority === "high" ? 3 : priority === "medium" ? 2 : 1;
+              return rank(b.priority) - rank(a.priority);
+            });
+            const first = ordered[0]?.title;
+            const bodyParts = [
+              dueToday.length ? `${dueToday.length} due today` : "",
+              overdue.length ? `${overdue.length} overdue` : "",
+              waitingDue.length ? `${waitingDue.length} follow-up` : "",
+              userInbox.length ? `${userInbox.length} clarify` : "",
+            ].filter(Boolean);
+            const body = bodyParts.length
+              ? `Today: ${bodyParts.join(" · ")}.${first ? ` Start with “${first}”.` : ""}`
+              : "Nothing urgent is pressing this morning. Choose one meaningful thing to move forward.";
+
+            const channels = Array.isArray(settings.reminderChannels)
+              ? settings.reminderChannels
+              : ["in_app", "push"];
+            let sent = 0;
+            if (channels.includes("in_app")) {
+              attempted++;
+              sent += await sendInAppNotification(supabase, row.user_id, {
+                itemId: null,
+                type: "briefing",
+                title: "Your NANTI briefing",
+                body,
+                dedupeKey: `briefing:${today}`,
+              });
+            }
+            if (channels.includes("push")) {
+              attempted++;
+              sent += await sendPushNotification(supabase, row.user_id, {
+                title: "Your NANTI briefing",
+                body,
+                tag: `nanti-briefing-${today}`,
+                data: { url: "/app/today" },
+              });
+            }
+            if (channels.includes("whatsapp")) {
+              attempted++;
+              sent += await sendWhatsAppNotification(supabase, row.user_id, body);
+            }
+            if (sent > 0) {
+              briefingsSent++;
+              processed++;
+            }
+          }
 
           for (const task of tasks || []) {
             const settings = settingsByUser.get(task.user_id) || {};
@@ -178,6 +276,7 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
             attempted,
             taskCandidates: tasks?.length || 0,
             waitingCandidates: waitingItems?.length || 0,
+            briefingsSent,
             timestamp: now.toISOString(),
           });
         } catch (error) {
@@ -213,8 +312,8 @@ async function sendInAppNotification(
   supabase: ReturnType<typeof createClient>,
   userId: string,
   notification: {
-    itemId: string;
-    type: "task_due" | "task_overdue" | "waiting_followup";
+    itemId?: string | null;
+    type: "task_due" | "task_overdue" | "waiting_followup" | "briefing";
     title: string;
     body: string;
     dedupeKey: string;
@@ -224,7 +323,7 @@ async function sendInAppNotification(
     .from("notifications")
     .insert({
       user_id: userId,
-      item_id: notification.itemId,
+      item_id: notification.itemId ?? null,
       notification_type: notification.type,
       title: notification.title,
       body: notification.body,
@@ -268,6 +367,15 @@ function jakartaMinutes(now: Date) {
   }).formatToParts(now);
   const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   return Number(value.hour) * 60 + Number(value.minute);
+}
+
+function isBriefingWindow(settings: Record<string, unknown>, now: Date) {
+  const value = typeof settings.briefingTime === "string" ? settings.briefingTime : "08:00";
+  const [h, m] = value.split(":").map(Number);
+  const target = (h || 0) * 60 + (m || 0);
+  const current = jakartaMinutes(now);
+  const delta = current - target;
+  return delta >= 0 && delta < 10;
 }
 
 function isQuietHours(settings: Record<string, unknown>, now: Date) {
