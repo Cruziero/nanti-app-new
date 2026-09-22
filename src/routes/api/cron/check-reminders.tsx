@@ -5,15 +5,14 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        if (request.headers.get("Authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
-          return json({ error: "Unauthorized" }, 401);
-        }
-
         try {
           const supabase = createClient(
-            process.env.VITE_SUPABASE_URL || "",
+            process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "",
             process.env.SUPABASE_SERVICE_ROLE_KEY || "",
           );
+          if (!await isAuthorized(request, supabase)) {
+            return json({ error: "Unauthorized" }, 401);
+          }
           const now = new Date();
 
           const [
@@ -72,6 +71,18 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
             const title = overdue ? "Tugas terlambat" : "Pengingat NANTI";
             let sent = 0;
 
+            if (channels.includes("in_app")) {
+              attempted++;
+              const windowHours = Math.max(1, minHours);
+              const bucket = Math.floor(now.getTime() / (windowHours * 3_600_000));
+              sent += await sendInAppNotification(supabase, task.user_id, {
+                itemId: task.id,
+                type: overdue ? "task_overdue" : "task_due",
+                title,
+                body: task.title,
+                dedupeKey: `task:${task.id}:${bucket}`,
+              });
+            }
             if (channels.includes("push")) {
               attempted++;
               sent += await sendPushNotification(supabase, task.user_id, {
@@ -113,6 +124,17 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
             const body = `Masih menunggu “${waiting.title}”${who}. Sudah waktunya follow up.`;
             let sent = 0;
 
+            if (channels.includes("in_app")) {
+              attempted++;
+              const dayBucket = jakartaDate(now);
+              sent += await sendInAppNotification(supabase, waiting.user_id, {
+                itemId: waiting.id,
+                type: "waiting_followup",
+                title: "Waktunya follow up",
+                body,
+                dedupeKey: `waiting:${waiting.id}:${dayBucket}`,
+              });
+            }
             if (channels.includes("push")) {
               attempted++;
               sent += await sendPushNotification(supabase, waiting.user_id, {
@@ -127,7 +149,17 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
               sent += await sendWhatsAppNotification(supabase, waiting.user_id, body);
             }
 
-            if (sent > 0) processed++;
+            if (sent > 0) {
+              await supabase
+                .from("waiting_items")
+                .update({
+                  follow_up_at: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+                  updated_at: now.toISOString(),
+                })
+                .eq("id", waiting.id)
+                .eq("user_id", waiting.user_id);
+              processed++;
+            }
           }
 
           return json({
@@ -145,6 +177,58 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
     },
   },
 });
+
+async function isAuthorized(
+  request: Request,
+  supabase: ReturnType<typeof createClient>,
+) {
+  const header = request.headers.get("Authorization") || "";
+  const envSecret = process.env.CRON_SECRET;
+  if (envSecret && header === `Bearer ${envSecret}`) return true;
+
+  const { data, error } = await supabase
+    .from("automation_runtime")
+    .select("secret")
+    .eq("key", "reminder_dispatch")
+    .maybeSingle();
+  if (error) {
+    console.error("Could not read scheduler credential:", error);
+    return false;
+  }
+  return Boolean(data?.secret && header === `Bearer ${data.secret}`);
+}
+
+async function sendInAppNotification(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  notification: {
+    itemId: string;
+    type: "task_due" | "task_overdue" | "waiting_followup";
+    title: string;
+    body: string;
+    dedupeKey: string;
+  },
+) {
+  const { data, error } = await supabase
+    .from("notifications")
+    .insert({
+      user_id: userId,
+      item_id: notification.itemId,
+      notification_type: notification.type,
+      title: notification.title,
+      body: notification.body,
+      dedupe_key: notification.dedupeKey,
+      status: "unread",
+    })
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    if ((error as { code?: string }).code === "23505") return 0;
+    throw error;
+  }
+  return data ? 1 : 0;
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
