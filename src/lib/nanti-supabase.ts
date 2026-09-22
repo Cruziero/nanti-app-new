@@ -205,7 +205,7 @@ export const updateTask = createServerFn({ method: "POST" }).middleware([require
       .from("tasks")
       .update({ ...updates, updated_at: new Date().toISOString() })
       .eq("id", id)
-      .eq("user_id", userId);
+      .eq("user_id", userId).select("id").single();
     if (error) throw error;
   });
 
@@ -213,7 +213,7 @@ export const deleteTask = createServerFn({ method: "POST" }).middleware([require
   .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { userId, supabase } = context;
-    const { error } = await supabase.from("tasks").delete().eq("id", data.id).eq("user_id", userId);
+    const { error } = await supabase.from("tasks").delete().eq("id", data.id).eq("user_id", userId).select("id").single();
     if (error) throw error;
   });
 
@@ -272,7 +272,7 @@ export const updateWaitingItem = createServerFn({ method: "POST" }).middleware([
       .from("waiting_items")
       .update({ ...updates, updated_at: new Date().toISOString() })
       .eq("id", id)
-      .eq("user_id", userId);
+      .eq("user_id", userId).select("id").single();
     if (error) throw error;
   });
 
@@ -284,7 +284,7 @@ export const deleteWaitingItem = createServerFn({ method: "POST" }).middleware([
       .from("waiting_items")
       .delete()
       .eq("id", data.id)
-      .eq("user_id", userId);
+      .eq("user_id", userId).select("id").single();
     if (error) throw error;
   });
 

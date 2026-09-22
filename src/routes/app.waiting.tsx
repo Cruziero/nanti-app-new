@@ -58,8 +58,8 @@ function WaitingPage() {
                     </span>
                   )}
                   <button
-                    onClick={() => {
-                      complete(item.id);
+                    onClick={async () => {
+                      if (!await complete(item.id)) return;
                       toast.success("Marked received");
                     }}
                     className="rounded-md border border-border px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground transition-colors hover:bg-secondary"
@@ -67,8 +67,8 @@ function WaitingPage() {
                     Done
                   </button>
                   <button
-                    onClick={() => {
-                      snooze(item.id, 2);
+                    onClick={async () => {
+                      if (!await snooze(item.id, 2)) return;
                       toast("Snoozed 2 days");
                     }}
                     className="rounded-md px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground/50 transition-colors hover:text-muted-foreground"

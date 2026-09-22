@@ -258,11 +258,11 @@ interface Ctx extends State {
   hydrated: boolean;
   update: (id: string, patch: Partial<Item>) => void;
   addItems: (items: Item[], conversationText?: string) => Promise<number[]>;
-  complete: (id: string) => Promise<void>;
-  snooze: (id: string, days: number) => void;
+  complete: (id: string) => Promise<boolean>;
+  snooze: (id: string, days: number) => Promise<boolean>;
   track: (id: string) => void;
   ignore: (id: string) => void;
-  remove: (id: string) => void;
+  remove: (id: string) => Promise<boolean>;
   setSettings: (patch: Partial<Settings>) => Promise<boolean>;
   reset: () => void;
   personOf: (id?: string) => Person | undefined;
@@ -467,6 +467,8 @@ export function NantiProvider({ children }: { children: ReactNode }) {
         return savedIndexes;
       },
       complete: async (id) => {
+        const current = state.items.find((i) => i.id === id);
+        if (!current || current.status === "inbox") return false;
         if (useSupabase) {
           const item = state.items.find((i) => i.id === id);
           try {
@@ -478,7 +480,7 @@ export function NantiProvider({ children }: { children: ReactNode }) {
           } catch (error) {
             console.error("Failed to complete item:", error);
             toast.error("Tugas belum ditandai selesai. Coba lagi.");
-            return;
+            return false;
           }
         }
         mutate((s) => ({
@@ -487,28 +489,28 @@ export function NantiProvider({ children }: { children: ReactNode }) {
             i.id === id ? { ...i, status: i.kind === "waiting" ? "received" : "done" } : i,
           ),
         }));
+        return true;
       },
-      snooze: (id, days) => {
+      snooze: async (id, days) => {
+        const item = state.items.find((i) => i.id === id);
+        if (!item) return false;
+        if (item.kind === "waiting" || item.status === "inbox") {
+          toast.error("Penundaan untuk item ini belum tersedia.");
+          return false;
+        }
+        const base = item.due && item.due > todayISO() ? item.due : todayISO();
+        const due = addDays(base, days);
         if (useSupabase) {
-          const item = state.items.find((i) => i.id === id);
-          if (item?.kind === "waiting") {
-            updateWaitingItemFn({ data: { id, started_at: new Date().toISOString() } }).catch(
-              console.error,
-            );
-          } else {
-            const newDue = addDays(item?.due ?? todayISO(), days);
-            updateTaskFn({ data: { id, due_date: newDue } }).catch(console.error);
+          try {
+            await updateTaskFn({ data: { id, due_date: due } });
+          } catch (error) {
+            console.error("Failed to postpone task:", error);
+            toast.error("Jadwal belum berubah. Coba lagi.");
+            return false;
           }
         }
-        mutate((s) => ({
-          ...s,
-          items: s.items.map((i) => {
-            if (i.id !== id) return i;
-            return i.kind === "waiting"
-              ? { ...i, since: dayOffset(0) }
-              : { ...i, due: addDays(i.due ?? todayISO(), days) };
-          }),
-        }));
+        mutate((s) => ({ ...s, items: s.items.map((i) => i.id === id ? { ...i, due } : i) }));
+        return true;
       },
       track: (id) => {
         if (useSupabase) {
@@ -536,16 +538,28 @@ export function NantiProvider({ children }: { children: ReactNode }) {
           ),
         }));
       },
-      remove: (id) => {
+      remove: async (id) => {
+        const item = state.items.find((i) => i.id === id);
+        if (!item) return false;
         if (useSupabase) {
-          const item = state.items.find((i) => i.id === id);
-          if (item?.kind === "waiting") {
-            deleteWaitingItemFn({ data: { id } }).catch(console.error);
-          } else {
-            deleteTaskFn({ data: { id } }).catch(console.error);
+          if (item.status === "inbox") {
+            toast.error("Gunakan Abaikan untuk item di kotak masuk.");
+            return false;
+          }
+          try {
+            if (item.kind === "waiting") {
+              await deleteWaitingItemFn({ data: { id } });
+            } else {
+              await deleteTaskFn({ data: { id } });
+            }
+          } catch (error) {
+            console.error("Failed to delete item:", error);
+            toast.error("Item belum dihapus. Coba lagi.");
+            return false;
           }
         }
         mutate((s) => ({ ...s, items: s.items.filter((i) => i.id !== id) }));
+        return true;
       },
       setSettings: async (patch) => {
         const newSettings = { ...state.settings, ...patch };
