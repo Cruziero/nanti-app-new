@@ -174,9 +174,6 @@ export const createTask = createServerFn({ method: "POST" }).middleware([require
         reminder_time: z.string().optional().nullable(),
         reminder_channels: z.array(z.enum(["whatsapp", "push", "calendar", "in_app"])).optional(),
         reminder_intensity: z.enum(["gentle", "normal", "persistent"]).optional().nullable(),
-        time: z.string().max(20).optional().nullable(),
-        person_name: z.string().max(200).optional().nullable(),
-        project_name: z.string().max(200).optional().nullable(),
       })
       .parse(data),
   )
@@ -204,6 +201,9 @@ export const updateTask = createServerFn({ method: "POST" }).middleware([require
         due_date: z.string().optional(),
         project_id: z.string().uuid().optional().nullable(),
         person_id: z.string().uuid().optional().nullable(),
+        time: z.string().max(20).optional().nullable(),
+        person_name: z.string().max(200).optional().nullable(),
+        project_name: z.string().max(200).optional().nullable(),
         reminder_enabled: z.boolean().optional(),
         reminder_time: z.string().optional().nullable(),
         reminder_channels: z.array(z.enum(["whatsapp", "push", "calendar", "in_app"])).optional(),
@@ -464,7 +464,14 @@ export const startWhatsAppLink = createServerFn({ method: "POST" }).middleware([
       .eq("user_id", userId)
       .maybeSingle();
     if (existingError) throw existingError;
-    if (existing?.verified_at) return { connected: true, phone_number: existing.phone_number, code: null };
+    if (existing?.verified_at) {
+      return {
+        connected: true,
+        phone_number: existing.phone_number,
+        code: null,
+        expires_at: null,
+      };
+    }
 
     const code = crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase();
     const expires = new Date(Date.now() + 15 * 60_000).toISOString();
