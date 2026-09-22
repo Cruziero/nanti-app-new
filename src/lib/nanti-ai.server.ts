@@ -298,6 +298,7 @@ export async function interpretAssistantCommand(
     due?: string;
     time?: string;
     person?: string;
+    project?: string;
     updatedAt?: string;
   }>,
 ): Promise<AssistantCommand> {
