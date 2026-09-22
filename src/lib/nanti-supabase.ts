@@ -137,6 +137,38 @@ export const deletePerson = createServerFn({ method: "POST" }).middleware([requi
     if (error) throw error;
   });
 
+export const resolvePersonMemory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({
+      name: z.string().min(1).max(200),
+      company: z.string().max(200).optional().nullable(),
+    }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: person, error } = await supabase.rpc("resolve_person_memory", {
+      p_name: data.name,
+      p_company: data.company ?? null,
+    });
+    if (error) throw error;
+    return person as Record<string, unknown>;
+  });
+
+export const resolveProjectMemory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ name: z.string().min(1).max(200) }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: project, error } = await supabase.rpc("resolve_project_memory", {
+      p_name: data.name,
+    });
+    if (error) throw error;
+    return project as Record<string, unknown>;
+  });
+
 // Tasks
 export const fetchTasks = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { userId, supabase } = context;
