@@ -135,8 +135,8 @@ export function parseIndonesianDate(text: string): DateParseResult {
     return { date: today, time, confidence: 1.0, raw: text };
   }
 
-  // "besok"
-  if (/\bbesok\b/.test(lower)) {
+  // "besok" and common chat shorthand ("bsk")
+  if (/\b(besok|bsk)\b/.test(lower)) {
     return { date: addDays(today, 1), time, confidence: 1.0, raw: text };
   }
 
