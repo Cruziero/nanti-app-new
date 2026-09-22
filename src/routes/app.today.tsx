@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useNanti } from "@/lib/nanti-store";
 import {
@@ -21,6 +21,26 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import type { Item } from "@/lib/nanti-types";
+import { fetchDailyBriefing } from "@/lib/nanti-briefing.functions";
+import { RefreshCw } from "lucide-react";
+
+type DailyBriefingView = {
+  brief_date: string;
+  greeting: string;
+  summary: string;
+  stats: {
+    totalTasks?: number;
+    dueToday?: number;
+    overdue?: number;
+    waiting?: number;
+    waitingDue?: number;
+    inbox?: number;
+  };
+  priorities: string[];
+  waiting: string[];
+  inbox: string[];
+  generated_at: string;
+};
 
 export const Route = createFileRoute("/app/today")({
   validateSearch: (search: Record<string, unknown>): { view?: "all" | undefined } => ({
@@ -42,7 +62,26 @@ export function Today() {
   const [pending, setPending] = useState<string | null>(null);
   const lock = useRef(false);
   const [draft, setDraft] = useState<{ title: string; text: string } | null>(null);
+  const [briefing, setBriefing] = useState<DailyBriefingView | null>(null);
+  const [briefingLoading, setBriefingLoading] = useState(false);
   const openDetail = useItemDetail();
+
+  const loadBriefing = useCallback(async (force = false) => {
+    setBriefingLoading(true);
+    try {
+      const result = await fetchDailyBriefing({ data: { force } });
+      setBriefing(result as DailyBriefingView);
+    } catch (error) {
+      console.error("Failed to load daily briefing:", error);
+    } finally {
+      setBriefingLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    void loadBriefing(false);
+  }, [hydrated, loadBriefing]);
   const tasks = items.filter((i) => i.status === "open" && i.kind !== "waiting");
   const today = tasks
     .filter((i) => isOverdue(i) || isDueToday(i))
@@ -122,6 +161,93 @@ export function Today() {
           Import a screenshot
         </Link>
       </header>
+
+      <section
+        aria-label="Daily briefing"
+        className="rounded-xl border border-border bg-secondary/35 p-5 sm:p-6"
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              Daily briefing
+            </p>
+            <h2 className="mt-2 font-serif text-2xl sm:text-3xl">
+              {briefing?.greeting || "Your morning brief"}
+            </h2>
+          </div>
+          <button
+            type="button"
+            disabled={briefingLoading}
+            onClick={() => void loadBriefing(true)}
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:text-foreground disabled:opacity-50"
+            aria-label="Refresh daily briefing"
+          >
+            <RefreshCw className={`size-4 ${briefingLoading ? "animate-spin" : ""}`} />
+          </button>
+        </div>
+
+        {briefingLoading && !briefing ? (
+          <p className="mt-4 text-sm text-muted-foreground">NANTI is preparing your brief…</p>
+        ) : briefing ? (
+          <>
+            <p className="mt-4 max-w-3xl text-sm leading-6 text-foreground/90 sm:text-[15px]">
+              {briefing.summary}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
+              <span className="rounded-full border border-border bg-background px-2.5 py-1">
+                {briefing.stats.dueToday || 0} due today
+              </span>
+              <span className="rounded-full border border-border bg-background px-2.5 py-1">
+                {briefing.stats.overdue || 0} overdue
+              </span>
+              <span className="rounded-full border border-border bg-background px-2.5 py-1">
+                {briefing.stats.waitingDue || 0} follow-up
+              </span>
+              <span className="rounded-full border border-border bg-background px-2.5 py-1">
+                {briefing.stats.inbox || 0} clarify
+              </span>
+            </div>
+            {briefing.priorities?.length > 0 && (
+              <div className="mt-5">
+                <p className="mb-2 text-xs font-semibold text-muted-foreground">Start here</p>
+                <ol className="space-y-2">
+                  {briefing.priorities.slice(0, 3).map((priority, index) => (
+                    <li key={priority} className="flex gap-3 text-sm leading-6">
+                      <span className="text-muted-foreground">{index + 1}.</span>
+                      <span>{priority}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+            {(briefing.waiting?.length > 0 || briefing.inbox?.length > 0) && (
+              <div className="mt-5 flex flex-wrap gap-3">
+                {briefing.waiting?.length > 0 && (
+                  <Link
+                    to="/app/waiting"
+                    className="inline-flex min-h-11 items-center rounded-lg border border-border bg-background px-3 text-sm font-medium hover:bg-secondary"
+                  >
+                    {briefing.waiting.length} follow-up{briefing.waiting.length === 1 ? "" : "s"}
+                  </Link>
+                )}
+                {briefing.inbox?.length > 0 && (
+                  <Link
+                    to="/app/inbox"
+                    className="inline-flex min-h-11 items-center rounded-lg border border-border bg-background px-3 text-sm font-medium hover:bg-secondary"
+                  >
+                    {briefing.inbox.length} clarification{briefing.inbox.length === 1 ? "" : "s"}
+                  </Link>
+                )}
+              </div>
+            )}
+          </>
+        ) : (
+          <p className="mt-4 text-sm text-muted-foreground">
+            Your brief will appear here when NANTI can reach your workspace memory.
+          </p>
+        )}
+      </section>
+
       <DashboardAssistant />
       <div className="grid gap-10 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,1fr)]">
         <div className="min-w-0">
@@ -331,16 +457,20 @@ export function Today() {
             <dl className="mt-3 divide-y divide-border text-sm">
               <div className="flex flex-wrap justify-between gap-2 py-4">
                 <dt>WhatsApp</dt>
-                <dd className="text-xs text-muted-foreground">Coming soon</dd>
+                <dd className="text-xs text-muted-foreground">
+                  {settings.whatsappConnected ? "Connected" : "Connect in Settings"}
+                </dd>
               </div>
               <div className="flex flex-wrap justify-between gap-2 py-4">
                 <dt>Google Calendar</dt>
-                <dd className="text-xs text-muted-foreground">Coming soon</dd>
+                <dd className="text-xs text-muted-foreground">
+                  {settings.calendarConnected ? "Connected" : "Connect in Settings"}
+                </dd>
               </div>
             </dl>
             <p className="mt-2 text-xs leading-6 text-muted-foreground">
-              Automatic delivery and calendar sync aren’t available yet. You can paste chats into
-              NANTI now.
+              WhatsApp capture and reminders are available after connection. Calendar availability
+              depends on your workspace configuration.
             </p>
             <Link
               to="/app/settings"
