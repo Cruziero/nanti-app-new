@@ -8,6 +8,9 @@ const EXPANSIONS: Record<string, string> = {
   hrs: "harus",
   mst: "mesti",
   bsk: "besok",
+  beosok: "besok",
+  oulang: "pulang",
+  qoulang: "pulang",
   jm: "jam",
   jma: "jam",
   pgi: "pagi",
@@ -24,7 +27,6 @@ const EXPANSIONS: Record<string, string> = {
 
 const FUZZY_KEYWORDS = [
   "besok",
-  "pulang",
   "berangkat",
   "kembali",
   "pergi",
@@ -45,6 +47,16 @@ const FUZZY_KEYWORDS = [
   "sore",
   "malam",
   "selesai",
+  "what",
+  "forget",
+  "forgetting",
+  "tomorrow",
+  "today",
+  "remind",
+  "done",
+  "sudah",
+  "hapus",
+  "abaikan",
 ] as const;
 
 function editDistance(a: string, b: string) {
