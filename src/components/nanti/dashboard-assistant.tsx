@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useNanti } from "@/lib/nanti-store";
@@ -6,6 +6,7 @@ import { askAssistant, analyzeConversation } from "@/lib/nanti-ai.functions";
 import { chatMessageToFallbackItem, draftToItem } from "@/lib/nanti-import";
 import type { Item } from "@/lib/nanti-types";
 import { todayISO } from "@/lib/nanti-utils";
+import { createAiMessage, fetchAiMessages } from "@/lib/nanti-supabase";
 
 type Message = { role: "user" | "assistant"; text: string };
 export function DashboardAssistant() {
@@ -20,6 +21,41 @@ export function DashboardAssistant() {
   const [error, setError] = useState("");
   const lock = useRef(false);
   const field = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchAiMessages()
+      .then((rows) => {
+        if (cancelled) return;
+        setMessages(
+          rows.map((row) => ({
+            role: row.role as Message["role"],
+            text: row.content as string,
+          })),
+        );
+      })
+      .catch((error) => console.error("Failed to load NANTI chat history:", error));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const persistChatTurn = async (question: string, answer: string, taskCount: number) => {
+    const results = await Promise.allSettled([
+      createAiMessage({ data: { role: "user", content: question, metadata: { source: "dashboard" } } }),
+      createAiMessage({
+        data: {
+          role: "assistant",
+          content: answer,
+          metadata: { source: "dashboard", detected_task_count: taskCount },
+        },
+      }),
+    ]);
+    if (results.some((result) => result.status === "rejected")) {
+      console.error("Some NANTI chat messages were not persisted:", results);
+    }
+  };
+
   const submit = async () => {
     if (!input.trim() || lock.current) return;
     lock.current = true;
@@ -84,6 +120,7 @@ export function DashboardAssistant() {
           { role: "user", text: question },
           { role: "assistant", text: answer },
         ]);
+        await persistChatTurn(question, answer, nextDrafts.length);
         if (nextDrafts.length) {
           setDrafts(nextDrafts);
           setSelected(nextDrafts.map((i) => i.id));
