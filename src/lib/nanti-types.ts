@@ -28,6 +28,7 @@ export interface Person {
   name: string;
   org: string;
   role?: string | undefined;
+  phone?: string | undefined;
   lastConversation: string; // ISO date
   activity: { date: string; text: string }[];
 }
@@ -69,6 +70,14 @@ export interface Item {
   reminderIntensity?: ReminderIntensity;
   lastRemindedAt?: string | undefined;
   reminderCount?: number;
+  // Waiting/follow-up automation
+  followUpAt?: string | undefined;
+  lastFollowedUpAt?: string | undefined;
+  followUpCount?: number;
+  autoFollowUpEnabled?: boolean;
+  // Clarification
+  clarificationType?: "date" | "time" | "person" | "confirmation" | undefined;
+  clarificationQuestion?: string | undefined;
   // Invoice fields
   invoiceId?: string | undefined;
 }

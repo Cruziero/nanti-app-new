@@ -160,7 +160,7 @@ function ImportPage() {
     setSaving(true);
     try {
       const saved = await addItems(chosen.map((d) => draftToItem(d, { people, projects, sourceType })), text || undefined);
-      const savedDraftIndexes = new Set(saved.map((index) => indexes[index]));
+      const savedDraftIndexes = new Set(saved.map((record) => indexes[record.index]));
       const remaining = drafts.map((draft, index) => ({ draft: getClarifiedDraft(draft, index), index }))
         .filter(({ index }) => !savedDraftIndexes.has(index)).map(({ draft }) => draft);
       setDrafts(remaining);

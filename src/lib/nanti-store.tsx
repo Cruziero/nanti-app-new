@@ -36,6 +36,10 @@ import {
   createInboxItem as createInboxItemFn,
   updateInboxItem as updateInboxItemFn,
   promoteInboxItem as promoteInboxItemFn,
+  resolvePersonMemory,
+  resolveProjectMemory,
+  markWaitingFollowedUp as markWaitingFollowedUpFn,
+  logProductEvent,
   createConversation as createConversationFn,
   seedDemoData,
   fetchUserSettings,
@@ -212,6 +216,10 @@ function waitingToItem(item: Record<string, unknown>): Item {
     memoryStrength: 1.0,
     createdBy: "ai",
     createdAt: item.created_at as string,
+    followUpAt: (item.follow_up_at as string) || undefined,
+    lastFollowedUpAt: (item.last_followed_up_at as string) || undefined,
+    followUpCount: (item.follow_up_count as number) || 0,
+    autoFollowUpEnabled: item.auto_follow_up_enabled !== false,
   };
 }
 
@@ -230,10 +238,12 @@ function inboxToItem(item: Record<string, unknown>): Item {
     sourceType: (item.source_type as Item["sourceType"]) || undefined,
     quote: (item.conversation_text as string) || "",
     aiNote: "",
-    confidence: 0.8,
+    confidence: item.clarification_type ? 0.6 : 0.8,
     memoryStrength: 0.5,
     createdBy: "ai",
     createdAt: item.created_at as string,
+    clarificationType: (item.clarification_type as Item["clarificationType"]) || undefined,
+    clarificationQuestion: (item.clarification_question as string) || undefined,
   };
 }
 
@@ -254,6 +264,7 @@ function personToPerson(person: Record<string, unknown>): Person {
     name: person.name as string,
     org: (person.company as string) || "",
     role: (person.role as string) || undefined,
+    phone: (person.phone as string) || undefined,
     lastConversation: (person.last_conversation_at as string)?.slice(0, 10) || todayISO(),
     activity: [],
   };
@@ -262,11 +273,16 @@ function personToPerson(person: Record<string, unknown>): Person {
 interface Ctx extends State {
   hydrated: boolean;
   update: (id: string, patch: Partial<Item>) => void;
-  addItems: (items: Item[], conversationText?: string) => Promise<number[]>;
+  editItem: (id: string, patch: Partial<Item>) => Promise<boolean>;
+  addItems: (items: Item[], conversationText?: string) => Promise<Array<{ index: number; id: string }>>;
   complete: (id: string) => Promise<boolean>;
   snooze: (id: string, days: number) => Promise<boolean>;
   followUp: (id: string, days: number) => Promise<boolean>;
-  track: (id: string, details?: { personName?: string; due?: string; title?: string }) => Promise<boolean>;
+  markWaitingFollowedUp: (id: string, nextDays?: number) => Promise<boolean>;
+  track: (
+    id: string,
+    details?: { personName?: string; due?: string; time?: string; title?: string },
+  ) => Promise<string | false>;
   ignore: (id: string) => Promise<boolean>;
   remove: (id: string) => Promise<boolean>;
   setSettings: (patch: Partial<Settings>) => Promise<boolean>;
@@ -422,28 +438,149 @@ export function NantiProvider({ children }: { children: ReactNode }) {
           items: s.items.map((i) => (i.id === id ? { ...i, ...patch } : i)),
         }));
       },
+      editItem: async (id, patch) => {
+        const item = state.items.find((i) => i.id === id);
+        if (!item || item.status === "inbox") return false;
+        if (useSupabase) {
+          try {
+            if (item.kind === "waiting") {
+              await updateWaitingItemFn({
+                data: {
+                  id,
+                  title: patch.title,
+                  person_id: patch.personId === undefined ? undefined : patch.personId || null,
+                  project_id: patch.projectId === undefined ? undefined : patch.projectId || null,
+                  follow_up_at: patch.followUpAt,
+                  auto_follow_up_enabled: patch.autoFollowUpEnabled,
+                  status:
+                    patch.status === "received"
+                      ? "received"
+                      : patch.status === "open"
+                        ? "waiting"
+                        : undefined,
+                },
+              });
+            } else {
+              await updateTaskFn({
+                data: {
+                  id,
+                  title: patch.title,
+                  description: patch.description,
+                  type: patch.kind && patch.kind !== "invoice" ? patch.kind : undefined,
+                  status:
+                    patch.status === "done"
+                      ? "completed"
+                      : patch.status === "ignored"
+                        ? "dismissed"
+                        : patch.status === "open"
+                          ? "pending"
+                          : undefined,
+                  priority:
+                    patch.priority === "critical" ? "urgent" : patch.priority,
+                  due_date: patch.due,
+                  time: patch.time,
+                  person_id: patch.personId === undefined ? undefined : patch.personId || null,
+                  project_id: patch.projectId === undefined ? undefined : patch.projectId || null,
+                  person_name: patch.personName,
+                  project_name: patch.projectName,
+                  reminder_enabled: patch.reminderEnabled,
+                  reminder_time:
+                    patch.reminderTime === undefined ? undefined : patch.reminderTime || null,
+                  reminder_channels: patch.reminderChannels,
+                  reminder_intensity:
+                    patch.reminderIntensity === undefined ? undefined : patch.reminderIntensity || null,
+                },
+              });
+            }
+          } catch (error) {
+            console.error("Failed to edit item:", error);
+            toast.error("Perubahan belum tersimpan. Coba lagi.");
+            return false;
+          }
+        }
+        mutate((current) => ({
+          ...current,
+          items: current.items.map((i) => (i.id === id ? { ...i, ...patch } : i)),
+        }));
+        void logProductEvent({
+          data: {
+            event_name: "item_edited",
+            item_id: id,
+            source: "assistant",
+            properties: { fields: Object.keys(patch) },
+          },
+        }).catch(() => {});
+        return true;
+      },
       addItems: async (newItems, conversationText?: string) => {
         if (!useSupabase) {
           mutate((s) => ({ ...s, items: [...newItems, ...s.items] }));
-          return newItems.map((_, index) => index);
+          return newItems.map((item, index) => ({ index, id: item.id }));
         }
+        const newPeople: Person[] = [];
+        const newProjects: Project[] = [];
+        const resolvedPeople = new Map<string, string>();
+        const resolvedProjects = new Map<string, string>();
+
+        for (const item of newItems) {
+          if (!item.personId && item.personName) {
+            const key = item.personName.trim().toLowerCase();
+            if (key && !resolvedPeople.has(key)) {
+              try {
+                const person = await resolvePersonMemory({ data: { name: item.personName } });
+                const mapped = personToPerson(person);
+                resolvedPeople.set(key, mapped.id);
+                newPeople.push(mapped);
+              } catch (error) {
+                console.error("Failed to resolve person memory:", error);
+              }
+            }
+          }
+          if (!item.projectId && item.projectName) {
+            const key = item.projectName.trim().toLowerCase();
+            if (key && !resolvedProjects.has(key)) {
+              try {
+                const project = await resolveProjectMemory({ data: { name: item.projectName } });
+                const mapped = projectToProject(project);
+                resolvedProjects.set(key, mapped.id);
+                newProjects.push(mapped);
+              } catch (error) {
+                console.error("Failed to resolve project memory:", error);
+              }
+            }
+          }
+        }
+
+        const resolvedItems = newItems.map((item) => ({
+          ...item,
+          personId:
+            item.personId ||
+            (item.personName ? resolvedPeople.get(item.personName.trim().toLowerCase()) : undefined),
+          projectId:
+            item.projectId ||
+            (item.projectName ? resolvedProjects.get(item.projectName.trim().toLowerCase()) : undefined),
+        }));
+
         let conversationId: string | undefined;
         if (conversationText) {
           const conversation = await createConversationFn({ data: {
-            source: newItems.some((item) => item.sourceType === "chat")
+            source: resolvedItems.some((item) => item.sourceType === "chat")
               ? "Chat dengan NANTI"
               : "Impor percakapan",
             message_text: conversationText.slice(0, 20000),
           } });
           conversationId = conversation.id;
         }
-        const results = await Promise.allSettled(newItems.map(async (item) => {
+        const results = await Promise.allSettled(resolvedItems.map(async (item) => {
           if (item.status === "inbox") {
             const saved = await createInboxItemFn({ data: {
               type: item.kind, title: item.title, person_name: item.personName,
               project_name: item.projectName, due_date: item.due,
               conversation_text: conversationText?.slice(0, 5000),
-              source: item.source, source_type: item.sourceType, status: "pending",
+              source: item.source, source_type: item.sourceType,
+              clarification_type: item.clarificationType,
+              clarification_question: item.clarificationQuestion,
+              status: "pending",
             } });
             return inboxToItem(saved);
           }
@@ -455,6 +592,10 @@ export function NantiProvider({ children }: { children: ReactNode }) {
               source: item.source, quote: item.quote, ai_note: item.aiNote,
               confidence: item.confidence, source_type: item.sourceType,
               conversation_id: conversationId,
+              follow_up_at:
+                item.followUpAt ||
+                new Date(Date.now() + 2 * 86400000).toISOString(),
+              auto_follow_up_enabled: item.autoFollowUpEnabled ?? true,
             } });
             return waitingToItem(saved);
           }
@@ -473,17 +614,45 @@ export function NantiProvider({ children }: { children: ReactNode }) {
           return taskToItem(saved);
         }));
         const savedItems: Item[] = [];
-        const savedIndexes: number[] = [];
+        const savedRecords: Array<{ index: number; id: string }> = [];
         results.forEach((result, index) => {
           if (result.status === "fulfilled") {
             savedItems.push(result.value);
-            savedIndexes.push(index);
+            savedRecords.push({ index, id: result.value.id });
           } else {
             console.error("Failed to save imported item:", result.reason);
           }
         });
-        mutate((s) => ({ ...s, items: [...savedItems, ...s.items] }));
-        return savedIndexes;
+        mutate((current) => ({
+          ...current,
+          items: [...savedItems, ...current.items],
+          people: [
+            ...newPeople.filter(
+              (person) => !current.people.some((existing) => existing.id === person.id),
+            ),
+            ...current.people,
+          ],
+          projects: [
+            ...newProjects.filter(
+              (project) => !current.projects.some((existing) => existing.id === project.id),
+            ),
+            ...current.projects,
+          ],
+        }));
+        for (const savedItem of savedItems) {
+          void logProductEvent({
+            data: {
+              event_name: "capture_saved",
+              item_id: savedItem.id,
+              source: savedItem.sourceType || "unknown",
+              properties: {
+                kind: savedItem.kind,
+                needs_clarification: savedItem.status === "inbox",
+              },
+            },
+          }).catch(() => {});
+        }
+        return savedRecords;
       },
       complete: async (id) => {
         const current = state.items.find((i) => i.id === id);
@@ -508,6 +677,13 @@ export function NantiProvider({ children }: { children: ReactNode }) {
             i.id === id ? { ...i, status: i.kind === "waiting" ? "received" : "done" } : i,
           ),
         }));
+        void logProductEvent({
+          data: {
+            event_name: current.kind === "waiting" ? "waiting_received" : "task_completed",
+            item_id: id,
+            source: "app",
+          },
+        }).catch(() => {});
         return true;
       },
       snooze: async (id, days) => {
@@ -559,6 +735,49 @@ export function NantiProvider({ children }: { children: ReactNode }) {
         }));
         return true;
       },
+      markWaitingFollowedUp: async (id, nextDays = 2) => {
+        const item = state.items.find((i) => i.id === id);
+        if (!item || item.kind !== "waiting" || item.status !== "open") return false;
+        if (useSupabase) {
+          try {
+            const updated = await markWaitingFollowedUpFn({ data: { id, next_days: nextDays } });
+            const mapped = waitingToItem(updated as Record<string, unknown>);
+            mutate((current) => ({
+              ...current,
+              items: current.items.map((i) => (i.id === id ? mapped : i)),
+            }));
+          } catch (error) {
+            console.error("Failed to mark waiting follow-up:", error);
+            toast.error("Follow-up belum tercatat. Coba lagi.");
+            return false;
+          }
+        } else {
+          const now = new Date().toISOString();
+          const next = new Date(Date.now() + nextDays * 86400000).toISOString();
+          mutate((current) => ({
+            ...current,
+            items: current.items.map((i) =>
+              i.id === id
+                ? {
+                    ...i,
+                    lastFollowedUpAt: now,
+                    followUpAt: next,
+                    followUpCount: (i.followUpCount || 0) + 1,
+                  }
+                : i,
+            ),
+          }));
+        }
+        void logProductEvent({
+          data: {
+            event_name: "waiting_followed_up",
+            item_id: id,
+            source: "app",
+            properties: { next_days: nextDays },
+          },
+        }).catch(() => {});
+        return true;
+      },
       track: async (id, details) => {
         const item = state.items.find((i) => i.id === id);
         if (!item || item.status !== "inbox") return false;
@@ -572,13 +791,24 @@ export function NantiProvider({ children }: { children: ReactNode }) {
                 due_date: details?.due || item.due,
               },
             });
-            const promoted =
+            let promoted =
               result.entity === "waiting" ? waitingToItem(result.item) : taskToItem(result.item);
+            if (details?.time && result.entity === "task") {
+              await updateTaskFn({ data: { id: promoted.id, time: details.time } });
+              promoted = { ...promoted, time: details.time };
+            }
             mutate((s) => ({
               ...s,
               items: [promoted, ...s.items.filter((i) => i.id !== id)],
             }));
-            return true;
+            void logProductEvent({
+              data: {
+                event_name: "inbox_promoted",
+                item_id: promoted.id,
+                source: "clarification",
+              },
+            }).catch(() => {});
+            return promoted.id;
           } catch (error) {
             console.error("Failed to promote inbox item:", error);
             toast.error("Item belum disimpan sebagai tugas. Coba lagi.");
@@ -594,13 +824,14 @@ export function NantiProvider({ children }: { children: ReactNode }) {
                   title: details?.title || i.title,
                   personName: details?.personName || i.personName,
                   due: details?.due || i.due,
+                  time: details?.time || i.time,
                   status: "open" as const,
                   memoryStrength: Math.min((i.memoryStrength || 1) + 0.2, 2),
                 }
               : i,
           ),
         }));
-        return true;
+        return id;
       },
       ignore: async (id) => {
         const item = state.items.find((i) => i.id === id);

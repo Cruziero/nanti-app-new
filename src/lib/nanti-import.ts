@@ -6,6 +6,24 @@ import { parseSmartDate } from "./nanti-dates";
 
 export type Draft = ExtractedItem;
 
+function defaultReminderTime(due?: string, time?: string) {
+  if (!due) return undefined;
+  const dueAt = new Date(`${due}T${time || "09:00"}:00+07:00`);
+  if (Number.isNaN(dueAt.getTime())) return undefined;
+  const offsetMinutes = time ? 60 : 0;
+  const reminder = new Date(dueAt.getTime() - offsetMinutes * 60_000);
+  return reminder.toISOString();
+}
+
+function clarificationType(fields?: string[]) {
+  const first = fields?.[0]?.toLowerCase();
+  if (!first) return undefined;
+  if (first.includes("person") || first.includes("who")) return "person" as const;
+  if (first.includes("time") || first.includes("jam")) return "time" as const;
+  if (first.includes("date") || first.includes("when") || first.includes("tanggal")) return "date" as const;
+  return "confirmation" as const;
+}
+
 function matchPerson(people: Person[], name?: string | null) {
   if (!name) return undefined;
   const first = name.toLowerCase().split(" ").filter(Boolean)[0];
@@ -49,12 +67,14 @@ export function draftToItem(
     time = draft.dueTime;
   }
 
+  const needsClarification = Boolean(draft.needsClarification) || draft.confidence < 0.72;
+  const reminderEnabled = draft.kind !== "waiting" && (Boolean(due) || Boolean(draft.reminderRequired));
   const item: Item = {
     id: newId("ai"),
     title: draft.title || draft.what || "",
     description: draft.action || undefined,
     kind: draft.kind,
-    status: draft.needsClarification ? "inbox" : "open",
+    status: needsClarification ? "inbox" : "open",
     priority: draft.priority,
     ...(due ? { due } : {}),
     ...(time ? { time } : {}),
@@ -68,12 +88,30 @@ export function draftToItem(
     quote: draft.quote,
     aiNote: draft.aiNote,
     confidence: draft.confidence,
-    memoryStrength: draft.needsClarification ? 0.5 : 1.0,
+    memoryStrength: needsClarification ? 0.5 : 1.0,
     createdBy: "ai",
     createdAt: new Date().toISOString(),
-    reminderEnabled: draft.reminderRequired,
-    reminderChannels: draft.reminderRequired ? ["in_app", "push"] : [],
+    reminderEnabled,
+    reminderTime: reminderEnabled ? defaultReminderTime(due, time) : undefined,
+    reminderChannels: reminderEnabled ? ["in_app", "push"] : [],
     reminderIntensity: "normal",
+    ...(draft.kind === "waiting"
+      ? {
+          followUpAt: new Date(Date.now() + 2 * 86400000).toISOString(),
+          followUpCount: 0,
+          autoFollowUpEnabled: true,
+        }
+      : {}),
+    ...(needsClarification
+      ? {
+          clarificationType: clarificationType(draft.missingFields),
+          clarificationQuestion:
+            draft.clarifyingQuestion ||
+            (draft.kind === "waiting"
+              ? "Kamu sedang menunggu siapa?"
+              : "Mau NANTI simpan ini sebagai tugas?"),
+        }
+      : {}),
   };
   return item;
 }
@@ -119,6 +157,7 @@ export function chatMessageToFallbackItem(
     createdBy: "ai",
     createdAt: new Date().toISOString(),
     reminderEnabled: Boolean(parsed.date || parsed.time),
+    reminderTime: parsed.date ? defaultReminderTime(parsed.date, parsed.time ?? undefined) : undefined,
     reminderChannels: parsed.date || parsed.time ? ["in_app", "push"] : [],
     reminderIntensity: "normal",
   };

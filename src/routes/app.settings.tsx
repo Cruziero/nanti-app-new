@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/nanti/app-shell";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,12 @@ import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
 import { usePushSubscription } from "@/hooks/use-push-subscription";
 import type { ConversationTone, ReminderChannel } from "@/lib/nanti-types";
 import { cn } from "@/lib/utils";
-import { Check, Bell, BellOff, Loader2 } from "lucide-react";
+import { Check, Bell, BellOff, Loader2, MessageCircle, Copy } from "lucide-react";
+import {
+  disconnectWhatsApp,
+  fetchWhatsAppLink,
+  startWhatsAppLink,
+} from "@/lib/nanti-supabase";
 
 export const Route = createFileRoute("/app/settings")({
   head: () => ({
@@ -39,8 +45,19 @@ const channelOpts: { id: ReminderChannel; label: string }[] = [
   { id: "in_app", label: "In-app" },
 ];
 
+type WhatsAppLinkState = {
+  phone_number?: string | null;
+  link_code?: string | null;
+  link_expires_at?: string | null;
+  verified_at?: string | null;
+};
+
 function SettingsPage() {
   const { settings, setSettings, reset } = useNanti();
+  const [whatsAppLink, setWhatsAppLink] = useState<WhatsAppLinkState | null>(null);
+  const [whatsAppLoading, setWhatsAppLoading] = useState(true);
+  const nantiWhatsAppNumber = String(import.meta.env.VITE_NANTI_WHATSAPP_NUMBER || "").replace(/\D/g, "");
+  const whatsappConnected = Boolean(whatsAppLink?.verified_at && whatsAppLink?.phone_number);
   const { signOut } = useSupabaseAuth();
   const navigate = useNavigate();
   const {
@@ -50,6 +67,68 @@ function SettingsPage() {
     subscribe,
     unsubscribe,
   } = usePushSubscription();
+
+  const refreshWhatsApp = useCallback(async () => {
+    try {
+      const link = await fetchWhatsAppLink();
+      setWhatsAppLink(link as WhatsAppLinkState | null);
+    } catch (error) {
+      console.error("Failed to load WhatsApp connection:", error);
+    } finally {
+      setWhatsAppLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshWhatsApp();
+  }, [refreshWhatsApp]);
+
+  useEffect(() => {
+    if (!whatsAppLink?.link_code || whatsappConnected) return;
+    const timer = window.setInterval(() => {
+      void refreshWhatsApp();
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [refreshWhatsApp, whatsAppLink?.link_code, whatsappConnected]);
+
+  const connectWhatsApp = async () => {
+    setWhatsAppLoading(true);
+    try {
+      const result = await startWhatsAppLink();
+      if (result.connected) {
+        await refreshWhatsApp();
+        toast.success("WhatsApp already connected");
+        return;
+      }
+      setWhatsAppLink({
+        phone_number: null,
+        verified_at: null,
+        link_code: result.code,
+        link_expires_at: result.expires_at,
+      });
+    } catch (error) {
+      console.error("Failed to start WhatsApp link:", error);
+      toast.error("Could not start WhatsApp connection.");
+    } finally {
+      setWhatsAppLoading(false);
+    }
+  };
+
+  const unlinkWhatsApp = async () => {
+    setWhatsAppLoading(true);
+    try {
+      await disconnectWhatsApp();
+      setWhatsAppLink(null);
+      const nextChannels = settings.reminderChannels.filter((channel) => channel !== "whatsapp");
+      await setSettings({ reminderChannels: nextChannels, whatsappConnected: false });
+      toast.success("WhatsApp disconnected");
+    } catch (error) {
+      console.error("Failed to disconnect WhatsApp:", error);
+      toast.error("Could not disconnect WhatsApp.");
+    } finally {
+      setWhatsAppLoading(false);
+    }
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -110,12 +189,17 @@ function SettingsPage() {
               <span className="text-[13.5px]">{ch.label}</span>
               <Switch
                 checked={settings.reminderChannels.includes(ch.id)}
+                disabled={ch.id === "whatsapp" && !whatsappConnected}
                 onCheckedChange={() => {
+                  if (ch.id === "whatsapp" && !whatsappConnected) {
+                    toast("Connect WhatsApp first.");
+                    return;
+                  }
                   const current = settings.reminderChannels;
                   const next = current.includes(ch.id)
                     ? current.filter((c) => c !== ch.id)
                     : [...current, ch.id];
-                  setSettings({ reminderChannels: next });
+                  void setSettings({ reminderChannels: next });
                 }}
               />
             </div>
@@ -168,21 +252,72 @@ function SettingsPage() {
           Integrations
         </h2>
         <div className="divide-y divide-border">
-          <div className="flex items-center justify-between py-3">
-            <div>
-              <p className="text-[13.5px]">WhatsApp</p>
-              <p className="text-[12px] text-muted-foreground">WhatsApp Business API</p>
-            </div>
-            <span
-              className={cn(
-                "rounded-full px-2.5 py-0.5 text-[11px] font-medium",
-                settings.whatsappConnected
-                  ? "bg-primary/10 text-primary"
-                  : "bg-secondary text-muted-foreground",
+          <div className="py-3">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <MessageCircle className="size-4 text-primary" />
+                <div>
+                  <p className="text-[13.5px]">WhatsApp</p>
+                  <p className="text-[12px] text-muted-foreground">
+                    {whatsappConnected
+                      ? `Connected to ${whatsAppLink?.phone_number}`
+                      : "Forward messages to NANTI and turn them into actions"}
+                  </p>
+                </div>
+              </div>
+              {whatsAppLoading ? (
+                <Loader2 className="size-4 animate-spin text-muted-foreground" />
+              ) : whatsappConnected ? (
+                <Button variant="outline" size="sm" onClick={() => void unlinkWhatsApp()}>
+                  Disconnect
+                </Button>
+              ) : (
+                <Button size="sm" onClick={() => void connectWhatsApp()}>
+                  Connect
+                </Button>
               )}
-            >
-              {settings.whatsappConnected ? "Connected" : "Not connected"}
-            </span>
+            </div>
+
+            {!whatsappConnected && whatsAppLink?.link_code && (
+              <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
+                <p className="text-xs font-medium text-foreground">
+                  Send this message to NANTI on WhatsApp within 15 minutes:
+                </p>
+                <div className="mt-2 flex items-center gap-2">
+                  <code className="rounded bg-background px-2 py-1.5 text-sm font-semibold">
+                    LINK {whatsAppLink.link_code}
+                  </code>
+                  <button
+                    type="button"
+                    aria-label="Copy WhatsApp link code"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(`LINK ${whatsAppLink.link_code}`);
+                      toast.success("Link code copied");
+                    }}
+                    className="rounded-md border border-border p-2 text-muted-foreground hover:bg-background"
+                  >
+                    <Copy className="size-3.5" />
+                  </button>
+                </div>
+                {nantiWhatsAppNumber ? (
+                  <a
+                    className="mt-3 inline-flex min-h-10 items-center rounded-md bg-[#25D366] px-3 text-xs font-semibold text-black"
+                    href={`https://wa.me/${nantiWhatsAppNumber}?text=${encodeURIComponent(`LINK ${whatsAppLink.link_code}`)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Open WhatsApp
+                  </a>
+                ) : (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    The NANTI WhatsApp number still needs to be configured on the deployment.
+                  </p>
+                )}
+                <p className="mt-2 text-[11px] text-muted-foreground">
+                  This page checks automatically after you send the code.
+                </p>
+              </div>
+            )}
           </div>
           <div className="flex items-center justify-between py-3">
             <div>

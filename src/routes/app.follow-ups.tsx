@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Hourglass, Clock, AlertTriangle, Copy, Check } from "lucide-react";
 import { PageHeader, EmptyState, Section } from "@/components/nanti/app-shell";
@@ -36,7 +36,7 @@ const typeLabels: Record<string, string> = {
 };
 
 function FollowUpsPage() {
-  const { items, people, settings } = useNanti();
+  const { items, people, settings, markWaitingFollowedUp, followUp } = useNanti();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const suggestions = useMemo(() => detectFollowUps(items, people), [items, people]);
@@ -79,16 +79,35 @@ function FollowUpsPage() {
                     {s.suggestedAction}
                   </p>
                 </div>
-                <button
-                  onClick={() => copyMessage(s)}
-                  className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground transition-colors hover:bg-secondary"
-                >
-                  {isCopied ? (
-                    <><Check className="size-3 text-primary" /> Copied</>
-                  ) : (
-                    <><Copy className="size-3" /> Draft</>
-                  )}
-                </button>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <button
+                    onClick={() => copyMessage(s)}
+                    className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground transition-colors hover:bg-secondary"
+                  >
+                    {isCopied ? (
+                      <><Check className="size-3 text-primary" /> Copied</>
+                    ) : (
+                      <><Copy className="size-3" /> Draft</>
+                    )}
+                  </button>
+                  <button
+                    onClick={async () => {
+                      const item = items.find((candidate) => candidate.id === s.itemId);
+                      const ok = item?.kind === "waiting"
+                        ? await markWaitingFollowedUp(s.itemId, 2)
+                        : await followUp(s.itemId, 1);
+                      if (!ok) return;
+                      toast.success(
+                        item?.kind === "waiting"
+                          ? "Follow-up recorded · checking again in 2 days"
+                          : "Follow-up scheduled for tomorrow",
+                      );
+                    }}
+                    className="rounded-md border border-primary/30 bg-primary/5 px-2.5 py-1 text-[11.5px] font-medium text-primary transition-colors hover:bg-primary/10"
+                  >
+                    Mark sent
+                  </button>
+                </div>
               </div>
             );
           })}

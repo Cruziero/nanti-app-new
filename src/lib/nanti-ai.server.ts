@@ -12,30 +12,23 @@ async function chat(
   if (!key) throw new Error("AI belum dikonfigurasi.");
   const model = opts.model ?? TEXT_MODEL;
 
-  // Convert messages to OpenAI format
   const formattedMessages = messages.map((m) => {
-    const role = m.role === "assistant" ? "assistant" : "user";
+    const role =
+      m.role === "system" || m.role === "assistant" || m.role === "user" ? m.role : "user";
     if (typeof m.content === "string") {
       return { role, content: m.content };
     }
-    // Array content (for vision/multimodal)
     const parts = m.content.map((part) => {
       if (part.type === "image_url") {
-        return { type: "image_url", image_url: { url: (part.image_url as { url?: string })?.url ?? "" } };
+        return {
+          type: "image_url",
+          image_url: { url: (part.image_url as { url?: string })?.url ?? "" },
+        };
       }
       return { type: "text", text: (part as { text?: string }).text ?? "" };
     });
     return { role, content: parts };
   });
-
-  // Inject system message at the beginning
-  const systemMsg = messages.find((m) => m.role === "system");
-  if (systemMsg) {
-    formattedMessages.unshift({
-      role: "user",
-      content: typeof systemMsg.content === "string" ? systemMsg.content : "",
-    });
-  }
 
   const requestBody: Record<string, unknown> = {
     model,
@@ -105,14 +98,22 @@ ATURAN PENTING:
 - Deteksi juga proyek/klien yang dibahas (mis. "ABC Export") bila jelas disebut.
 
 Balas HANYA JSON valid dengan bentuk:
-{"summary":"kalimat ringkas Bahasa Indonesia","context":["poin informasi non-actionable"],"projects":["nama proyek/klien"],"items":[{"title":"","kind":"commitment|task|deadline|waiting|followup","priority":"high|medium|low","dueOffsetDays":0,"person":"nama atau null","org":"nama perusahaan atau null","project":"nama proyek atau null","source":"nama grup/chat atau null","quote":"kutipan asli persis dari percakapan","aiNote":"kenapa NANTI mendeteksi ini, 1-2 kalimat Bahasa Indonesia","confidence":0.0}]}
-dueOffsetDays: 0 = hari ini, 1 = besok, dst. null jika tidak ada tenggat. Untuk "waiting" selalu null.`;
+{"summary":"kalimat ringkas Bahasa Indonesia","context":["poin informasi non-actionable"],"projects":["nama proyek/klien"],"items":[{"title":"","kind":"commitment|task|deadline|waiting|followup","priority":"high|medium|low","dueOffsetDays":0,"when":"teks waktu asli atau null","dueTime":"HH:mm atau null","person":"nama atau null","org":"nama perusahaan atau null","project":"nama proyek atau null","source":"nama grup/chat atau null","quote":"kutipan asli persis dari percakapan","aiNote":"kenapa NANTI mendeteksi ini, 1-2 kalimat Bahasa Indonesia","confidence":0.0,"reminderRequired":true,"needsClarification":false,"missingFields":[],"clarifyingQuestion":"satu pertanyaan singkat atau null"}]}
+dueOffsetDays: 0 = hari ini, 1 = besok, dst. null jika tidak ada tenggat. Untuk "waiting" selalu null.
+Jika aksi jelas tetapi detail penting hilang, set needsClarification=true dan tanyakan SATU hal paling penting saja.
+- waiting tanpa siapa yang ditunggu -> missingFields=["person"], tanyakan siapa.
+- task/deadline yang jelas menyebut "besok/Jumat/jam..." jangan dianggap perlu klarifikasi tanggal.
+- permintaan pengingat tanpa waktu yang cukup jelas -> boleh klarifikasi date/time.
+- clarifyingQuestion harus natural, maksimal 12 kata.`;
 
 export interface ExtractedItem {
   title: string;
   kind: "task" | "commitment" | "deadline" | "waiting" | "followup";
   priority: "high" | "medium" | "low";
   dueOffsetDays: number | null;
+  when?: string | null;
+  whenParsed?: string | null;
+  dueTime?: string | null;
   person: string | null;
   org: string | null;
   project: string | null;
@@ -120,6 +121,10 @@ export interface ExtractedItem {
   quote: string;
   aiNote: string;
   confidence: number;
+  reminderRequired?: boolean;
+  needsClarification?: boolean;
+  missingFields?: string[];
+  clarifyingQuestion?: string | null;
 }
 
 export interface ExtractResult {
@@ -155,6 +160,16 @@ function clean(parsed: Partial<ExtractResult> | null): ExtractResult {
         project: i.project ?? null,
         source: i.source ?? null,
         dueOffsetDays: typeof i.dueOffsetDays === "number" ? i.dueOffsetDays : null,
+        when: typeof i.when === "string" ? i.when : null,
+        whenParsed: typeof i.whenParsed === "string" ? i.whenParsed : null,
+        dueTime: typeof i.dueTime === "string" ? i.dueTime : null,
+        reminderRequired: Boolean(i.reminderRequired),
+        needsClarification: Boolean(i.needsClarification),
+        missingFields: Array.isArray(i.missingFields)
+          ? i.missingFields.filter((field) => typeof field === "string")
+          : [],
+        clarifyingQuestion:
+          typeof i.clarifyingQuestion === "string" ? i.clarifyingQuestion : null,
       }))
       .filter((i) => i.confidence >= (i.kind === "commitment" ? 0.8 : 0.5)),
   };
@@ -219,4 +234,123 @@ export async function askNanti(question: string, context: string) {
     { role: "user", content: `Memori kerja saat ini:\n${context}\n\nPertanyaan: ${question}` },
   ]);
   return answer.trim() || "Maaf, saya belum bisa menjawab itu sekarang.";
+}
+
+
+export type AssistantCommandIntent =
+  | "none"
+  | "complete"
+  | "dismiss"
+  | "reschedule"
+  | "set_reminder"
+  | "edit"
+  | "mark_followed_up"
+  | "mark_received";
+
+export interface AssistantCommand {
+  intent: AssistantCommandIntent;
+  targetId: string | null;
+  dueText: string | null;
+  time: string | null;
+  reminderOffsetMinutes: number | null;
+  title: string | null;
+  priority: "low" | "medium" | "high" | null;
+  personName: string | null;
+  projectName: string | null;
+  confidence: number;
+  question: string | null;
+  acknowledgement: string | null;
+}
+
+const COMMAND_SYSTEM = `Kamu adalah router tindakan NANTI.
+Pengguna sedang berbicara dengan asisten tentang tugas yang SUDAH tersimpan.
+Tentukan apakah pesan terbaru meminta perubahan pada salah satu item yang diberikan.
+
+Intent yang boleh:
+- complete: pengguna bilang sudah selesai/beres
+- dismiss: pengguna bilang itu bukan tugas, hapus, abaikan
+- reschedule: ubah hari/tanggal/jam
+- set_reminder: minta diingatkan pada/berapa lama sebelum
+- edit: ganti judul, prioritas, orang, atau proyek pada item tersimpan
+- mark_followed_up: pengguna bilang sudah follow up item waiting
+- mark_received: hal yang ditunggu sudah diterima
+- none: bukan perintah edit terhadap item tersimpan
+
+ATURAN:
+- targetId HARUS salah satu ID yang diberikan. Jangan membuat ID.
+- Bila target ambigu, targetId=null dan isi question dengan SATU pertanyaan singkat.
+- "itu", "tadi", "yang barusan" biasanya merujuk item paling baru, tetapi confidence harus turun bila masih ambigu.
+- dueText simpan frasa waktu pengguna apa adanya, misalnya "Jumat", "besok", "tanggal 25".
+- time gunakan HH:mm bila eksplisit.
+- reminderOffsetMinutes hanya bila pengguna bilang "2 jam sebelum", "30 menit sebelum", dst.
+- Untuk edit, isi hanya field yang diminta: title, priority, personName, projectName.
+- priority hanya low|medium|high. "urgent"/"penting banget" -> high.
+- acknowledgement adalah jawaban sangat singkat setelah tindakan berhasil.
+Balas JSON valid saja.`;
+
+export async function interpretAssistantCommand(
+  message: string,
+  itemContext: Array<{
+    id: string;
+    title: string;
+    kind: string;
+    status: string;
+    due?: string;
+    time?: string;
+    person?: string;
+    updatedAt?: string;
+  }>,
+): Promise<AssistantCommand> {
+  const raw = await chat(
+    [
+      { role: "system", content: COMMAND_SYSTEM },
+      {
+        role: "user",
+        content: `Item tersimpan (urutan terbaru dulu):\n${JSON.stringify(itemContext)}\n\nPesan terbaru: ${message}`,
+      },
+    ],
+    { json: true },
+  );
+  const parsed = parseJson<Partial<AssistantCommand>>(raw);
+  const allowed = new Set<AssistantCommandIntent>([
+    "none",
+    "complete",
+    "dismiss",
+    "reschedule",
+    "set_reminder",
+    "edit",
+    "mark_followed_up",
+    "mark_received",
+  ]);
+  const ids = new Set(itemContext.map((item) => item.id));
+  const intent = parsed?.intent && allowed.has(parsed.intent) ? parsed.intent : "none";
+  const targetId = typeof parsed?.targetId === "string" && ids.has(parsed.targetId)
+    ? parsed.targetId
+    : null;
+  return {
+    intent,
+    targetId,
+    dueText: typeof parsed?.dueText === "string" ? parsed.dueText : null,
+    time: typeof parsed?.time === "string" ? parsed.time : null,
+    reminderOffsetMinutes:
+      typeof parsed?.reminderOffsetMinutes === "number"
+        ? Math.max(0, Math.min(30 * 24 * 60, parsed.reminderOffsetMinutes))
+        : null,
+    title: typeof parsed?.title === "string" ? parsed.title.slice(0, 500) : null,
+    priority:
+      parsed?.priority === "low" || parsed?.priority === "medium" || parsed?.priority === "high"
+        ? parsed.priority
+        : null,
+    personName:
+      typeof parsed?.personName === "string" ? parsed.personName.slice(0, 200) : null,
+    projectName:
+      typeof parsed?.projectName === "string" ? parsed.projectName.slice(0, 200) : null,
+    confidence:
+      typeof parsed?.confidence === "number"
+        ? Math.max(0, Math.min(1, parsed.confidence))
+        : 0,
+    question: typeof parsed?.question === "string" ? parsed.question : null,
+    acknowledgement:
+      typeof parsed?.acknowledgement === "string" ? parsed.acknowledgement : null,
+  };
 }
