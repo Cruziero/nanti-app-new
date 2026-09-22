@@ -165,7 +165,7 @@ Balas HANYA JSON valid:
   }]
 }
 dueOffsetDays: 0=hari ini, 1=besok, dst; null jika tidak ada tenggat. Untuk waiting selalu null.
-`
+`;
 
 export interface ExtractedReminderPlan {
   shouldRemind: boolean;
