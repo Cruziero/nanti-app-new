@@ -166,8 +166,14 @@ export const createTask = createServerFn({ method: "POST" }).middleware([require
         quote: z.string().max(2000).optional(),
         ai_note: z.string().max(2000).optional(),
         confidence: z.number().optional(),
-        source_type: z.string().max(50).optional(),
+        source_type: z.enum(["paste", "screenshot", "chat", "demo", "manual", "whatsapp", "calendar"]).optional(),
         time: z.string().max(20).optional(),
+        person_name: z.string().max(200).optional(),
+        project_name: z.string().max(200).optional(),
+        reminder_enabled: z.boolean().optional(),
+        reminder_time: z.string().optional().nullable(),
+        reminder_channels: z.array(z.enum(["whatsapp", "push", "calendar", "in_app"])).optional(),
+        reminder_intensity: z.enum(["gentle", "normal", "persistent"]).optional().nullable(),
       })
       .parse(data),
   )
@@ -195,6 +201,10 @@ export const updateTask = createServerFn({ method: "POST" }).middleware([require
         due_date: z.string().optional(),
         project_id: z.string().uuid().optional().nullable(),
         person_id: z.string().uuid().optional().nullable(),
+        reminder_enabled: z.boolean().optional(),
+        reminder_time: z.string().optional().nullable(),
+        reminder_channels: z.array(z.enum(["whatsapp", "push", "calendar", "in_app"])).optional(),
+        reminder_intensity: z.enum(["gentle", "normal", "persistent"]).optional().nullable(),
       })
       .parse(data),
   )
@@ -239,6 +249,14 @@ export const createWaitingItem = createServerFn({ method: "POST" }).middleware([
         status: z.enum(["waiting", "received", "snoozed"]).optional(),
         started_at: z.string().optional(),
         days_warning_threshold: z.number().optional(),
+        person_name: z.string().max(200).optional(),
+        project_name: z.string().max(200).optional(),
+        source: z.string().max(200).optional(),
+        quote: z.string().max(2000).optional(),
+        ai_note: z.string().max(2000).optional(),
+        confidence: z.number().min(0).max(1).optional(),
+        source_type: z.enum(["paste", "screenshot", "chat", "demo", "manual", "whatsapp", "calendar"]).optional(),
+        conversation_id: z.string().uuid().optional(),
       })
       .parse(data),
   )
@@ -310,6 +328,8 @@ export const createInboxItem = createServerFn({ method: "POST" }).middleware([re
         project_name: z.string().max(200).optional(),
         due_date: z.string().optional(),
         conversation_text: z.string().max(5000).optional(),
+        source: z.string().max(200).optional(),
+        source_type: z.enum(["paste", "screenshot", "chat", "demo", "manual", "whatsapp", "calendar"]).optional(),
         status: z.enum(["pending", "tracked", "ignored"]).optional(),
       })
       .parse(data),
@@ -342,8 +362,31 @@ export const updateInboxItem = createServerFn({ method: "POST" }).middleware([re
       .from("inbox_items")
       .update({ ...updates, updated_at: new Date().toISOString() })
       .eq("id", id)
-      .eq("user_id", userId);
+      .eq("user_id", userId)
+      .select("id")
+      .single();
     if (error) throw error;
+  });
+
+export const promoteInboxItem = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({
+      id: z.string().uuid(),
+      title: z.string().min(1).max(500).optional(),
+      person_name: z.string().max(200).optional(),
+      due_date: z.string().optional(),
+    }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: result, error } = await supabase.rpc("promote_inbox_item", {
+      p_id: data.id,
+      p_title: data.title ?? null,
+      p_person_name: data.person_name ?? null,
+      p_due_date: data.due_date ?? null,
+    });
+    if (error) throw error;
+    return result as { entity: "task" | "waiting"; item: Record<string, unknown> };
   });
 
 // Conversations
