@@ -152,7 +152,9 @@ export const resolvePersonMemory = createServerFn({ method: "POST" })
       p_company: data.company ?? null,
     });
     if (error) throw error;
-    return person as Record<string, unknown>;
+    const row = Array.isArray(person) ? person[0] : person;
+    if (!row) throw new Error("Person memory could not be resolved.");
+    return row as Record<string, unknown>;
   });
 
 export const resolveProjectMemory = createServerFn({ method: "POST" })
@@ -166,7 +168,9 @@ export const resolveProjectMemory = createServerFn({ method: "POST" })
       p_name: data.name,
     });
     if (error) throw error;
-    return project as Record<string, unknown>;
+    const row = Array.isArray(project) ? project[0] : project;
+    if (!row) throw new Error("Project memory could not be resolved.");
+    return row as Record<string, unknown>;
   });
 
 // Tasks
