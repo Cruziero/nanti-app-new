@@ -155,11 +155,43 @@ function extractedDate(item: ExtractedItem, original: string) {
   return { date: parsed.date, time: item.dueTime || parsed.time };
 }
 
-function reminderAt(date: string | null, time: string | null) {
+function reminderAt(
+  date: string | null,
+  time: string | null,
+  offsetMinutes?: number | null,
+) {
   if (!date) return null;
   const due = new Date(`${date}T${time || "09:00"}:00+07:00`);
   if (Number.isNaN(due.getTime())) return null;
-  return new Date(due.getTime() - (time ? 60 * 60_000 : 0)).toISOString();
+  const fallback = time ? 60 : 0;
+  const offset = offsetMinutes == null ? fallback : Math.max(0, offsetMinutes);
+  return new Date(due.getTime() - offset * 60_000).toISOString();
+}
+
+function semanticContext(item: ExtractedItem, date: string | null, time: string | null) {
+  return {
+    normalizedText: item.normalizedText,
+    what: item.what || item.action || item.title,
+    who: item.who || item.person || "user",
+    when: item.when || [date, time].filter(Boolean).join(" · ") || undefined,
+    where: item.where || undefined,
+    how: item.how || undefined,
+    owner: item.who && item.who !== "user" ? "other" : "me",
+    reminder: item.reminder
+      ? {
+          shouldRemind: Boolean(item.reminder.shouldRemind),
+          strategy: item.reminder.strategy,
+          offsetMinutes: item.reminder.offsetMinutes ?? null,
+          reason: item.reminder.reason || undefined,
+          message: item.reminder.message || undefined,
+        }
+      : undefined,
+    typoCorrected:
+      Boolean(item.normalizedText) &&
+      Boolean(item.quote) &&
+      item.normalizedText!.trim().toLowerCase() !== item.quote.trim().toLowerCase(),
+    ambiguity: item.missingFields || [],
+  };
 }
 
 async function handleMessage(message: IncomingMessage) {
@@ -428,6 +460,7 @@ async function persistExtractedItem(
   sourceExternalId: string,
 ): Promise<{ entity: "task" | "waiting" | "inbox"; id: string; title: string; question?: string }> {
   const { date, time } = extractedDate(item, original);
+  const semantics = semanticContext(item, date, time);
   const needsClarification = Boolean(item.needsClarification) || item.confidence < 0.72;
 
   if (needsClarification) {
@@ -452,6 +485,7 @@ async function persistExtractedItem(
         source_type: "whatsapp",
         clarification_type: type,
         clarification_question: question,
+        semantic_context: semantics,
         status: "pending",
       }, { onConflict: "user_id,source_external_id" })
       .select("*")
@@ -488,6 +522,7 @@ async function persistExtractedItem(
         ai_note: item.aiNote || "",
         confidence: item.confidence,
         conversation_id: conversationId,
+        semantic_context: semantics,
       }, { onConflict: "user_id,source_external_id" })
       .select("id,title")
       .single();
@@ -508,7 +543,10 @@ async function persistExtractedItem(
     return { entity: "waiting", id: data.id, title: data.title };
   }
 
-  const enableReminder = Boolean(date) || Boolean(item.reminderRequired);
+  const enableReminder =
+    Boolean(date) ||
+    Boolean(item.reminderRequired) ||
+    Boolean(item.reminder?.shouldRemind);
   const { data, error } = await supabase
     .from("tasks")
     .upsert({
@@ -531,9 +569,12 @@ async function persistExtractedItem(
       confidence: item.confidence,
       conversation_id: conversationId,
       reminder_enabled: enableReminder,
-      reminder_time: enableReminder ? reminderAt(date, time) : null,
+      reminder_time: enableReminder
+        ? reminderAt(date, time, item.reminder?.offsetMinutes)
+        : null,
       reminder_channels: enableReminder ? ["in_app", "push"] : [],
       reminder_intensity: "normal",
+      semantic_context: semantics,
     }, { onConflict: "user_id,source_external_id" })
     .select("*")
     .single();
@@ -642,6 +683,7 @@ async function promoteInboxAdmin(
         source_type: "whatsapp",
         quote: inbox.conversation_text || "",
         confidence: 0.8,
+        semantic_context: inbox.semantic_context || {},
       })
       .select("id,title")
       .single();
@@ -686,8 +728,15 @@ async function promoteInboxAdmin(
       source_type: "whatsapp",
       quote: inbox.conversation_text || "",
       confidence: 0.8,
+      semantic_context: inbox.semantic_context || {},
       reminder_enabled: Boolean(due || details.time),
-      reminder_time: due ? reminderAt(due, details.time || null) : null,
+      reminder_time: due
+        ? reminderAt(
+            due,
+            details.time || null,
+            Number(inbox.semantic_context?.reminder?.offsetMinutes ?? (details.time ? 60 : 0)),
+          )
+        : null,
       reminder_channels: due || details.time ? ["in_app", "push"] : [],
       reminder_intensity: "normal",
     })
