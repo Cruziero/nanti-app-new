@@ -36,6 +36,30 @@ export const askAssistant = createServerFn({ method: "POST" }).middleware([requi
     return { answer: await askNanti(data.question, data.context) };
   });
 
+
+export const interpretTaskCommand = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({
+      message: z.string().min(1).max(2000),
+      items: z.array(
+        z.object({
+          id: z.string().uuid(),
+          title: z.string().max(500),
+          kind: z.string().max(40),
+          status: z.string().max(40),
+          due: z.string().optional(),
+          time: z.string().optional(),
+          person: z.string().max(200).optional(),
+          updatedAt: z.string().optional(),
+        }),
+      ).max(25),
+    }).parse(data),
+  )
+  .handler(async ({ data }) => {
+    const { interpretAssistantCommand } = await import("./nanti-ai.server");
+    return interpretAssistantCommand(data.message, data.items);
+  });
+
 export const parseSmartDateServer = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ text: z.string().min(1).max(500) }).parse(data))
   .handler(async ({ data }) => {
