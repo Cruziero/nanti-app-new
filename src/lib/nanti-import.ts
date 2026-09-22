@@ -3,16 +3,51 @@ import type { Item, Person, Project, SourceType } from "./nanti-types";
 import { dayOffset } from "./nanti-demo";
 import { newId, todayISO } from "./nanti-utils";
 import { parseSmartDate } from "./nanti-dates";
+import {
+  normalizeActionTitle,
+  normalizeCasualIndonesian,
+} from "./nanti-language";
 
 export type Draft = ExtractedItem;
 
-function defaultReminderTime(due?: string, time?: string) {
+function defaultReminderTime(due?: string, time?: string, offsetMinutes?: number | null) {
   if (!due) return undefined;
   const dueAt = new Date(`${due}T${time || "09:00"}:00+07:00`);
   if (Number.isNaN(dueAt.getTime())) return undefined;
-  const offsetMinutes = time ? 60 : 0;
-  const reminder = new Date(dueAt.getTime() - offsetMinutes * 60_000);
+  const fallbackOffset = time ? 60 : 0;
+  const offset = offsetMinutes == null ? fallbackOffset : Math.max(0, offsetMinutes);
+  const reminder = new Date(dueAt.getTime() - offset * 60_000);
   return reminder.toISOString();
+}
+
+function inferLocation(text: string) {
+  const normalized = normalizeCasualIndonesian(text);
+  const match = /\b(?:dari|ke|di)\s+(.+?)(?=\s+(?:jam|pukul|besok|hari\s+ini|lusa|untuk|dan)\b|$)/i.exec(
+    normalized,
+  );
+  return match?.[1]?.trim().replace(/[.,!?;:]+$/, "") || undefined;
+}
+
+function fallbackReminderPlan(title: string, text: string, due?: string, time?: string) {
+  if (!due && !time) return undefined;
+  const lower = normalizeCasualIndonesian(text).toLowerCase();
+  const travel = /\b(pulang|berangkat|pergi|kembali|meeting|rapat|appointment|janji temu)\b/.test(
+    lower,
+  );
+  const quickAction = /\b(kirim|bayar|telepon|call|followup|follow up)\b/.test(lower);
+  const offsetMinutes = time ? (travel ? 60 : quickAction ? 15 : 30) : 0;
+  const strategy = time ? "before" as const : "morning_of" as const;
+  return {
+    shouldRemind: true,
+    strategy,
+    offsetMinutes,
+    reason: time
+      ? travel
+        ? "Beri waktu untuk bersiap sebelum aktivitas dimulai."
+        : "Beri jeda singkat agar tindakan tidak terlambat."
+      : "Ingatkan pada pagi hari tenggat.",
+    message: `Ingat: ${title}`,
+  };
 }
 
 function clarificationType(fields?: string[]) {
@@ -68,11 +103,40 @@ export function draftToItem(
   }
 
   const needsClarification = Boolean(draft.needsClarification) || draft.confidence < 0.72;
-  const reminderEnabled = draft.kind !== "waiting" && (Boolean(due) || Boolean(draft.reminderRequired));
+  const reminderPlan =
+    draft.reminder ||
+    fallbackReminderPlan(draft.title || draft.what || "Tugas", draft.quote || draft.normalizedText || "", due, time);
+  const reminderEnabled =
+    draft.kind !== "waiting" &&
+    Boolean(reminderPlan?.shouldRemind || due || draft.reminderRequired);
+  const semanticContext = {
+    normalizedText: draft.normalizedText,
+    what: draft.what || draft.action || draft.title,
+    who: draft.who || (draft.person ? draft.person : "user"),
+    when: draft.when || [due, time].filter(Boolean).join(" · ") || undefined,
+    where: draft.where || undefined,
+    how: draft.how || undefined,
+    owner: draft.who && draft.who !== "user" ? ("other" as const) : ("me" as const),
+    reminder: reminderPlan
+      ? {
+          shouldRemind: Boolean(reminderPlan.shouldRemind),
+          strategy: reminderPlan.strategy,
+          offsetMinutes: reminderPlan.offsetMinutes ?? null,
+          reason: reminderPlan.reason || undefined,
+          message: reminderPlan.message || undefined,
+        }
+      : undefined,
+    typoCorrected:
+      Boolean(draft.normalizedText) &&
+      Boolean(draft.quote) &&
+      draft.normalizedText!.trim().toLowerCase() !== draft.quote.trim().toLowerCase(),
+    ambiguity: draft.missingFields || [],
+  };
   const item: Item = {
     id: newId("ai"),
     title: draft.title || draft.what || "",
     description: draft.action || undefined,
+    semanticContext,
     kind: draft.kind,
     status: needsClarification ? "inbox" : "open",
     priority: draft.priority,
@@ -92,7 +156,9 @@ export function draftToItem(
     createdBy: "ai",
     createdAt: new Date().toISOString(),
     reminderEnabled,
-    reminderTime: reminderEnabled ? defaultReminderTime(due, time) : undefined,
+    reminderTime: reminderEnabled
+      ? defaultReminderTime(due, time, reminderPlan?.offsetMinutes)
+      : undefined,
     reminderChannels: reminderEnabled ? ["in_app", "push"] : [],
     reminderIntensity: "normal",
     ...(draft.kind === "waiting"
@@ -125,8 +191,9 @@ export function chatMessageToFallbackItem(
   text: string,
   ctx: { people: Person[]; projects: Project[] },
 ): Item | null {
-  const normalized = text.trim();
-  if (!normalized) return null;
+  const raw = text.trim();
+  if (!raw) return null;
+  const normalized = normalizeCasualIndonesian(raw);
   const lower = normalized.toLowerCase();
   const actionable =
     /\b(harus|perlu|mesti|wajib|jangan\s+lupa|tolong\s+ingat|tolong\s+ingetin|ingatkan|remind|need\s+to|have\s+to|must)\b/i.test(
@@ -135,10 +202,15 @@ export function chatMessageToFallbackItem(
   if (!actionable) return null;
 
   const parsed = parseSmartDate(normalized);
-  const title = normalized
-    .replace(/^\s*(besok|bsk|hari ini|lusa)\s*[,.:;-]?\s*/i, "")
-    .replace(/^\s*(saya|sy|aku|gue|gw)\s+(harus|perlu|mesti|wajib)\s+/i, "")
-    .trim();
+  const title = normalizeActionTitle(normalized);
+  const where = inferLocation(normalized);
+  const reminderPlan = fallbackReminderPlan(title, normalized, parsed.date ?? undefined, parsed.time ?? undefined);
+  const when = [
+    parsed.date || (/\bbesok\b/i.test(normalized) ? "besok" : undefined),
+    parsed.time || undefined,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return {
     id: newId("chat"),
@@ -148,16 +220,38 @@ export function chatMessageToFallbackItem(
     priority: "medium",
     ...(parsed.date ? { due: parsed.date } : {}),
     ...(parsed.time ? { time: parsed.time } : {}),
+    ...(where ? { semanticContext: {
+      normalizedText: normalized,
+      what: title || normalized,
+      who: "user",
+      when: when || undefined,
+      where,
+      owner: "me",
+      reminder: reminderPlan,
+      typoCorrected: normalized.toLowerCase() !== raw.toLowerCase(),
+    } } : {
+      semanticContext: {
+        normalizedText: normalized,
+        what: title || normalized,
+        who: "user",
+        when: when || undefined,
+        owner: "me",
+        reminder: reminderPlan,
+        typoCorrected: normalized.toLowerCase() !== raw.toLowerCase(),
+      },
+    }),
     source: "Chat dengan NANTI",
     sourceType: "chat",
-    quote: normalized,
-    aiNote: "Dibuat dari pesan chat yang berisi tindakan eksplisit untuk Anda.",
-    confidence: parsed.date || parsed.time ? 0.9 : 0.75,
+    quote: raw,
+    aiNote: "Dibuat dari pesan chat yang berisi tindakan eksplisit; typo dan singkatan dinormalisasi.",
+    confidence: parsed.date || parsed.time ? 0.9 : 0.76,
     memoryStrength: 1,
     createdBy: "ai",
     createdAt: new Date().toISOString(),
     reminderEnabled: Boolean(parsed.date || parsed.time),
-    reminderTime: parsed.date ? defaultReminderTime(parsed.date, parsed.time ?? undefined) : undefined,
+    reminderTime: parsed.date
+      ? defaultReminderTime(parsed.date, parsed.time ?? undefined, reminderPlan?.offsetMinutes)
+      : undefined,
     reminderChannels: parsed.date || parsed.time ? ["in_app", "push"] : [],
     reminderIntensity: "normal",
   };
