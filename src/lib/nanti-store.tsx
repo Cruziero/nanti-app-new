@@ -260,6 +260,7 @@ interface Ctx extends State {
   addItems: (items: Item[], conversationText?: string) => Promise<number[]>;
   complete: (id: string) => Promise<boolean>;
   snooze: (id: string, days: number) => Promise<boolean>;
+  followUp: (id: string, days: number) => Promise<boolean>;
   track: (id: string) => void;
   ignore: (id: string) => void;
   remove: (id: string) => Promise<boolean>;
@@ -510,6 +511,34 @@ export function NantiProvider({ children }: { children: ReactNode }) {
           }
         }
         mutate((s) => ({ ...s, items: s.items.map((i) => i.id === id ? { ...i, due } : i) }));
+        return true;
+      },
+      followUp: async (id, days) => {
+        const item = state.items.find((i) => i.id === id);
+        if (!item) return false;
+        if (item.kind === "waiting" || item.status === "inbox") {
+          toast.error("Tindak lanjut untuk item ini belum tersedia.");
+          return false;
+        }
+        const base = item.due && item.due > todayISO() ? item.due : todayISO();
+        const due = addDays(base, days);
+        if (useSupabase) {
+          try {
+            await updateTaskFn({
+              data: { id, type: "followup", status: "pending", due_date: due },
+            });
+          } catch (error) {
+            console.error("Failed to schedule follow-up:", error);
+            toast.error("Tindak lanjut belum dijadwalkan. Coba lagi.");
+            return false;
+          }
+        }
+        mutate((s) => ({
+          ...s,
+          items: s.items.map((i) =>
+            i.id === id ? { ...i, kind: "followup", status: "open", due } : i,
+          ),
+        }));
         return true;
       },
       track: (id) => {
