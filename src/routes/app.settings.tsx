@@ -11,12 +11,27 @@ import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
 import { usePushSubscription } from "@/hooks/use-push-subscription";
 import type { ConversationTone, ReminderChannel } from "@/lib/nanti-types";
 import { cn } from "@/lib/utils";
-import { Check, Bell, BellOff, Loader2, MessageCircle, Copy } from "lucide-react";
+import {
+  Check,
+  Bell,
+  BellOff,
+  Loader2,
+  MessageCircle,
+  Copy,
+  Brain,
+  Trash2,
+} from "lucide-react";
 import {
   disconnectWhatsApp,
   fetchWhatsAppLink,
   startWhatsAppLink,
 } from "@/lib/nanti-supabase";
+import {
+  deleteLanguageMemory,
+  fetchLanguageMemories,
+  setLanguageMemoryActive,
+  type LanguageMemoryRow,
+} from "@/lib/nanti-learning.functions";
 
 export const Route = createFileRoute("/app/settings")({
   head: () => ({
@@ -56,6 +71,8 @@ function SettingsPage() {
   const { settings, setSettings, reset } = useNanti();
   const [whatsAppLink, setWhatsAppLink] = useState<WhatsAppLinkState | null>(null);
   const [whatsAppLoading, setWhatsAppLoading] = useState(true);
+  const [languageMemories, setLanguageMemories] = useState<LanguageMemoryRow[]>([]);
+  const [languageLoading, setLanguageLoading] = useState(true);
   const nantiWhatsAppNumber = String(import.meta.env.VITE_NANTI_WHATSAPP_NUMBER || "").replace(/\D/g, "");
   const whatsappConnected = Boolean(whatsAppLink?.verified_at && whatsAppLink?.phone_number);
   const { signOut } = useSupabaseAuth();
@@ -82,6 +99,21 @@ function SettingsPage() {
   useEffect(() => {
     void refreshWhatsApp();
   }, [refreshWhatsApp]);
+
+  const refreshLanguageMemory = useCallback(async () => {
+    try {
+      const rows = await fetchLanguageMemories();
+      setLanguageMemories(rows);
+    } catch (error) {
+      console.error("Failed to load NANTI language memory:", error);
+    } finally {
+      setLanguageLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshLanguageMemory();
+  }, [refreshLanguageMemory]);
 
   useEffect(() => {
     if (!whatsAppLink?.link_code || whatsappConnected) return;
@@ -135,6 +167,49 @@ function SettingsPage() {
     }
   };
 
+  const toggleLanguageMemory = async (memory: LanguageMemoryRow) => {
+    try {
+      const updated = await setLanguageMemoryActive({
+        data: { id: memory.id, active: !memory.active },
+      });
+      setLanguageMemories((current) =>
+        current.map((item) => (item.id === memory.id ? updated : item)),
+      );
+    } catch (error) {
+      console.error("Failed to update NANTI learning:", error);
+      toast.error("Could not update that learned pattern.");
+    }
+  };
+
+  const removeLanguageMemory = async (memory: LanguageMemoryRow) => {
+    try {
+      await deleteLanguageMemory({ data: { id: memory.id } });
+      setLanguageMemories((current) => current.filter((item) => item.id !== memory.id));
+      toast.success("NANTI forgot that learned pattern.");
+    } catch (error) {
+      console.error("Failed to delete NANTI learning:", error);
+      toast.error("Could not remove that learned pattern.");
+    }
+  };
+
+  const languageMeaning = (memory: LanguageMemoryRow) => {
+    const value = memory.learned_value || {};
+    if (typeof value.meaning === "string") return value.meaning;
+    if (typeof value.offsetMinutes === "number") {
+      return `${value.offsetMinutes} minutes before`;
+    }
+    if (typeof value.intent === "string") {
+      const after = value.after && typeof value.after === "object"
+        ? JSON.stringify(value.after)
+        : "";
+      return [`Correction: ${value.intent}`, after].filter(Boolean).join(" · ").slice(0, 220);
+    }
+    if (typeof value.field === "string") {
+      return `${value.field}: ${String(value.answer || "")}`;
+    }
+    return JSON.stringify(value).slice(0, 220);
+  };
+
   const handleSignOut = async () => {
     await signOut();
     toast.success("Signed out.");
@@ -182,6 +257,65 @@ function SettingsPage() {
             </button>
           ))}
         </div>
+      </section>
+
+      <section className="mb-10">
+        <div className="mb-4 flex items-center gap-2">
+          <Brain className="size-4 text-primary" />
+          <h2 className="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+            What NANTI learned
+          </h2>
+        </div>
+        <p className="mb-4 text-[12.5px] leading-5 text-muted-foreground">
+          NANTI learns your shorthand, corrections, aliases, and reminder habits. Teach it in chat,
+          for example: “kalau aku bilang OTW, maksudnya on the way.”
+        </p>
+
+        {languageLoading ? (
+          <div className="flex items-center gap-2 py-3 text-xs text-muted-foreground">
+            <Loader2 className="size-3.5 animate-spin" />
+            Loading personal learning…
+          </div>
+        ) : languageMemories.length ? (
+          <div className="divide-y divide-border rounded-lg border border-border">
+            {languageMemories.slice(0, 20).map((memory) => (
+              <div key={memory.id} className="flex items-start gap-3 p-3">
+                <Switch
+                  className="mt-0.5"
+                  checked={memory.active}
+                  onCheckedChange={() => void toggleLanguageMemory(memory)}
+                  aria-label={`${memory.active ? "Disable" : "Enable"} learned pattern ${memory.pattern_text}`}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="truncate text-[13px] font-medium">{memory.pattern_text}</p>
+                    <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] text-muted-foreground">
+                      {memory.memory_type.replaceAll("_", " ")}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
+                    {languageMeaning(memory)}
+                  </p>
+                  <p className="mt-1 text-[10.5px] text-muted-foreground/60">
+                    {Math.round(memory.confidence * 100)}% confidence · {memory.evidence_count} evidence
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  aria-label={`Delete learned pattern ${memory.pattern_text}`}
+                  onClick={() => void removeLanguageMemory(memory)}
+                  className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed border-border p-4 text-[12.5px] text-muted-foreground">
+            Nothing learned yet. Correct NANTI naturally or teach it a phrase in Ask NANTI.
+          </div>
+        )}
       </section>
 
       <section className="mb-10">
