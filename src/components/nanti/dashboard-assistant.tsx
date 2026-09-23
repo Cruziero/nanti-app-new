@@ -189,7 +189,7 @@ function fallbackCommand(message: string, target?: Item): Command | null {
       personName: null,
       projectName: null,
       learningType: teaching.memoryType,
-      learningEntityType: null,
+      learningEntityType: teaching.entityType ?? null,
       learningPattern: teaching.pattern,
       learningMeaning: teaching.meaning,
       confidence: 0.96,
