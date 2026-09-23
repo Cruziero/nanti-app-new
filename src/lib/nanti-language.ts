@@ -263,7 +263,7 @@ export function detectExplicitLanguageTeaching(text: string): ExplicitLanguageTe
     const meaning = directEntity[3]!.trim();
     const entityType = inferTaughtEntityType(pattern);
     const ambiguousPredicate =
-      /^(belum|sudah|udah|lagi|sedang|harus|mau|akan|bisa|tidak|nggak|ga|gak|baru|perlu|punya|kirim|balas|bales|datang|pergi)\b/i.test(
+      /^(belum|sudah|udah|lagi|sedang|harus|mau|akan|bisa|tidak|nggak|ga|gak|baru|perlu|punya|kirim|balas|bales|datang|pergi|pindah|pindahkan|berubah|ganti)\b/i.test(
         meaning,
       );
     const looksLikeCompactCanonical = meaning.split(/\s+/).length <= 6;
