@@ -5,12 +5,16 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export const analyzeConversation = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
-      .object({ text: z.string().min(1).max(20000), source: z.string().max(120).optional() })
+      .object({
+        text: z.string().min(1).max(20000),
+        source: z.string().max(120).optional(),
+        context: z.string().max(16000).optional(),
+      })
       .parse(data),
   )
   .handler(async ({ data }) => {
     const { extractItems } = await import("./nanti-ai.server");
-    return extractItems(data.text, data.source);
+    return extractItems(data.text, data.source, data.context);
   });
 
 export const analyzeScreenshot = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
@@ -54,11 +58,12 @@ export const interpretTaskCommand = createServerFn({ method: "POST" }).middlewar
           updatedAt: z.string().optional(),
         }),
       ).max(25),
+      recentConversation: z.string().max(8000).optional(),
     }).parse(data),
   )
   .handler(async ({ data }) => {
     const { interpretAssistantCommand } = await import("./nanti-ai.server");
-    return interpretAssistantCommand(data.message, data.items);
+    return interpretAssistantCommand(data.message, data.items, data.recentConversation);
   });
 
 export const parseSmartDateServer = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])

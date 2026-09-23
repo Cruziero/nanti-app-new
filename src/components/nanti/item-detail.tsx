@@ -101,7 +101,7 @@ export function ItemDetailProvider({ children }: { children: ReactNode }) {
                       <Field label="What">{item.semanticContext.what || item.title}</Field>
                       <Field label="Who">
                         {item.semanticContext.who === "user"
-                          ? "Anda"
+                          ? [ "Anda", person?.name || item.personName ].filter(Boolean).join(" → ")
                           : item.semanticContext.who || person?.name || item.personName || "—"}
                       </Field>
                       <Field label="When">

@@ -79,7 +79,40 @@ function parseJson<T>(raw: string): T | null {
   }
 }
 
-const EXTRACT_SYSTEM = `Kamu adalah NANTI, asisten kerja AI untuk pengguna Indonesia yang bekerja lewat WhatsApp.
+const LANGUAGE_GUIDE = `
+CARA MEMAHAMI CHAT PENGGUNA:
+- Prioritaskan maksud, bukan ejaan. Bahasa bisa Indonesia, English, atau campuran.
+- Singkatan umum: gw/gue/aku/sy=saya; bsk=besok; dr=dari; tgl=tanggal; yg=yang; udh=sudah; blm=belum; ntar=nanti; sblm=sebelum; jgn=jangan; krm=kirim; tlp/telp=telepon; mnt=menit.
+- Tidak ada tanda baca bukan berarti tidak ada struktur. Cari aksi, pihak, waktu, tempat, cara, dan hubungan antar klausa.
+- Kata ganti seperti "itu", "yang tadi", "dia", "mereka", "yg invoice", "yg puncak" harus dihubungkan ke konteks bila referensinya cukup jelas.
+- Jangan mengoreksi nama orang, brand, proyek, atau tempat hanya karena terlihat tidak umum.
+- Untuk jam tanpa pagi/siang/sore/malam, jangan mengarang AM/PM bila benar-benar ambigu.
+- Jangan menganggap percakapan santai sebagai tugas kecuali ada tindakan, komitmen, deadline, waiting, follow-up, atau permintaan reminder yang nyata.
+
+CONTOH PEMAHAMAN:
+1) "Saya beosok harus oulang dr puncak jam 10 pagi"
+   -> what: "Pulang dari Puncak"; who: user; when: besok 10:00; where: Puncak; reminder: 60 menit sebelum.
+2) "gw bsk meeting sm bu rina jam 2 siang di scbd"
+   -> task "Meeting dengan Bu Rina"; person: Bu Rina; when: besok 14:00; where: SCBD.
+3) "jgn lupa krm invoice ke pak dodi tgl 25"
+   -> task "Kirim invoice ke Pak Dodi"; person: Pak Dodi; tanggal 25; reminder pagi hari H bila tidak ada jam.
+4) "blm ada kabar dr vendor, follow up kamis"
+   -> followup/waiting yang actionable untuk Kamis, bukan information biasa.
+5) "mbak lia bilang revisinya dikirim jumat"
+   -> commitment dari Mbak Lia; user perlu mengingat janji itu, bukan mengubah aktor menjadi user.
+6) "remind gue 30 mnt sblm meeting"
+   -> reminder 30 menit sebelum meeting yang dirujuk konteks; jangan buat tugas baru bila meeting sudah ada.
+7) "yang tadi pindahin ke jumat jam 3 sore"
+   -> edit/reschedule item yang dirujuk, bukan task baru.
+8) "gw udh bayar yg invoice tadi"
+   -> complete item invoice yang dirujuk.
+9) "besok jam 10 aja"
+   -> jika konteks sebelumnya sedang membahas jadwal satu item yang jelas, ini perubahan WHEN; jika tidak jelas, tanya satu pertanyaan.
+10) "Pak Rio belum bales"
+   -> bila ada item waiting aktif untuk Pak Rio, ini konteks waiting; jangan otomatis menciptakan task duplikat.
+`;
+
+const EXTRACT_SYSTEM = `${LANGUAGE_GUIDE}\nKamu adalah NANTI, asisten kerja AI untuk pengguna Indonesia yang bekerja lewat WhatsApp.
 Tugasmu: membaca percakapan yang sering informal, disingkat, dan typo, lalu memahami MAKSUDNYA sebelum mengekstrak hal yang benar-benar perlu diingat.
 
 PENTING TENTANG TYPO / CHAT LANGUAGE:
@@ -287,13 +320,20 @@ const EMPTY: ExtractResult = {
   items: [],
 };
 
-export async function extractItems(text: string, sourceHint?: string): Promise<ExtractResult> {
+export async function extractItems(
+  text: string,
+  sourceHint?: string,
+  contextHint?: string,
+): Promise<ExtractResult> {
   const raw = await chat(
     [
       { role: "system", content: EXTRACT_SYSTEM },
       {
         role: "user",
-        content: `Nama grup/chat (jika tahu): ${sourceHint || "tidak diketahui"}\n\nPercakapan:\n${text}`,
+        content: `Nama grup/chat (jika tahu): ${sourceHint || "tidak diketahui"}
+${contextHint ? `\nKonteks percakapan dan memori terbaru (gunakan hanya untuk resolusi referensi, jangan buat task dari konteks lama):\n${contextHint.slice(0, 12000)}\n` : ""}
+Pesan/percakapan baru yang harus dianalisis:
+${text}`,
       },
     ],
     { json: true },
@@ -327,7 +367,8 @@ export async function extractFromImage(
   return clean(parsed);
 }
 
-const ASK_SYSTEM = `Kamu adalah NANTI, chief of staff AI berbahasa Indonesia.
+const ASK_SYSTEM = `${LANGUAGE_GUIDE}
+Kamu adalah NANTI, chief of staff AI berbahasa Indonesia.
 Kamu punya memori kerja pengguna: tugas, janji, waiting, orang, proyek, dan semantic context WHAT/WHO/WHEN/WHERE/HOW/reminder.
 Pengguna sering typo, singkatan, atau campur Indonesia-Inggris. Pahami maksud naturalnya; jangan terpaku pada ejaan.
 Jawab singkat, tenang, dan konkret. Untuk pertanyaan seperti "what am I forgetting?", prioritaskan overdue, due today, waiting yang harus di-follow-up, dan klarifikasi yang belum selesai.
@@ -368,7 +409,8 @@ export interface AssistantCommand {
   acknowledgement: string | null;
 }
 
-const COMMAND_SYSTEM = `Kamu adalah router tindakan NANTI.
+const COMMAND_SYSTEM = `${LANGUAGE_GUIDE}
+Kamu adalah router tindakan NANTI.
 Pengguna sedang berbicara dengan asisten tentang tugas yang SUDAH tersimpan.
 Tentukan apakah pesan terbaru meminta perubahan pada salah satu item yang diberikan.
 
@@ -408,13 +450,18 @@ export async function interpretAssistantCommand(
     project?: string;
     updatedAt?: string;
   }>,
+  recentConversation?: string,
 ): Promise<AssistantCommand> {
   const raw = await chat(
     [
       { role: "system", content: COMMAND_SYSTEM },
       {
         role: "user",
-        content: `Item tersimpan (urutan terbaru dulu):\n${JSON.stringify(itemContext)}\n\nPesan terbaru: ${message}`,
+        content: `Item tersimpan (urutan terbaru dulu):
+${JSON.stringify(itemContext)}
+${recentConversation ? `\nPercakapan terbaru:\n${recentConversation.slice(0, 6000)}\n` : ""}
+Pesan terbaru yang harus diinterpretasikan:
+${message}`,
       },
     ],
     { json: true },
