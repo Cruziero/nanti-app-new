@@ -78,4 +78,47 @@ assert.equal(
   "what am i forgetting",
 );
 
-console.log("PASS: typo normalization, semantic extraction fallback, location/time and reminder strategy.");
+const meetingRaw = "gw bsk meeting sm bu rina jam 2 siang di scbd";
+assert.equal(
+  language.normalizeCasualIndonesian(meetingRaw).toLowerCase(),
+  "gw besok meeting sama bu rina jam 2 siang di scbd",
+);
+const meetingDate = dates.parseSmartDate(meetingRaw);
+assert.ok(meetingDate.date);
+assert.equal(meetingDate.time, "14:00");
+
+const invoiceRaw = "jgn lupa krm invoice ke pak dodi tgl 25";
+const invoiceItem = importer.chatMessageToFallbackItem(invoiceRaw, {
+  people: [],
+  projects: [],
+});
+assert.ok(invoiceItem, "reminder shorthand should become a task");
+assert.equal(invoiceItem.title.toLowerCase(), "kirim invoice ke pak dodi");
+assert.equal(invoiceItem.personName?.toLowerCase(), "pak dodi");
+assert.equal(invoiceItem.semanticContext?.where, undefined);
+assert.equal(invoiceItem.semanticContext?.reminder?.strategy, "morning_of");
+assert.ok(invoiceItem.due);
+
+const callRaw = "saya besok harus tlp bu rina via wa jam 4 sore";
+const callItem = importer.chatMessageToFallbackItem(callRaw, {
+  people: [],
+  projects: [],
+});
+assert.ok(callItem);
+assert.equal(callItem.time, "16:00");
+assert.equal(callItem.personName?.toLowerCase(), "bu rina");
+assert.equal(callItem.semanticContext?.how, "WhatsApp");
+assert.equal(callItem.semanticContext?.reminder?.offsetMinutes, 15);
+
+assert.equal(
+  language.normalizedIntentText("gw udh bayar yg invoice tadi"),
+  "gw sudah bayar yang invoice tadi",
+);
+assert.equal(
+  language.normalizeCasualIndonesian("remind me 30 mnt sblm meeting").toLowerCase(),
+  "ingatkan saya 30 menit sebelum meeting",
+);
+
+console.log(
+  "PASS: typo/slang normalization, time/date parsing, people/place disambiguation, how and reminder strategy.",
+);
