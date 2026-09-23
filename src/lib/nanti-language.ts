@@ -219,11 +219,20 @@ export function normalizedIntentText(text: string) {
 
 
 export type ExplicitLanguageTeaching = {
-  memoryType: "phrase_alias" | "reminder_preference";
+  memoryType: "phrase_alias" | "entity_alias" | "reminder_preference";
+  entityType?: "person" | "project" | "location";
   pattern: string;
   meaning: string;
   offsetMinutes?: number;
 };
+
+function inferTaughtEntityType(pattern: string) {
+  const normalized = pattern.trim().toLowerCase();
+  if (/^(pak|bapak|bu|ibu|mas|mbak)\b/.test(normalized)) return "person" as const;
+  if (/^(project|proyek)\b/.test(normalized)) return "project" as const;
+  if (/^(lokasi|tempat)\b/.test(normalized)) return "location" as const;
+  return undefined;
+}
 
 export function detectExplicitLanguageTeaching(text: string): ExplicitLanguageTeaching | null {
   const casual = normalizeCasualIndonesian(text).trim();
@@ -233,11 +242,32 @@ export function detectExplicitLanguageTeaching(text: string): ExplicitLanguageTe
     /^["“']?(.+?)["”']?\s+(?:artinya|maksudnya)\s+["“']?(.+?)["”']?$/i.exec(casual);
 
   if (alias) {
+    const pattern = alias[1]!.trim();
+    const meaning = alias[2]!.trim();
+    const entityType = inferTaughtEntityType(pattern);
     return {
-      memoryType: "phrase_alias",
-      pattern: alias[1]!.trim(),
-      meaning: alias[2]!.trim(),
+      memoryType: entityType ? "entity_alias" : "phrase_alias",
+      ...(entityType ? { entityType } : {}),
+      pattern,
+      meaning,
     };
+  }
+
+  const directEntity =
+    /^((?:pak|bapak|bu|ibu|mas|mbak)\s+.+?|(?:project|proyek)\s+.+?|(?:lokasi|tempat)\s+.+?)\s+(?:itu|adalah|=)\s+(.+)$/i.exec(
+      casual,
+    );
+  if (directEntity) {
+    const pattern = directEntity[1]!.trim();
+    const entityType = inferTaughtEntityType(pattern);
+    if (entityType) {
+      return {
+        memoryType: "entity_alias",
+        entityType,
+        pattern,
+        meaning: directEntity[2]!.trim(),
+      };
+    }
   }
 
   const reminder =
