@@ -12,7 +12,10 @@ import { chatMessageToFallbackItem, draftToItem } from "@/lib/nanti-import";
 import type { Item } from "@/lib/nanti-types";
 import { parseSmartDate } from "@/lib/nanti-dates";
 import { isDueToday, isOverdue, todayISO, waitingDays } from "@/lib/nanti-utils";
-import { normalizeCasualIndonesian, normalizedIntentText } from "@/lib/nanti-language";
+import {
+  detectExplicitLanguageTeaching,
+  normalizedIntentText,
+} from "@/lib/nanti-language";
 import { recordLanguageMemory } from "@/lib/nanti-learning.functions";
 import { createAiMessage, fetchAiMessages } from "@/lib/nanti-supabase";
 
@@ -169,53 +172,23 @@ function reminderIso(date: string, time: string, offsetMinutes = 0) {
 
 function fallbackCommand(message: string, target?: Item): Command | null {
   const lower = normalizedIntentText(message);
-  const casual = normalizeCasualIndonesian(message).trim();
   const parsed = parseSmartDate(message);
+  const teaching = detectExplicitLanguageTeaching(message);
 
-  const taughtAlias =
-    /^(?:kalau|jika)\s+(?:(?:saya|aku|gue|gw)\s+)?(?:bilang|nulis|ketik)\s+["“']?(.+?)["”']?\s+(?:itu\s+)?(?:maksudnya|artinya)\s+["“']?(.+?)["”']?$/i.exec(casual) ||
-    /^["“']?(.+?)["”']?\s+(?:artinya|maksudnya)\s+["“']?(.+?)["”']?$/i.exec(casual);
-  if (taughtAlias) {
+  if (teaching) {
     return {
       intent: "teach_language",
       targetId: null,
       dueText: null,
       time: null,
-      reminderOffsetMinutes: null,
+      reminderOffsetMinutes: teaching.offsetMinutes ?? null,
       title: null,
       priority: null,
       personName: null,
       projectName: null,
-      learningType: "phrase_alias",
-      learningPattern: taughtAlias[1]!.trim(),
-      learningMeaning: taughtAlias[2]!.trim(),
-      confidence: 0.96,
-      question: null,
-      acknowledgement: null,
-    };
-  }
-
-  const reminderPreference =
-    /^(?:kalau|jika)\s+(.+?)\s+(?:ingatkan(?:\s+saya)?|remind(?:\s+me)?)\s+(\d+)\s*(menit|jam|minute|minutes|hour|hours)\s*(?:sebelum|before)\b/i.exec(
-      casual,
-    );
-  if (reminderPreference) {
-    const amount = Number(reminderPreference[2]);
-    const unit = reminderPreference[3]!.toLowerCase();
-    const minutes = unit.startsWith("jam") || unit.startsWith("hour") ? amount * 60 : amount;
-    return {
-      intent: "teach_language",
-      targetId: null,
-      dueText: null,
-      time: null,
-      reminderOffsetMinutes: minutes,
-      title: null,
-      priority: null,
-      personName: null,
-      projectName: null,
-      learningType: "reminder_preference",
-      learningPattern: reminderPreference[1]!.trim(),
-      learningMeaning: `${minutes} minutes before`,
+      learningType: teaching.memoryType,
+      learningPattern: teaching.pattern,
+      learningMeaning: teaching.meaning,
       confidence: 0.96,
       question: null,
       acknowledgement: null,
