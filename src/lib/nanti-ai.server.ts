@@ -1,66 +1,182 @@
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
+const GEMINI_MODEL = process.env["GEMINI_MODEL"] || "gemini-3.5-flash";
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
-const TEXT_MODEL = "gpt-4o-mini";
-const VISION_MODEL = "gpt-4o-mini";
+const OPENAI_TEXT_MODEL = process.env["OPENAI_MODEL"] || "gpt-4o-mini";
 
 type Content = string | Array<Record<string, unknown>>;
 
-async function chat(
+function geminiParts(content: Content) {
+  if (typeof content === "string") return [{ text: content }];
+  return content.map((part) => {
+    if (part.type === "image_url") {
+      const url = (part.image_url as { url?: string })?.url ?? "";
+      const match = url.match(/^data:([^;]+);base64,(.+)$/);
+      return {
+        inlineData: {
+          mimeType: match?.[1] || "image/png",
+          data: match?.[2] || "",
+        },
+      };
+    }
+    return { text: String((part as { text?: string }).text ?? "") };
+  });
+}
+
+async function chatGemini(
+  messages: { role: string; content: Content }[],
+  opts: { json?: boolean; model?: string } = {},
+) {
+  const key = process.env["GEMINI_API_KEY"];
+  if (!key) throw new Error("GEMINI_API_KEY is not configured.");
+  const model = opts.model || GEMINI_MODEL;
+  const system = messages.find((message) => message.role === "system");
+  const contents = messages
+    .filter((message) => message.role !== "system")
+    .map((message) => ({
+      role: message.role === "assistant" ? "model" : "user",
+      parts: geminiParts(message.content),
+    }));
+
+  const body: Record<string, unknown> = {
+    contents,
+    ...(system
+      ? {
+          systemInstruction: {
+            parts: [
+              {
+                text:
+                  typeof system.content === "string"
+                    ? system.content
+                    : system.content
+                        .map((part) => String((part as { text?: string }).text ?? ""))
+                        .join("\n"),
+              },
+            ],
+          },
+        }
+      : {}),
+    generationConfig: {
+      ...(opts.json ? { responseMimeType: "application/json" } : {}),
+      thinkingConfig: { thinkingBudget: 0 },
+    },
+  };
+
+  const response = await fetch(
+    `${GEMINI_API_URL}/${model}:generateContent?key=${key}`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    },
+  );
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    const error = new Error(`Gemini API error ${response.status}`);
+    console.error("Gemini API error", response.status, detail.slice(0, 500));
+    throw error;
+  }
+
+  const data = (await response.json()) as {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  };
+  return (
+    data.candidates?.[0]?.content?.parts
+      ?.map((part) => part.text || "")
+      .join("")
+      .trim() || ""
+  );
+}
+
+async function chatOpenAI(
   messages: { role: string; content: Content }[],
   opts: { json?: boolean; model?: string } = {},
 ) {
   const key = process.env["OPENAI_API_KEY"];
-  if (!key) throw new Error("AI belum dikonfigurasi.");
-  const model = opts.model ?? TEXT_MODEL;
+  if (!key) throw new Error("OPENAI_API_KEY is not configured.");
+  const model = opts.model || OPENAI_TEXT_MODEL;
 
-  const formattedMessages = messages.map((m) => {
+  const formattedMessages = messages.map((message) => {
     const role =
-      m.role === "system" || m.role === "assistant" || m.role === "user" ? m.role : "user";
-    if (typeof m.content === "string") {
-      return { role, content: m.content };
+      message.role === "system" ||
+      message.role === "assistant" ||
+      message.role === "user"
+        ? message.role
+        : "user";
+    if (typeof message.content === "string") {
+      return { role, content: message.content };
     }
-    const parts = m.content.map((part) => {
-      if (part.type === "image_url") {
+    return {
+      role,
+      content: message.content.map((part) => {
+        if (part.type === "image_url") {
+          return {
+            type: "image_url",
+            image_url: { url: (part.image_url as { url?: string })?.url ?? "" },
+          };
+        }
         return {
-          type: "image_url",
-          image_url: { url: (part.image_url as { url?: string })?.url ?? "" },
+          type: "text",
+          text: String((part as { text?: string }).text ?? ""),
         };
-      }
-      return { type: "text", text: (part as { text?: string }).text ?? "" };
-    });
-    return { role, content: parts };
+      }),
+    };
   });
 
-  const requestBody: Record<string, unknown> = {
-    model,
-    messages: formattedMessages,
-    temperature: 0.2,
-    max_tokens: 8192,
-    ...(opts.json
-      ? { response_format: { type: "json_object" } }
-      : {}),
-  };
-
-  const res = await fetch(OPENAI_URL, {
+  const response = await fetch(OPENAI_URL, {
     method: "POST",
     headers: {
       "content-type": "application/json",
       authorization: `Bearer ${key}`,
     },
-    body: JSON.stringify(requestBody),
+    body: JSON.stringify({
+      model,
+      messages: formattedMessages,
+      temperature: 0.2,
+      max_tokens: 8192,
+      ...(opts.json ? { response_format: { type: "json_object" } } : {}),
+    }),
   });
 
-  if (res.status === 429) throw new Error("Terlalu banyak permintaan. Coba lagi sebentar lagi.");
-  if (res.status === 402) throw new Error("Kredit AI habis. Tambahkan kredit di OpenAI.");
-  if (!res.ok) {
-    const detail = await res.text().catch(() => "");
-    console.error("OpenAI API error", res.status, detail.slice(0, 400));
-    throw new Error(`AI sedang bermasalah (${res.status}). Coba lagi.`);
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    console.error("OpenAI API error", response.status, detail.slice(0, 500));
+    throw new Error(`OpenAI API error ${response.status}`);
   }
 
-  const data = (await res.json()) as {
-    choices?: { message?: { content?: string } }[];
+  const data = (await response.json()) as {
+    choices?: Array<{ message?: { content?: string } }>;
   };
-  return data.choices?.[0]?.message?.content ?? "";
+  return data.choices?.[0]?.message?.content?.trim() || "";
+}
+
+async function chat(
+  messages: { role: string; content: Content }[],
+  opts: { json?: boolean; model?: string } = {},
+) {
+  const hasGemini = Boolean(process.env["GEMINI_API_KEY"]);
+  const hasOpenAI = Boolean(process.env["OPENAI_API_KEY"]);
+
+  if (!hasGemini && !hasOpenAI) {
+    throw new Error("AI belum dikonfigurasi.");
+  }
+
+  if (hasGemini) {
+    try {
+      return await chatGemini(messages, opts);
+    } catch (error) {
+      if (!hasOpenAI) {
+        throw new Error("AI sedang bermasalah. Coba lagi sebentar lagi.");
+      }
+      console.error("Gemini failed; falling back to OpenAI:", error);
+    }
+  }
+
+  try {
+    return await chatOpenAI(messages, opts);
+  } catch {
+    throw new Error("AI sedang bermasalah. Coba lagi sebentar lagi.");
+  }
 }
 
 /** Models sometimes wrap JSON in prose or code fences. */
