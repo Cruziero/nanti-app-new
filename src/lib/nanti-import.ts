@@ -32,7 +32,7 @@ function inferLocation(text: string) {
 
 function inferRelatedPerson(text: string) {
   const normalized = normalizeCasualIndonesian(text);
-  const match = /\b(pak|bapak|bu|ibu|mbak|mas)\s+([A-Za-z][A-Za-z'-]*(?:\s+(?!(?:jam|tanggal|besok|hari|di|ke|dari|untuk|soal|tentang)\b)[A-Za-z][A-Za-z'-]*)?)/i.exec(
+  const match = /\b(pak|bapak|bu|ibu|mbak|mas)\s+([A-Za-z][A-Za-z'-]*(?:\s+(?!(?:jam|pukul|tanggal|besok|hari|di|ke|dari|untuk|soal|tentang|via|lewat)\b)[A-Za-z][A-Za-z'-]*)?)/i.exec(
     normalized,
   );
   if (!match) return undefined;
