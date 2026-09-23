@@ -16,7 +16,11 @@ import {
 } from "@/lib/nanti-language";
 import { recordLanguageMemory } from "@/lib/nanti-learning.functions";
 import { recordEntityAlias } from "@/lib/nanti-context-memory.functions";
-import { createAiMessage, fetchAiMessages } from "@/lib/nanti-supabase";
+import {
+  clearAiMessages,
+  createAiMessage,
+  fetchAiMessages,
+} from "@/lib/nanti-supabase";
 
 type Message = {
   role: "user" | "assistant";
@@ -524,6 +528,26 @@ export function SimpleAssistant() {
     return { answer: turn.reply || "Okay.", saved: [] as string[] };
   };
 
+  const clearChat = async () => {
+    if (busy || lock.current) return;
+    lock.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      await clearAiMessages();
+      setMessages([]);
+      setPending(null);
+      setInput("");
+    } catch (clearError) {
+      console.error("Failed to clear Ask NANTI:", clearError);
+      setError("Chat history couldn’t be cleared. Please try again.");
+    } finally {
+      lock.current = false;
+      setBusy(false);
+      field.current?.focus();
+    }
+  };
+
   const send = async (value?: string) => {
     const question = (value ?? input).trim();
     if (!question || lock.current) return;
@@ -622,6 +646,19 @@ export function SimpleAssistant() {
   return (
     <div className="flex min-h-[calc(100vh-12rem)] flex-col">
       <div className="flex-1">
+        {messages.length > 0 && (
+          <div className="mb-5 flex justify-end">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void clearChat()}
+              className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground disabled:opacity-50"
+            >
+              Clear chat
+            </button>
+          </div>
+        )}
+
         {messages.length === 0 ? (
           <div className="py-8 sm:py-14">
             <p className="max-w-xl text-[17px] leading-7 text-foreground">
