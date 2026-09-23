@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { extractItems, type ExtractedItem } from "@/lib/nanti-ai.server";
+import { loadLanguageLearningPrompt } from "@/lib/nanti-learning.functions";
+import { detectExplicitLanguageTeaching, normalizedIntentText } from "@/lib/nanti-language";
 import { parseSmartDate } from "@/lib/nanti-dates";
 import { addDays, todayISO } from "@/lib/nanti-utils";
 
@@ -299,6 +301,28 @@ async function handleMessage(message: IncomingMessage) {
       return;
     }
 
+    const teaching = detectExplicitLanguageTeaching(content);
+    if (teaching) {
+      await recordLanguageMemoryAdmin(supabase, {
+        userId: link.user_id,
+        memoryType: teaching.memoryType,
+        patternKey: `${teaching.memoryType}:${normalizedIntentText(teaching.pattern)}`,
+        patternText: teaching.pattern,
+        learnedValue: {
+          meaning: teaching.meaning,
+          ...(teaching.offsetMinutes != null ? { offsetMinutes: teaching.offsetMinutes } : {}),
+        },
+        exampleText: content,
+        confidence: 0.96,
+      });
+      await updateMessageStatus(supabase, message.id, "processed");
+      await sendText(
+        message.from,
+        `Siap. Saya ingat “${teaching.pattern}” sebagai “${teaching.meaning}”.`,
+      );
+      return;
+    }
+
     const { data: conversation, error: conversationError } = await supabase
       .from("conversations")
       .upsert(
@@ -315,7 +339,8 @@ async function handleMessage(message: IncomingMessage) {
       .single();
     if (conversationError) throw conversationError;
 
-    const extraction = await extractItems(content, "WhatsApp");
+    const learning = await loadLanguageLearningPrompt(supabase, link.user_id);
+    const extraction = await extractItems(content, "WhatsApp", learning);
     const created = [];
     let clarification: { id: string; question: string } | null = null;
 
@@ -646,6 +671,24 @@ async function resolvePendingClarification(
   }
 
   const promoted = await promoteInboxAdmin(supabase, userId, inbox, details);
+  if (inbox.clarification_type === "person" || inbox.clarification_type === "date" || inbox.clarification_type === "time") {
+    await recordLanguageMemoryAdmin(supabase, {
+      userId,
+      memoryType: "correction_example",
+      patternKey: `whatsapp-clarify:${inbox.clarification_type}:${normalizedIntentText(
+        String(inbox.conversation_text || inbox.title || ""),
+      ).slice(0, 360)}`,
+      patternText: String(inbox.conversation_text || inbox.title || "WhatsApp clarification"),
+      learnedValue: {
+        field: inbox.clarification_type,
+        answer,
+        details,
+      },
+      exampleText: answer,
+      sourceItemId: promoted.id,
+      confidence: 0.84,
+    });
+  }
   return promoted.kind === "waiting"
     ? `Siap. Saya catat kamu menunggu ${details.personName || inbox.person_name || "orang itu"}.`
     : `Siap. “${promoted.title}” sudah saya simpan.`;
@@ -894,6 +937,74 @@ async function recordPersonActivityAdmin(
     .eq("id", input.personId)
     .eq("user_id", input.userId);
   if (personError) throw personError;
+}
+
+async function recordLanguageMemoryAdmin(
+  supabase: ReturnType<typeof adminClient>,
+  input: {
+    userId: string;
+    memoryType:
+      | "phrase_alias"
+      | "entity_alias"
+      | "reminder_preference"
+      | "correction_example"
+      | "style_preference";
+    patternKey: string;
+    patternText: string;
+    learnedValue: Record<string, unknown>;
+    exampleText?: string | null;
+    sourceItemId?: string | null;
+    confidence?: number;
+  },
+) {
+  const key = input.patternKey.trim().toLowerCase().replace(/\s+/g, " ").slice(0, 500);
+  const { data: existing, error: existingError } = await supabase
+    .from("user_language_memory")
+    .select("id,evidence_count,confidence,learned_value")
+    .eq("user_id", input.userId)
+    .eq("memory_type", input.memoryType)
+    .eq("pattern_key", key)
+    .maybeSingle();
+  if (existingError) throw existingError;
+
+  if (existing) {
+    const sameValue =
+      JSON.stringify(existing.learned_value || {}) === JSON.stringify(input.learnedValue || {});
+    const { error } = await supabase
+      .from("user_language_memory")
+      .update({
+        pattern_text: input.patternText.slice(0, 1000),
+        learned_value: input.learnedValue,
+        example_text: input.exampleText?.slice(0, 3000) || null,
+        source_item_id: input.sourceItemId || null,
+        evidence_count: Number(existing.evidence_count || 1) + 1,
+        confidence: Math.min(
+          0.98,
+          Math.max(Number(existing.confidence || 0), input.confidence ?? 0.72)
+            + (sameValue ? 0.04 : 0.01),
+        ),
+        active: true,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existing.id)
+      .eq("user_id", input.userId);
+    if (error) throw error;
+    return;
+  }
+
+  const { error } = await supabase.from("user_language_memory").insert({
+    user_id: input.userId,
+    memory_type: input.memoryType,
+    pattern_key: key,
+    pattern_text: input.patternText.slice(0, 1000),
+    learned_value: input.learnedValue,
+    example_text: input.exampleText?.slice(0, 3000) || null,
+    source_item_id: input.sourceItemId || null,
+    confidence: Math.max(0, Math.min(1, input.confidence ?? 0.72)),
+    evidence_count: 1,
+    active: true,
+  });
+  if (error) throw error;
 }
 
 async function clearPendingClarification(

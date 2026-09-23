@@ -216,3 +216,43 @@ export function normalizedIntentText(text: string) {
     .replace(/\s+/g, " ")
     .trim();
 }
+
+
+export type ExplicitLanguageTeaching = {
+  memoryType: "phrase_alias" | "reminder_preference";
+  pattern: string;
+  meaning: string;
+  offsetMinutes?: number;
+};
+
+export function detectExplicitLanguageTeaching(text: string): ExplicitLanguageTeaching | null {
+  const casual = normalizeCasualIndonesian(text).trim();
+
+  const alias =
+    /^(?:kalau|jika)\s+(?:(?:saya|aku|gue|gw)\s+)?(?:bilang|nulis|ketik)\s+["“']?(.+?)["”']?\s+(?:itu\s+)?(?:maksudnya|artinya)\s+["“']?(.+?)["”']?$/i.exec(casual) ||
+    /^["“']?(.+?)["”']?\s+(?:artinya|maksudnya)\s+["“']?(.+?)["”']?$/i.exec(casual);
+
+  if (alias) {
+    return {
+      memoryType: "phrase_alias",
+      pattern: alias[1]!.trim(),
+      meaning: alias[2]!.trim(),
+    };
+  }
+
+  const reminder =
+    /^(?:kalau|jika)\s+(.+?)\s+(?:ingatkan(?:\s+saya)?|remind(?:\s+me)?)\s+(\d+)\s*(menit|jam|minute|minutes|hour|hours)\s*(?:sebelum|before)\b/i.exec(
+      casual,
+    );
+  if (!reminder) return null;
+
+  const amount = Number(reminder[2]);
+  const unit = reminder[3]!.toLowerCase();
+  const offsetMinutes = unit.startsWith("jam") || unit.startsWith("hour") ? amount * 60 : amount;
+  return {
+    memoryType: "reminder_preference",
+    pattern: reminder[1]!.trim(),
+    meaning: `${offsetMinutes} minutes before`,
+    offsetMinutes,
+  };
+}

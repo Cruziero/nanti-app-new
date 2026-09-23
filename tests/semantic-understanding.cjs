@@ -119,6 +119,28 @@ assert.equal(
   "ingatkan saya 30 menit sebelum meeting",
 );
 
+const taughtAlias = language.detectExplicitLanguageTeaching(
+  "kalau aku bilang OTW maksudnya on the way",
+);
+assert.ok(taughtAlias);
+assert.equal(taughtAlias.memoryType, "phrase_alias");
+assert.equal(taughtAlias.pattern.toLowerCase(), "otw");
+assert.equal(taughtAlias.meaning.toLowerCase(), "on the way");
+
+const taughtReminder = language.detectExplicitLanguageTeaching(
+  "kalau meeting ingatkan saya 30 menit sebelum",
+);
+assert.ok(taughtReminder);
+assert.equal(taughtReminder.memoryType, "reminder_preference");
+assert.equal(taughtReminder.pattern.toLowerCase(), "meeting");
+assert.equal(taughtReminder.offsetMinutes, 30);
+
+assert.equal(
+  language.detectExplicitLanguageTeaching("besok saya meeting jam 10"),
+  null,
+  "ordinary tasks must never be misclassified as teaching",
+);
+
 console.log(
-  "PASS: typo/slang normalization, time/date parsing, people/place disambiguation, how and reminder strategy.",
+  "PASS: typo/slang normalization, semantic extraction, teaching detection, people/place disambiguation and reminder strategy.",
 );

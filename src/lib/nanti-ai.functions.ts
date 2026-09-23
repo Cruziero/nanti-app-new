@@ -12,9 +12,14 @@ export const analyzeConversation = createServerFn({ method: "POST" }).middleware
       })
       .parse(data),
   )
-  .handler(async ({ data }) => {
-    const { extractItems } = await import("./nanti-ai.server");
-    return extractItems(data.text, data.source, data.context);
+  .handler(async ({ data, context }) => {
+    const [{ extractItems }, { loadLanguageLearningPrompt }] = await Promise.all([
+      import("./nanti-ai.server"),
+      import("./nanti-learning.functions"),
+    ]);
+    const learning = await loadLanguageLearningPrompt(context.supabase, context.userId);
+    const combinedContext = [data.context, learning].filter(Boolean).join("\n\n");
+    return extractItems(data.text, data.source, combinedContext);
   });
 
 export const analyzeScreenshot = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
@@ -26,18 +31,31 @@ export const analyzeScreenshot = createServerFn({ method: "POST" }).middleware([
       })
       .parse(data),
   )
-  .handler(async ({ data }) => {
-    const { extractFromImage } = await import("./nanti-ai.server");
-    return extractFromImage(data.image, data.source);
+  .handler(async ({ data, context }) => {
+    const [{ extractFromImage }, { loadLanguageLearningPrompt }] = await Promise.all([
+      import("./nanti-ai.server"),
+      import("./nanti-learning.functions"),
+    ]);
+    const learning = await loadLanguageLearningPrompt(context.supabase, context.userId);
+    return extractFromImage(data.image, data.source, learning);
   });
 
 export const askAssistant = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z.object({ question: z.string().min(1).max(2000), context: z.string().max(20000) }).parse(data),
   )
-  .handler(async ({ data }) => {
-    const { askNanti } = await import("./nanti-ai.server");
-    return { answer: await askNanti(data.question, data.context) };
+  .handler(async ({ data, context }) => {
+    const [{ askNanti }, { loadLanguageLearningPrompt }] = await Promise.all([
+      import("./nanti-ai.server"),
+      import("./nanti-learning.functions"),
+    ]);
+    const learning = await loadLanguageLearningPrompt(context.supabase, context.userId);
+    return {
+      answer: await askNanti(
+        data.question,
+        [data.context, learning].filter(Boolean).join("\n\n"),
+      ),
+    };
   });
 
 
@@ -61,9 +79,17 @@ export const interpretTaskCommand = createServerFn({ method: "POST" }).middlewar
       recentConversation: z.string().max(8000).optional(),
     }).parse(data),
   )
-  .handler(async ({ data }) => {
-    const { interpretAssistantCommand } = await import("./nanti-ai.server");
-    return interpretAssistantCommand(data.message, data.items, data.recentConversation);
+  .handler(async ({ data, context }) => {
+    const [{ interpretAssistantCommand }, { loadLanguageLearningPrompt }] = await Promise.all([
+      import("./nanti-ai.server"),
+      import("./nanti-learning.functions"),
+    ]);
+    const learning = await loadLanguageLearningPrompt(context.supabase, context.userId);
+    return interpretAssistantCommand(
+      data.message,
+      data.items,
+      [data.recentConversation, learning].filter(Boolean).join("\n\n"),
+    );
   });
 
 export const parseSmartDateServer = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
