@@ -12,7 +12,8 @@ import { chatMessageToFallbackItem, draftToItem } from "@/lib/nanti-import";
 import type { Item } from "@/lib/nanti-types";
 import { parseSmartDate } from "@/lib/nanti-dates";
 import { isDueToday, isOverdue, todayISO, waitingDays } from "@/lib/nanti-utils";
-import { normalizedIntentText } from "@/lib/nanti-language";
+import { normalizeCasualIndonesian, normalizedIntentText } from "@/lib/nanti-language";
+import { recordLanguageMemory } from "@/lib/nanti-learning.functions";
 import { createAiMessage, fetchAiMessages } from "@/lib/nanti-supabase";
 
 type Message = { role: "user" | "assistant"; text: string };
@@ -36,7 +37,8 @@ type Command = {
     | "set_reminder"
     | "edit"
     | "mark_followed_up"
-    | "mark_received";
+    | "mark_received"
+    | "teach_language";
   targetId: string | null;
   dueText: string | null;
   time: string | null;
@@ -45,6 +47,14 @@ type Command = {
   priority: "low" | "medium" | "high" | null;
   personName: string | null;
   projectName: string | null;
+  learningType:
+    | "phrase_alias"
+    | "entity_alias"
+    | "reminder_preference"
+    | "style_preference"
+    | null;
+  learningPattern: string | null;
+  learningMeaning: string | null;
   confidence: number;
   question: string | null;
   acknowledgement: string | null;
@@ -158,9 +168,61 @@ function reminderIso(date: string, time: string, offsetMinutes = 0) {
 }
 
 function fallbackCommand(message: string, target?: Item): Command | null {
-  if (!target) return null;
   const lower = normalizedIntentText(message);
+  const casual = normalizeCasualIndonesian(message).trim();
   const parsed = parseSmartDate(message);
+
+  const taughtAlias =
+    /^(?:kalau|jika)\s+(?:(?:saya|aku|gue|gw)\s+)?(?:bilang|nulis|ketik)\s+["“']?(.+?)["”']?\s+(?:itu\s+)?(?:maksudnya|artinya)\s+["“']?(.+?)["”']?$/i.exec(casual) ||
+    /^["“']?(.+?)["”']?\s+(?:artinya|maksudnya)\s+["“']?(.+?)["”']?$/i.exec(casual);
+  if (taughtAlias) {
+    return {
+      intent: "teach_language",
+      targetId: null,
+      dueText: null,
+      time: null,
+      reminderOffsetMinutes: null,
+      title: null,
+      priority: null,
+      personName: null,
+      projectName: null,
+      learningType: "phrase_alias",
+      learningPattern: taughtAlias[1]!.trim(),
+      learningMeaning: taughtAlias[2]!.trim(),
+      confidence: 0.96,
+      question: null,
+      acknowledgement: null,
+    };
+  }
+
+  const reminderPreference =
+    /^(?:kalau|jika)\s+(.+?)\s+(?:ingatkan(?:\s+saya)?|remind(?:\s+me)?)\s+(\d+)\s*(menit|jam|minute|minutes|hour|hours)\s*(?:sebelum|before)\b/i.exec(
+      casual,
+    );
+  if (reminderPreference) {
+    const amount = Number(reminderPreference[2]);
+    const unit = reminderPreference[3]!.toLowerCase();
+    const minutes = unit.startsWith("jam") || unit.startsWith("hour") ? amount * 60 : amount;
+    return {
+      intent: "teach_language",
+      targetId: null,
+      dueText: null,
+      time: null,
+      reminderOffsetMinutes: minutes,
+      title: null,
+      priority: null,
+      personName: null,
+      projectName: null,
+      learningType: "reminder_preference",
+      learningPattern: reminderPreference[1]!.trim(),
+      learningMeaning: `${minutes} minutes before`,
+      confidence: 0.96,
+      question: null,
+      acknowledgement: null,
+    };
+  }
+
+  if (!target) return null;
 
   if (/^(sudah|udah|selesai|done|beres)\b/.test(lower)) {
     return {
@@ -173,6 +235,9 @@ function fallbackCommand(message: string, target?: Item): Command | null {
       priority: null,
       personName: null,
       projectName: null,
+      learningType: null,
+      learningPattern: null,
+      learningMeaning: null,
       confidence: 0.9,
       question: null,
       acknowledgement: null,
@@ -189,6 +254,9 @@ function fallbackCommand(message: string, target?: Item): Command | null {
       priority: null,
       personName: null,
       projectName: null,
+      learningType: null,
+      learningPattern: null,
+      learningMeaning: null,
       confidence: 0.86,
       question: null,
       acknowledgement: null,
@@ -205,6 +273,9 @@ function fallbackCommand(message: string, target?: Item): Command | null {
       priority: null,
       personName: null,
       projectName: null,
+      learningType: null,
+      learningPattern: null,
+      learningMeaning: null,
       confidence: 0.88,
       question: null,
       acknowledgement: null,
@@ -224,6 +295,9 @@ function fallbackCommand(message: string, target?: Item): Command | null {
       priority: null,
       personName: null,
       projectName: null,
+      learningType: null,
+      learningPattern: null,
+      learningMeaning: null,
       confidence: 0.84,
       question: null,
       acknowledgement: null,
@@ -243,6 +317,9 @@ function fallbackCommand(message: string, target?: Item): Command | null {
       priority: null,
       personName: null,
       projectName: null,
+      learningType: null,
+      learningPattern: null,
+      learningMeaning: null,
       confidence: 0.84,
       question: null,
       acknowledgement: null,
@@ -339,6 +416,39 @@ export function DashboardAssistant() {
     await persistChatTurn(question, answer, metadata);
   };
 
+  const learnCorrection = (
+    target: Item,
+    rawMessage: string,
+    intent: string,
+    after: Record<string, unknown>,
+    confidence = 0.8,
+  ) => {
+    const key = `${intent}:${normalizedIntentText(rawMessage).slice(0, 420)}`;
+    void recordLanguageMemory({
+      data: {
+        memory_type: "correction_example",
+        pattern_key: key,
+        pattern_text: rawMessage,
+        learned_value: {
+          intent,
+          target_kind: target.kind,
+          before: {
+            title: target.title,
+            due: target.due,
+            time: target.time,
+            person: target.personName,
+            project: target.projectName,
+            semantic: target.semanticContext,
+          },
+          after,
+        },
+        example_text: target.quote || target.semanticContext?.normalizedText || target.title,
+        source_item_id: /^[0-9a-f-]{36}$/i.test(target.id) ? target.id : null,
+        confidence,
+      },
+    }).catch((error) => console.error("Failed to learn NANTI correction:", error));
+  };
+
   const resolveClarification = async (answer: string) => {
     if (!pendingClarification) return false;
     const item = items.find((candidate) => candidate.id === pendingClarification.itemId);
@@ -386,6 +496,9 @@ export function DashboardAssistant() {
           card.id === item.id ? { ...card, id: promotedId, status: "open" } : card,
         ),
       );
+      learnCorrection(item, item.quote || pendingClarification.question, "clarify_person", {
+        personName: answer.trim(),
+      }, 0.84);
       await appendTurn(answer, `Siap. Saya catat kamu menunggu ${answer.trim()}.`, {
         clarification_resolved: true,
         item_id: promotedId,
@@ -410,6 +523,10 @@ export function DashboardAssistant() {
           : card,
       ),
     );
+    learnCorrection(item, item.quote || pendingClarification.question, "clarify_when", {
+      due,
+      time,
+    }, 0.84);
     await appendTurn(answer, `Siap. Saya jadwalkan${due ? ` untuk ${due}` : ""}${time ? ` jam ${time}` : ""}.`, {
       clarification_resolved: true,
       item_id: promotedId,
@@ -419,6 +536,42 @@ export function DashboardAssistant() {
 
   const applyCommand = async (command: Command, rawMessage: string) => {
     if (command.intent === "none" || command.confidence < 0.72) return null;
+
+    if (command.intent === "teach_language") {
+      if (!command.learningType || !command.learningPattern || !command.learningMeaning) {
+        return {
+          handled: true,
+          answer: command.question || "Apa frasa atau kebiasaan yang mau kamu ajarkan ke NANTI?",
+        };
+      }
+      try {
+        await recordLanguageMemory({
+          data: {
+            memory_type: command.learningType,
+            pattern_key: `${command.learningType}:${normalizedIntentText(command.learningPattern)}`,
+            pattern_text: command.learningPattern,
+            learned_value: {
+              meaning: command.learningMeaning,
+              ...(command.reminderOffsetMinutes != null
+                ? { offsetMinutes: command.reminderOffsetMinutes }
+                : {}),
+            },
+            example_text: rawMessage,
+            confidence: Math.max(0.85, command.confidence),
+          },
+        });
+      } catch (error) {
+        console.error("Failed to teach NANTI:", error);
+        return { handled: true, answer: "Pelajaran itu belum berhasil saya simpan." };
+      }
+      return {
+        handled: true,
+        answer:
+          command.acknowledgement ||
+          `Siap. Mulai sekarang saya ingat “${command.learningPattern}” sebagai “${command.learningMeaning}”.`,
+      };
+    }
+
     const fallbackTarget = recentItems[0];
     const targetId =
       command.targetId ||
@@ -494,6 +647,7 @@ export function DashboardAssistant() {
       if (!await editItem(target.id, patch)) {
         return { handled: true, answer: "Jadwalnya belum berhasil saya ubah." };
       }
+      learnCorrection(target, rawMessage, "reschedule", patch, 0.82);
       return {
         handled: true,
         answer:
@@ -518,6 +672,7 @@ export function DashboardAssistant() {
       if (!await editItem(target.id, patch)) {
         return { handled: true, answer: "Perubahannya belum berhasil saya simpan." };
       }
+      learnCorrection(target, rawMessage, "edit", patch, 0.82);
       return {
         handled: true,
         answer: command.acknowledgement || `Siap. “${target.title}” sudah saya perbarui.`,
@@ -570,6 +725,35 @@ export function DashboardAssistant() {
         })
       ) {
         return { handled: true, answer: "Pengingatnya belum berhasil disimpan." };
+      }
+      learnCorrection(
+        target,
+        rawMessage,
+        "set_reminder",
+        {
+          reminderEnabled: true,
+          reminderTime: when,
+          offsetMinutes: offset,
+          due: parsed.date || target.due,
+          time: parsed.time || command.time || target.time,
+        },
+        command.reminderOffsetMinutes != null ? 0.9 : 0.78,
+      );
+      if (command.reminderOffsetMinutes != null) {
+        void recordLanguageMemory({
+          data: {
+            memory_type: "reminder_preference",
+            pattern_key: `reminder:${normalizedIntentText(target.semanticContext?.what || target.title).slice(0, 300)}`,
+            pattern_text: target.semanticContext?.what || target.title,
+            learned_value: {
+              offsetMinutes: command.reminderOffsetMinutes,
+              strategy: "before",
+            },
+            example_text: rawMessage,
+            source_item_id: /^[0-9a-f-]{36}$/i.test(target.id) ? target.id : null,
+            confidence: 0.9,
+          },
+        }).catch(() => {});
       }
       return {
         handled: true,
@@ -700,6 +884,9 @@ export function DashboardAssistant() {
           priority: null,
           personName: null,
           projectName: null,
+          learningType: null,
+          learningPattern: null,
+          learningMeaning: null,
           confidence: 0,
           question: null,
           acknowledgement: null,
