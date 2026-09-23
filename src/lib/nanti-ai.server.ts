@@ -414,6 +414,7 @@ export interface AssistantCommand {
     | "reminder_preference"
     | "style_preference"
     | null;
+  learningEntityType: "person" | "project" | "location" | null;
   learningPattern: string | null;
   learningMeaning: string | null;
   confidence: number;
@@ -448,7 +449,7 @@ ATURAN:
 - Untuk edit, isi hanya field yang diminta: title, priority, personName, projectName.
 - Untuk teach_language, targetId HARUS null. Isi:
   * learningType="phrase_alias" untuk "kalau aku bilang X maksudnya Y"
-  * learningType="entity_alias" untuk alias orang/proyek, mis. "Pak B itu Pak Budi"
+  * learningType="entity_alias" untuk alias orang/proyek/lokasi, mis. "Pak B itu Budi"; isi learningEntityType="person|project|location"
   * learningType="reminder_preference" untuk kebiasaan reminder, mis. "kalau meeting ingetin 30 menit sebelum"
   * learningType="style_preference" untuk gaya respons, mis. "jawab singkat aja"
   * learningPattern = kata/frasa/konteks pemicu
@@ -528,6 +529,12 @@ ${message}`,
       parsed?.learningType === "reminder_preference" ||
       parsed?.learningType === "style_preference"
         ? parsed.learningType
+        : null,
+    learningEntityType:
+      parsed?.learningEntityType === "person" ||
+      parsed?.learningEntityType === "project" ||
+      parsed?.learningEntityType === "location"
+        ? parsed.learningEntityType
         : null,
     learningPattern:
       typeof parsed?.learningPattern === "string" ? parsed.learningPattern.slice(0, 500) : null,
