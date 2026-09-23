@@ -57,7 +57,6 @@ async function chatGemini(
       : {}),
     generationConfig: {
       ...(opts.json ? { responseMimeType: "application/json" } : {}),
-      thinkingConfig: { thinkingBudget: 0 },
     },
   };
 
