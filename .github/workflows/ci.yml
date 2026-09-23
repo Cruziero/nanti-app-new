@@ -16,5 +16,5 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm install --legacy-peer-deps --no-audit --no-fund
-      - run: node tests/semantic-understanding.cjs
+      - run: npm run test:quality
       - run: npm run build

@@ -1,0 +1,596 @@
+{
+  "version": 1,
+  "total": 96,
+  "normalize": [
+    {
+      "id": "norm-01",
+      "input": "gw bsk meeting sm bu rina jam 2 siang di scbd",
+      "expected": "gw besok meeting sama bu rina jam 2 siang di scbd"
+    },
+    {
+      "id": "norm-02",
+      "input": "jgn lupa krm invoice tgl 25",
+      "expected": "jangan lupa kirim invoice tanggal 25"
+    },
+    {
+      "id": "norm-03",
+      "input": "sy hrs tlp pak dodi sblm mlm",
+      "expected": "saya harus telepon pak dodi sebelum malam"
+    },
+    {
+      "id": "norm-04",
+      "input": "remind me 30 mnt sblm meeting",
+      "expected": "ingatkan saya 30 menit sebelum meeting"
+    },
+    {
+      "id": "norm-05",
+      "input": "Saya beosok harus oulang dr puncak jam 10 pagi",
+      "expected": "Saya besok harus pulang dari puncak jam 10 pagi"
+    },
+    {
+      "id": "norm-06",
+      "input": "nnti jam 4",
+      "expected": "nanti jam 4"
+    },
+    {
+      "id": "norm-07",
+      "input": "udh byr invoice",
+      "expected": "sudah bayar invoice"
+    },
+    {
+      "id": "norm-08",
+      "input": "blm krm PO",
+      "expected": "belum kirim PO"
+    },
+    {
+      "id": "norm-09",
+      "input": "klo bsk lg sibuk",
+      "expected": "kalau besok lagi sibuk"
+    },
+    {
+      "id": "norm-10",
+      "input": "tlg ingetin sy",
+      "expected": "tolong ingatkan saya"
+    },
+    {
+      "id": "norm-11",
+      "input": "brgkt naik kereta",
+      "expected": "berangkat naik kereta"
+    },
+    {
+      "id": "norm-12",
+      "input": "smpe kantor",
+      "expected": "sampai kantor"
+    },
+    {
+      "id": "norm-13",
+      "input": "jma 9 pgi",
+      "expected": "jam 9 pagi"
+    },
+    {
+      "id": "norm-14",
+      "input": "stlh meeting",
+      "expected": "setelah meeting"
+    },
+    {
+      "id": "norm-15",
+      "input": "dmn meetingnya",
+      "expected": "dimana meetingnya"
+    },
+    {
+      "id": "norm-16",
+      "input": "kmn kita pergi",
+      "expected": "kemana kita pergi"
+    },
+    {
+      "id": "norm-17",
+      "input": "knp belum bayar",
+      "expected": "kenapa belum bayar"
+    },
+    {
+      "id": "norm-18",
+      "input": "brp mnt lagi",
+      "expected": "berapa menit lagi"
+    },
+    {
+      "id": "norm-19",
+      "input": "jmt sore",
+      "expected": "jumat sore"
+    },
+    {
+      "id": "norm-20",
+      "input": "sen pagi",
+      "expected": "senin pagi"
+    },
+    {
+      "id": "norm-21",
+      "input": "follow up vendor",
+      "expected": "followup vendor"
+    },
+    {
+      "id": "norm-22",
+      "input": "follow-up vendor",
+      "expected": "followup vendor"
+    },
+    {
+      "id": "norm-23",
+      "input": "qoulang dr kantor",
+      "expected": "pulang dari kantor"
+    },
+    {
+      "id": "norm-24",
+      "input": "Whatt am I forgeting?",
+      "expected": "What am I forgetting?"
+    }
+  ],
+  "dateTime": [
+    {
+      "id": "date-01",
+      "input": "besok jam 10 pagi",
+      "dateOffset": 1,
+      "time": "10:00"
+    },
+    {
+      "id": "date-02",
+      "input": "bsk jam 4 sore",
+      "dateOffset": 1,
+      "time": "16:00"
+    },
+    {
+      "id": "date-03",
+      "input": "lusa pukul 7 malam",
+      "dateOffset": 2,
+      "time": "19:00"
+    },
+    {
+      "id": "date-04",
+      "input": "hari ini jam 09.30",
+      "dateOffset": 0,
+      "time": "09:30"
+    },
+    {
+      "id": "date-05",
+      "input": "3 hari lagi jam 2 siang",
+      "dateOffset": 3,
+      "time": "14:00"
+    },
+    {
+      "id": "date-06",
+      "input": "5 hari lagi 16.45",
+      "dateOffset": 5,
+      "time": "16:45"
+    },
+    {
+      "id": "date-07",
+      "input": "minggu depan jam 8 pagi",
+      "dateOffset": 7,
+      "time": "08:00"
+    },
+    {
+      "id": "date-08",
+      "input": "nanti sore",
+      "dateOffset": 0,
+      "time": "17:00"
+    },
+    {
+      "id": "date-09",
+      "input": "nanti malam",
+      "dateOffset": 0,
+      "hasDate": true
+    },
+    {
+      "id": "date-10",
+      "input": "senin jam 9 pagi",
+      "weekday": 1,
+      "time": "09:00"
+    },
+    {
+      "id": "date-11",
+      "input": "jumat jam 3 sore",
+      "weekday": 5,
+      "time": "15:00"
+    },
+    {
+      "id": "date-12",
+      "input": "monday 11.00",
+      "weekday": 1,
+      "time": "11:00"
+    },
+    {
+      "id": "date-13",
+      "input": "friday 4:15 pm",
+      "weekday": 5,
+      "time": "16:15"
+    },
+    {
+      "id": "date-14",
+      "input": "tanggal 28 jam 10 pagi",
+      "hasDate": true,
+      "time": "10:00"
+    },
+    {
+      "id": "date-15",
+      "input": "28 september jam 13.00",
+      "hasDate": true,
+      "time": "13:00"
+    },
+    {
+      "id": "date-16",
+      "input": "september 30 pukul 6 sore",
+      "hasDate": true,
+      "time": "18:00"
+    },
+    {
+      "id": "date-17",
+      "input": "2026-10-01 jam 7 pagi",
+      "date": "2026-10-01",
+      "time": "07:00"
+    },
+    {
+      "id": "date-18",
+      "input": "bsk pukul 12 siang",
+      "dateOffset": 1,
+      "time": "12:00"
+    },
+    {
+      "id": "date-19",
+      "input": "bsk pukul 12 pagi",
+      "dateOffset": 1,
+      "time": "00:00"
+    },
+    {
+      "id": "date-20",
+      "input": "besok 18.30",
+      "dateOffset": 1,
+      "time": "18:30"
+    }
+  ],
+  "fallbackTask": [
+    {
+      "id": "task-01",
+      "input": "Saya beosok harus oulang dr puncak jam 10 pagi",
+      "titleIncludes": "pulang dari puncak",
+      "time": "10:00",
+      "where": "puncak",
+      "reminderOffset": 60,
+      "typoCorrected": true,
+      "hasDue": true
+    },
+    {
+      "id": "task-02",
+      "input": "gw bsk hrs meeting sm bu rina jam 2 siang di scbd",
+      "titleIncludes": "meeting",
+      "time": "14:00",
+      "person": "bu rina",
+      "where": "scbd",
+      "reminderOffset": 60,
+      "hasDue": true
+    },
+    {
+      "id": "task-03",
+      "input": "jgn lupa krm invoice ke pak dodi tgl 25",
+      "titleIncludes": "kirim invoice",
+      "person": "pak dodi",
+      "reminderOffset": 0,
+      "hasDue": true
+    },
+    {
+      "id": "task-04",
+      "input": "saya besok harus tlp bu rina via wa jam 4 sore",
+      "titleIncludes": "telepon",
+      "time": "16:00",
+      "person": "bu rina",
+      "how": "WhatsApp",
+      "reminderOffset": 15,
+      "hasDue": true
+    },
+    {
+      "id": "task-05",
+      "input": "aku perlu bayar vendor besok jam 11 pagi",
+      "titleIncludes": "bayar vendor",
+      "time": "11:00",
+      "reminderOffset": 15,
+      "hasDue": true
+    },
+    {
+      "id": "task-06",
+      "input": "saya mesti berangkat ke bandung besok jam 6 pagi naik mobil",
+      "titleIncludes": "berangkat",
+      "time": "06:00",
+      "where": "bandung",
+      "how": "Naik mobil",
+      "reminderOffset": 60,
+      "hasDue": true
+    },
+    {
+      "id": "task-07",
+      "input": "gue wajib kirim PO ke vendor tanggal 25",
+      "titleIncludes": "kirim po",
+      "reminderOffset": 0,
+      "hasDue": true
+    },
+    {
+      "id": "task-08",
+      "input": "remind me besok jam 9 pagi bayar listrik",
+      "time": "09:00",
+      "hasDue": true
+    },
+    {
+      "id": "task-09",
+      "input": "saya harus call pak anton jam 5 sore",
+      "titleIncludes": "call",
+      "time": "17:00",
+      "person": "pak anton",
+      "how": "Telepon",
+      "reminderOffset": 15
+    },
+    {
+      "id": "task-10",
+      "input": "saya harus email bu sari besok jam 10",
+      "titleIncludes": "email",
+      "time": "10:00",
+      "person": "bu sari",
+      "how": "Email",
+      "reminderOffset": 30,
+      "hasDue": true
+    },
+    {
+      "id": "task-11",
+      "input": "saya perlu meeting di senayan besok jam 1 siang",
+      "titleIncludes": "meeting",
+      "time": "13:00",
+      "where": "senayan",
+      "reminderOffset": 60,
+      "hasDue": true
+    },
+    {
+      "id": "task-12",
+      "input": "gw hrs pergi ke bogor lusa jam 7 pagi naik motor",
+      "titleIncludes": "pergi",
+      "time": "07:00",
+      "where": "bogor",
+      "how": "Naik motor",
+      "reminderOffset": 60,
+      "hasDue": true
+    },
+    {
+      "id": "task-13",
+      "input": "sy wajib telepon mas ari hari ini jam 4 sore",
+      "titleIncludes": "telepon",
+      "time": "16:00",
+      "person": "mas ari",
+      "how": "Telepon",
+      "reminderOffset": 15,
+      "hasDue": true
+    },
+    {
+      "id": "task-14",
+      "input": "jgn lupa bayar invoice tanggal 28",
+      "titleIncludes": "bayar invoice",
+      "reminderOffset": 0,
+      "hasDue": true
+    },
+    {
+      "id": "task-15",
+      "input": "saya harus rapat dengan bu lia besok jam 9 pagi",
+      "titleIncludes": "rapat",
+      "time": "09:00",
+      "person": "bu lia",
+      "reminderOffset": 60,
+      "hasDue": true
+    },
+    {
+      "id": "task-16",
+      "input": "aku perlu kirim revisi via whatsapp besok jam 3 sore",
+      "titleIncludes": "kirim revisi",
+      "time": "15:00",
+      "how": "WhatsApp",
+      "reminderOffset": 15,
+      "hasDue": true
+    },
+    {
+      "id": "task-17",
+      "input": "saya mesti bayar lewat bank transfer besok jam 2 siang",
+      "titleIncludes": "bayar",
+      "time": "14:00",
+      "how": "Transfer",
+      "reminderOffset": 15,
+      "hasDue": true
+    },
+    {
+      "id": "task-18",
+      "input": "saya wajib appointment di rs pondok indah besok jam 8 pagi",
+      "titleIncludes": "appointment",
+      "time": "08:00",
+      "where": "rs pondok indah",
+      "reminderOffset": 60,
+      "hasDue": true
+    },
+    {
+      "id": "task-19",
+      "input": "saya harus kembali ke kantor besok jam 6 sore",
+      "titleIncludes": "kembali",
+      "time": "18:00",
+      "where": "kantor",
+      "reminderOffset": 60,
+      "hasDue": true
+    },
+    {
+      "id": "task-20",
+      "input": "remind me besok jam 7 pagi pergi ke bandara",
+      "titleIncludes": "pergi ke bandara",
+      "time": "07:00",
+      "where": "bandara",
+      "reminderOffset": 60,
+      "hasDue": true
+    }
+  ],
+  "rejectTask": [
+    {
+      "id": "reject-01",
+      "input": "lagi ngopi di kantor"
+    },
+    {
+      "id": "reject-02",
+      "input": "pak b belum bales"
+    },
+    {
+      "id": "reject-03",
+      "input": "bu rina bilang revisi dikirim jumat"
+    },
+    {
+      "id": "reject-04",
+      "input": "besok meeting jam 10"
+    },
+    {
+      "id": "reject-05",
+      "input": "invoice sudah dibayar"
+    },
+    {
+      "id": "reject-06",
+      "input": "apa kabar"
+    },
+    {
+      "id": "reject-07",
+      "input": "what am i forgetting?"
+    },
+    {
+      "id": "reject-08",
+      "input": "siapa yang followup hari ini?"
+    },
+    {
+      "id": "reject-09",
+      "input": "project tps lagi jalan"
+    },
+    {
+      "id": "reject-10",
+      "input": "vendor baru kirim barang"
+    },
+    {
+      "id": "reject-11",
+      "input": "saya sudah sampai kantor"
+    },
+    {
+      "id": "reject-12",
+      "input": "mungkin besok ke bandung"
+    },
+    {
+      "id": "reject-13",
+      "input": "pak dodi ada di scbd"
+    },
+    {
+      "id": "reject-14",
+      "input": "jam 10 cocok"
+    },
+    {
+      "id": "reject-15",
+      "input": "iya"
+    },
+    {
+      "id": "reject-16",
+      "input": "jumat aja"
+    }
+  ],
+  "teaching": [
+    {
+      "id": "teach-01",
+      "input": "kalau aku bilang OTW maksudnya on the way",
+      "memoryType": "phrase_alias",
+      "pattern": "OTW",
+      "meaning": "on the way"
+    },
+    {
+      "id": "teach-02",
+      "input": "FYI artinya for your information",
+      "memoryType": "phrase_alias",
+      "pattern": "FYI",
+      "meaning": "for your information"
+    },
+    {
+      "id": "teach-03",
+      "input": "Pak B itu Budi",
+      "memoryType": "entity_alias",
+      "entityType": "person",
+      "pattern": "Pak B",
+      "meaning": "Budi"
+    },
+    {
+      "id": "teach-04",
+      "input": "Bu R maksudnya Bu Rina",
+      "memoryType": "entity_alias",
+      "entityType": "person",
+      "pattern": "Bu R",
+      "meaning": "Bu Rina"
+    },
+    {
+      "id": "teach-05",
+      "input": "proyek TPS maksudnya The Padel Side",
+      "memoryType": "entity_alias",
+      "entityType": "project",
+      "pattern": "proyek TPS",
+      "meaning": "The Padel Side"
+    },
+    {
+      "id": "teach-06",
+      "input": "lokasi kantor = SCBD",
+      "memoryType": "entity_alias",
+      "entityType": "location",
+      "pattern": "lokasi kantor",
+      "meaning": "SCBD"
+    },
+    {
+      "id": "teach-07",
+      "input": "kalau meeting ingatkan saya 30 menit sebelum",
+      "memoryType": "reminder_preference",
+      "pattern": "meeting",
+      "offsetMinutes": 30
+    },
+    {
+      "id": "teach-08",
+      "input": "jika appointment remind me 2 jam before",
+      "memoryType": "reminder_preference",
+      "pattern": "appointment",
+      "offsetMinutes": 120
+    },
+    {
+      "id": "teach-09",
+      "input": "Pak B itu belum bales",
+      "expectNull": true
+    },
+    {
+      "id": "teach-10",
+      "input": "Pak B itu lagi meeting",
+      "expectNull": true
+    },
+    {
+      "id": "teach-11",
+      "input": "proyek TPS itu belum selesai",
+      "expectNull": true
+    },
+    {
+      "id": "teach-12",
+      "input": "lokasi kantor itu pindah besok",
+      "expectNull": true
+    },
+    {
+      "id": "teach-13",
+      "input": "project TPS lagi jalan",
+      "expectNull": true
+    },
+    {
+      "id": "teach-14",
+      "input": "besok saya meeting jam 10",
+      "expectNull": true
+    },
+    {
+      "id": "teach-15",
+      "input": "Bu Rina bilang nanti kirim",
+      "expectNull": true
+    },
+    {
+      "id": "teach-16",
+      "input": "OTW ke kantor",
+      "expectNull": true
+    }
+  ]
+}

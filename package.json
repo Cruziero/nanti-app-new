@@ -9,7 +9,10 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test:semantic": "node tests/semantic-understanding.cjs",
+    "test:assistant-quality": "node tests/assistant-quality.cjs",
+    "test:quality": "npm run test:semantic && npm run test:assistant-quality"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
