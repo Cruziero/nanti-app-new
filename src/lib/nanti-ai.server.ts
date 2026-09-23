@@ -345,6 +345,7 @@ ${text}`,
 export async function extractFromImage(
   dataUrl: string,
   sourceHint?: string,
+  contextHint?: string,
 ): Promise<ExtractResult> {
   const raw = await chat(
     [
@@ -354,7 +355,9 @@ export async function extractFromImage(
         content: [
           {
             type: "text",
-            text: `Ini screenshot percakapan WhatsApp. Baca semua teksnya (termasuk nama pengirim), lalu ekstrak sesuai instruksi. Nama grup/chat (jika tahu): ${sourceHint || "dari screenshot"}. Balas hanya JSON.`,
+            text: `Ini screenshot percakapan WhatsApp. Baca semua teksnya (termasuk nama pengirim), lalu ekstrak sesuai instruksi. Nama grup/chat (jika tahu): ${sourceHint || "dari screenshot"}.
+${contextHint ? `\nKonteks/personal learning user (gunakan untuk interpretasi saja, jangan buat task lama):\n${contextHint.slice(0, 10000)}\n` : ""}
+Balas hanya JSON.`,
           },
           { type: "image_url", image_url: { url: dataUrl } },
         ],
@@ -392,7 +395,8 @@ export type AssistantCommandIntent =
   | "set_reminder"
   | "edit"
   | "mark_followed_up"
-  | "mark_received";
+  | "mark_received"
+  | "teach_language";
 
 export interface AssistantCommand {
   intent: AssistantCommandIntent;
@@ -404,6 +408,14 @@ export interface AssistantCommand {
   priority: "low" | "medium" | "high" | null;
   personName: string | null;
   projectName: string | null;
+  learningType:
+    | "phrase_alias"
+    | "entity_alias"
+    | "reminder_preference"
+    | "style_preference"
+    | null;
+  learningPattern: string | null;
+  learningMeaning: string | null;
   confidence: number;
   question: string | null;
   acknowledgement: string | null;
@@ -422,6 +434,7 @@ Intent yang boleh:
 - edit: ganti judul, prioritas, orang, atau proyek pada item tersimpan
 - mark_followed_up: pengguna bilang sudah follow up item waiting
 - mark_received: hal yang ditunggu sudah diterima
+- teach_language: pengguna secara eksplisit mengajari NANTI arti istilah, alias, kebiasaan reminder, atau preferensi gaya
 - none: bukan perintah edit terhadap item tersimpan
 
 ATURAN:
@@ -433,6 +446,14 @@ ATURAN:
 - time gunakan HH:mm bila eksplisit.
 - reminderOffsetMinutes hanya bila pengguna bilang "2 jam sebelum", "30 menit sebelum", dst.
 - Untuk edit, isi hanya field yang diminta: title, priority, personName, projectName.
+- Untuk teach_language, targetId HARUS null. Isi:
+  * learningType="phrase_alias" untuk "kalau aku bilang X maksudnya Y"
+  * learningType="entity_alias" untuk alias orang/proyek, mis. "Pak B itu Pak Budi"
+  * learningType="reminder_preference" untuk kebiasaan reminder, mis. "kalau meeting ingetin 30 menit sebelum"
+  * learningType="style_preference" untuk gaya respons, mis. "jawab singkat aja"
+  * learningPattern = kata/frasa/konteks pemicu
+  * learningMeaning = arti/preferensi yang harus diingat
+- Jangan gunakan teach_language untuk koreksi satu kali seperti "yang tadi pindahin ke Jumat"; itu tetap reschedule/edit.
 - priority hanya low|medium|high. "urgent"/"penting banget" -> high.
 - acknowledgement adalah jawaban sangat singkat setelah tindakan berhasil.
 Balas JSON valid saja.`;
@@ -476,6 +497,7 @@ ${message}`,
     "edit",
     "mark_followed_up",
     "mark_received",
+    "teach_language",
   ]);
   const ids = new Set(itemContext.map((item) => item.id));
   const intent = parsed?.intent && allowed.has(parsed.intent) ? parsed.intent : "none";
@@ -500,6 +522,17 @@ ${message}`,
       typeof parsed?.personName === "string" ? parsed.personName.slice(0, 200) : null,
     projectName:
       typeof parsed?.projectName === "string" ? parsed.projectName.slice(0, 200) : null,
+    learningType:
+      parsed?.learningType === "phrase_alias" ||
+      parsed?.learningType === "entity_alias" ||
+      parsed?.learningType === "reminder_preference" ||
+      parsed?.learningType === "style_preference"
+        ? parsed.learningType
+        : null,
+    learningPattern:
+      typeof parsed?.learningPattern === "string" ? parsed.learningPattern.slice(0, 500) : null,
+    learningMeaning:
+      typeof parsed?.learningMeaning === "string" ? parsed.learningMeaning.slice(0, 1000) : null,
     confidence:
       typeof parsed?.confidence === "number"
         ? Math.max(0, Math.min(1, parsed.confidence))
