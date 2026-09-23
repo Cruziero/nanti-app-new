@@ -23,6 +23,38 @@ const EXPANSIONS: Record<string, string> = {
   telp: "telepon",
   krm: "kirim",
   byr: "bayar",
+  tgl: "tanggal",
+  ntar: "nanti",
+  nnti: "nanti",
+  skrg: "sekarang",
+  sblm: "sebelum",
+  sblum: "sebelum",
+  stlh: "setelah",
+  yg: "yang",
+  sm: "sama",
+  ama: "sama",
+  klo: "kalau",
+  kalo: "kalau",
+  krn: "karena",
+  udh: "sudah",
+  uda: "sudah",
+  dah: "sudah",
+  blm: "belum",
+  blom: "belum",
+  jgn: "jangan",
+  inget: "ingat",
+  ingetin: "ingatkan",
+  tlg: "tolong",
+  lg: "lagi",
+  trus: "terus",
+  bgt: "banget",
+  dmn: "dimana",
+  kmn: "kemana",
+  knp: "kenapa",
+  brp: "berapa",
+  mnt: "menit",
+  jmt: "jumat",
+  sen: "senin",
 };
 
 const FUZZY_KEYWORDS = [
@@ -57,6 +89,20 @@ const FUZZY_KEYWORDS = [
   "sudah",
   "hapus",
   "abaikan",
+  "sebelum",
+  "setelah",
+  "tanggal",
+  "nanti",
+  "sekarang",
+  "belum",
+  "sama",
+  "jangan",
+  "ingat",
+  "kabar",
+  "vendor",
+  "invoice",
+  "deadline",
+  "appointment",
 ] as const;
 
 function editDistance(a: string, b: string) {
@@ -94,6 +140,9 @@ function normalizeWord(word: string) {
   let best: string | null = null;
   let bestDistance = Number.POSITIVE_INFINITY;
   for (const keyword of FUZZY_KEYWORDS) {
+    // Keep fuzzy correction conservative: typos normally preserve the first letter
+    // and differ by at most two characters. Explicit weird spellings belong in EXPANSIONS.
+    if (lower[0] !== keyword[0] || Math.abs(lower.length - keyword.length) > 2) continue;
     const distance = editDistance(lower, keyword);
     const threshold = lower.length >= 7 || keyword.length >= 7 ? 2 : 1;
     if (distance <= threshold && distance < bestDistance) {
@@ -110,7 +159,9 @@ function normalizeWord(word: string) {
  */
 export function normalizeCasualIndonesian(text: string) {
   return text
-    .replace(/\bfollow\s+up\b/gi, "followup")
+    .replace(/\bfollow\s*[- ]?\s*up\b/gi, "followup")
+    .replace(/\bjgn\s+lupa\b/gi, "jangan lupa")
+    .replace(/\bremind\s+me\b/gi, "ingatkan saya")
     .replace(/[A-Za-z]+/g, (word) => normalizeWord(word))
     .replace(/\s+/g, " ")
     .trim();
@@ -127,6 +178,7 @@ export function normalizeActionTitle(text: string) {
     /^(saya|aku|gue|gw)\s+/i,
     /^(hari\s+ini|besok|lusa)\s+/i,
     /^(harus|perlu|mesti|wajib|need\s+to|have\s+to|must)\s+/i,
+    /^(jangan\s+lupa|tolong\s+ingatkan(?:\s+saya)?|ingatkan\s+saya)\s+/i,
   ];
   let changed = true;
   while (changed) {
