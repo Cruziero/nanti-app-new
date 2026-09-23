@@ -133,3 +133,45 @@ export const generateFollowUpMessageServer = createServerFn({ method: "POST" }).
       ),
     };
   });
+
+
+export const processAssistantTurn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({
+      message: z.string().min(1).max(4000),
+      workspaceContext: z.string().max(24000).optional().default(""),
+      recentConversation: z.string().max(10000).optional().default(""),
+      items: z.array(
+        z.object({
+          id: z.string().min(1).max(120),
+          title: z.string().max(500),
+          kind: z.string().max(40),
+          status: z.string().max(40),
+          due: z.string().optional(),
+          time: z.string().optional(),
+          person: z.string().max(200).optional(),
+          project: z.string().max(200).optional(),
+          semantic: z.unknown().optional(),
+        }),
+      ).max(40),
+    }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const [{ runAssistantTurn }, { normalizeCasualIndonesian }, personalContext] =
+      await Promise.all([
+        import("./nanti-ai.server"),
+        import("./nanti-language"),
+        loadPersonalAiContext(context),
+      ]);
+
+    return runAssistantTurn({
+      rawMessage: data.message,
+      normalizedMessage: normalizeCasualIndonesian(data.message),
+      workspaceContext: [data.workspaceContext, personalContext]
+        .filter(Boolean)
+        .join("\n\n"),
+      itemContext: data.items,
+      recentConversation: data.recentConversation,
+    });
+  });

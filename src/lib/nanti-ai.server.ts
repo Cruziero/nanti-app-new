@@ -1,66 +1,181 @@
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
+const GEMINI_MODEL = process.env["GEMINI_MODEL"] || "gemini-3.5-flash";
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
-const TEXT_MODEL = "gpt-4o-mini";
-const VISION_MODEL = "gpt-4o-mini";
+const OPENAI_TEXT_MODEL = process.env["OPENAI_MODEL"] || "gpt-4o-mini";
 
 type Content = string | Array<Record<string, unknown>>;
 
-async function chat(
+function geminiParts(content: Content) {
+  if (typeof content === "string") return [{ text: content }];
+  return content.map((part) => {
+    if (part.type === "image_url") {
+      const url = (part.image_url as { url?: string })?.url ?? "";
+      const match = url.match(/^data:([^;]+);base64,(.+)$/);
+      return {
+        inlineData: {
+          mimeType: match?.[1] || "image/png",
+          data: match?.[2] || "",
+        },
+      };
+    }
+    return { text: String((part as { text?: string }).text ?? "") };
+  });
+}
+
+async function chatGemini(
+  messages: { role: string; content: Content }[],
+  opts: { json?: boolean; model?: string } = {},
+) {
+  const key = process.env["GEMINI_API_KEY"];
+  if (!key) throw new Error("GEMINI_API_KEY is not configured.");
+  const model = opts.model || GEMINI_MODEL;
+  const system = messages.find((message) => message.role === "system");
+  const contents = messages
+    .filter((message) => message.role !== "system")
+    .map((message) => ({
+      role: message.role === "assistant" ? "model" : "user",
+      parts: geminiParts(message.content),
+    }));
+
+  const body: Record<string, unknown> = {
+    contents,
+    ...(system
+      ? {
+          systemInstruction: {
+            parts: [
+              {
+                text:
+                  typeof system.content === "string"
+                    ? system.content
+                    : system.content
+                        .map((part) => String((part as { text?: string }).text ?? ""))
+                        .join("\n"),
+              },
+            ],
+          },
+        }
+      : {}),
+    generationConfig: {
+      ...(opts.json ? { responseMimeType: "application/json" } : {}),
+    },
+  };
+
+  const response = await fetch(
+    `${GEMINI_API_URL}/${model}:generateContent?key=${key}`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    },
+  );
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    const error = new Error(`Gemini API error ${response.status}`);
+    console.error("Gemini API error", response.status, detail.slice(0, 500));
+    throw error;
+  }
+
+  const data = (await response.json()) as {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  };
+  return (
+    data.candidates?.[0]?.content?.parts
+      ?.map((part) => part.text || "")
+      .join("")
+      .trim() || ""
+  );
+}
+
+async function chatOpenAI(
   messages: { role: string; content: Content }[],
   opts: { json?: boolean; model?: string } = {},
 ) {
   const key = process.env["OPENAI_API_KEY"];
-  if (!key) throw new Error("AI belum dikonfigurasi.");
-  const model = opts.model ?? TEXT_MODEL;
+  if (!key) throw new Error("OPENAI_API_KEY is not configured.");
+  const model = opts.model || OPENAI_TEXT_MODEL;
 
-  const formattedMessages = messages.map((m) => {
+  const formattedMessages = messages.map((message) => {
     const role =
-      m.role === "system" || m.role === "assistant" || m.role === "user" ? m.role : "user";
-    if (typeof m.content === "string") {
-      return { role, content: m.content };
+      message.role === "system" ||
+      message.role === "assistant" ||
+      message.role === "user"
+        ? message.role
+        : "user";
+    if (typeof message.content === "string") {
+      return { role, content: message.content };
     }
-    const parts = m.content.map((part) => {
-      if (part.type === "image_url") {
+    return {
+      role,
+      content: message.content.map((part) => {
+        if (part.type === "image_url") {
+          return {
+            type: "image_url",
+            image_url: { url: (part.image_url as { url?: string })?.url ?? "" },
+          };
+        }
         return {
-          type: "image_url",
-          image_url: { url: (part.image_url as { url?: string })?.url ?? "" },
+          type: "text",
+          text: String((part as { text?: string }).text ?? ""),
         };
-      }
-      return { type: "text", text: (part as { text?: string }).text ?? "" };
-    });
-    return { role, content: parts };
+      }),
+    };
   });
 
-  const requestBody: Record<string, unknown> = {
-    model,
-    messages: formattedMessages,
-    temperature: 0.2,
-    max_tokens: 8192,
-    ...(opts.json
-      ? { response_format: { type: "json_object" } }
-      : {}),
-  };
-
-  const res = await fetch(OPENAI_URL, {
+  const response = await fetch(OPENAI_URL, {
     method: "POST",
     headers: {
       "content-type": "application/json",
       authorization: `Bearer ${key}`,
     },
-    body: JSON.stringify(requestBody),
+    body: JSON.stringify({
+      model,
+      messages: formattedMessages,
+      temperature: 0.2,
+      max_tokens: 8192,
+      ...(opts.json ? { response_format: { type: "json_object" } } : {}),
+    }),
   });
 
-  if (res.status === 429) throw new Error("Terlalu banyak permintaan. Coba lagi sebentar lagi.");
-  if (res.status === 402) throw new Error("Kredit AI habis. Tambahkan kredit di OpenAI.");
-  if (!res.ok) {
-    const detail = await res.text().catch(() => "");
-    console.error("OpenAI API error", res.status, detail.slice(0, 400));
-    throw new Error(`AI sedang bermasalah (${res.status}). Coba lagi.`);
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    console.error("OpenAI API error", response.status, detail.slice(0, 500));
+    throw new Error(`OpenAI API error ${response.status}`);
   }
 
-  const data = (await res.json()) as {
-    choices?: { message?: { content?: string } }[];
+  const data = (await response.json()) as {
+    choices?: Array<{ message?: { content?: string } }>;
   };
-  return data.choices?.[0]?.message?.content ?? "";
+  return data.choices?.[0]?.message?.content?.trim() || "";
+}
+
+async function chat(
+  messages: { role: string; content: Content }[],
+  opts: { json?: boolean; model?: string } = {},
+) {
+  const hasGemini = Boolean(process.env["GEMINI_API_KEY"]);
+  const hasOpenAI = Boolean(process.env["OPENAI_API_KEY"]);
+
+  if (!hasGemini && !hasOpenAI) {
+    throw new Error("AI belum dikonfigurasi.");
+  }
+
+  if (hasGemini) {
+    try {
+      return await chatGemini(messages, opts);
+    } catch (error) {
+      if (!hasOpenAI) {
+        throw new Error("AI sedang bermasalah. Coba lagi sebentar lagi.");
+      }
+      console.error("Gemini failed; falling back to OpenAI:", error);
+    }
+  }
+
+  try {
+    return await chatOpenAI(messages, opts);
+  } catch {
+    throw new Error("AI sedang bermasalah. Coba lagi sebentar lagi.");
+  }
 }
 
 /** Models sometimes wrap JSON in prose or code fences. */
@@ -369,7 +484,7 @@ Balas hanya JSON.`,
         ],
       },
     ],
-    { model: VISION_MODEL },
+    {},
   );
   const parsed = parseJson<ExtractResult>(raw);
   if (!parsed) return { ...EMPTY, summary: "NANTI tidak dapat membaca screenshot ini." };
@@ -553,5 +668,263 @@ ${message}`,
     question: typeof parsed?.question === "string" ? parsed.question : null,
     acknowledgement:
       typeof parsed?.acknowledgement === "string" ? parsed.acknowledgement : null,
+  };
+}
+
+
+export type AssistantTurnMode =
+  | "answer"
+  | "create"
+  | "complete"
+  | "dismiss"
+  | "reschedule"
+  | "set_reminder"
+  | "edit"
+  | "mark_followed_up"
+  | "mark_received"
+  | "teach_language"
+  | "clarify";
+
+export interface AssistantTurnResult {
+  mode: AssistantTurnMode;
+  reply: string;
+  confidence: number;
+  targetId: string | null;
+  dueText: string | null;
+  time: string | null;
+  reminderOffsetMinutes: number | null;
+  title: string | null;
+  priority: "low" | "medium" | "high" | null;
+  personName: string | null;
+  projectName: string | null;
+  learningType:
+    | "phrase_alias"
+    | "entity_alias"
+    | "reminder_preference"
+    | "style_preference"
+    | null;
+  learningEntityType: "person" | "project" | "location" | null;
+  learningPattern: string | null;
+  learningMeaning: string | null;
+  items: ExtractedItem[];
+}
+
+const TURN_SYSTEM = `${LANGUAGE_GUIDE}
+Kamu adalah NANTI — asisten kerja pribadi yang bertindak seperti chief of staff, bukan chatbot umum.
+
+SATU PESAN = SATU KEPUTUSAN UTAMA.
+Pilih tepat SATU mode utama:
+- answer: pengguna bertanya tentang memori kerja, tugas, jadwal, orang, proyek, apa yang terlupa, apa yang harus dilakukan, atau meminta rangkuman.
+- create: pengguna menyatakan tugas/komitmen/deadline/waiting/follow-up BARU yang jelas perlu disimpan.
+- complete: menandai item tersimpan selesai.
+- dismiss: menghapus/mengabaikan item tersimpan.
+- reschedule: mengubah tanggal/jam item tersimpan.
+- set_reminder: mengatur pengingat item tersimpan.
+- edit: mengubah judul/prioritas/orang/proyek item tersimpan.
+- mark_followed_up: pengguna sudah follow up item waiting.
+- mark_received: hal yang ditunggu sudah diterima.
+- teach_language: pengguna secara eksplisit mengajari istilah/alias/preferensi.
+- clarify: maksud penting tetapi tidak cukup aman untuk bertindak; tanya SATU pertanyaan pendek.
+
+PRINSIP:
+1. Pahami maksud, bukan ejaan. Typo, singkatan, tanpa tanda baca, campuran Indonesia/English adalah normal.
+2. Input NORMALIZED hanya petunjuk. RAW MESSAGE adalah sumber kebenaran.
+3. Jangan menjalankan tiga interpretasi sekaligus. Pilih satu mode yang paling sesuai.
+4. Jangan membuat task dari pertanyaan. "What am I forgetting?", "apa hari ini?", "siapa yang harus difollow up?" adalah answer.
+5. Jangan menjawab generik bila sebenarnya ada aksi yang jelas. "bsk sy harus pulang dr puncak jam 10" adalah create.
+6. Jangan membuat task baru bila pengguna sedang mengedit item yang jelas dirujuk: "yang tadi Jumat aja" = reschedule.
+7. Jangan membuat task duplikat bila pesan hanya memberi status tentang waiting yang sudah ada.
+8. Bila create, items berisi HANYA item baru dari pesan saat ini. Jangan mengeluarkan item lama dari context.
+9. Bila bukan create, items HARUS [].
+10. Gunakan canonical person/project dari memory hanya jika satu kandidat jelas. Kalau ambigu, clarify.
+11. reply harus natural, singkat, berguna, dan tidak robotik. Maksimal 120 kata.
+12. Untuk create yang jelas, reply mengkonfirmasi WHAT + WHEN + WHO/WHERE bila relevan.
+13. Untuk answer, jawab langsung dari workspace memory. Jangan mengarang.
+14. Untuk typo yang jelas, perbaiki diam-diam. Jangan bertanya hanya karena typo.
+15. Current message selalu mengalahkan learned memory lama.
+16. Jika recent chat menunjukkan NANTI baru saja menanyakan SATU klarifikasi untuk sebuah item, jawaban pendek berikutnya seperti "jam 10 pagi", "Budi", "Jumat", atau "iya" harus diperlakukan sebagai jawaban atas klarifikasi itu — bukan task baru.
+
+CONTOH:
+RAW: "Saya beosok harus oulang dr puncak jam 10 pagi"
+NORMALIZED: "saya besok harus pulang dari puncak jam 10 pagi"
+=> mode=create; task Pulang dari Puncak; besok 10:00; where=Puncak.
+
+RAW: "what am i forgetting?"
+=> mode=answer; rangkum overdue, hari ini, waiting/follow-up, clarification.
+
+RAW: "yang tadi jumat jam 3 aja"
+=> mode=reschedule terhadap item terbaru yang jelas.
+
+RAW: "udah beres yg invoice"
+=> mode=complete item invoice yang cocok.
+
+RAW: "Pak B belum bales"
+=> bila ada waiting aktif yang jelas untuk Pak B, mode=answer dengan status/follow-up suggestion; jangan buat task duplikat.
+
+RAW: "Pak B itu Budi"
+=> mode=teach_language, learningType=entity_alias, learningEntityType=person.
+
+FORMAT JSON:
+{
+  "mode":"answer|create|complete|dismiss|reschedule|set_reminder|edit|mark_followed_up|mark_received|teach_language|clarify",
+  "reply":"jawaban singkat natural",
+  "confidence":0.0,
+  "targetId":null,
+  "dueText":null,
+  "time":null,
+  "reminderOffsetMinutes":null,
+  "title":null,
+  "priority":null,
+  "personName":null,
+  "projectName":null,
+  "learningType":null,
+  "learningEntityType":null,
+  "learningPattern":null,
+  "learningMeaning":null,
+  "items":[]
+}
+
+Jika mode=create, bentuk setiap items sama dengan schema extraction NANTI:
+title, normalizedText, what, who, when, whenParsed, dueOffsetDays, dueTime, where, how,
+person, org, project, kind, priority, source, quote, aiNote, confidence,
+reminderRequired, reminder, needsClarification, missingFields, clarifyingQuestion.
+`;
+
+export async function runAssistantTurn(input: {
+  rawMessage: string;
+  normalizedMessage: string;
+  workspaceContext: string;
+  itemContext: Array<{
+    id: string;
+    title: string;
+    kind: string;
+    status: string;
+    due?: string;
+    time?: string;
+    person?: string;
+    project?: string;
+    semantic?: unknown;
+  }>;
+  recentConversation?: string;
+}): Promise<AssistantTurnResult> {
+  const raw = await chat(
+    [
+      { role: "system", content: TURN_SYSTEM },
+      {
+        role: "user",
+        content: `TODAY (Asia/Jakarta): ${new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Asia/Jakarta",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).format(new Date())}
+
+RAW MESSAGE:
+${input.rawMessage}
+
+NORMALIZED MESSAGE:
+${input.normalizedMessage}
+
+CURRENT SAVED ITEMS (newest/relevant first):
+${JSON.stringify(input.itemContext).slice(0, 14000)}
+
+WORKSPACE MEMORY:
+${input.workspaceContext.slice(0, 18000)}
+
+RECENT CHAT:
+${(input.recentConversation || "").slice(0, 7000)}
+
+Return one decision only.`,
+      },
+    ],
+    { json: true },
+  );
+
+  const parsed = parseJson<Partial<AssistantTurnResult>>(raw);
+  const allowed = new Set<AssistantTurnMode>([
+    "answer",
+    "create",
+    "complete",
+    "dismiss",
+    "reschedule",
+    "set_reminder",
+    "edit",
+    "mark_followed_up",
+    "mark_received",
+    "teach_language",
+    "clarify",
+  ]);
+  const ids = new Set(input.itemContext.map((item) => item.id));
+  const mode =
+    parsed?.mode && allowed.has(parsed.mode as AssistantTurnMode)
+      ? (parsed.mode as AssistantTurnMode)
+      : "clarify";
+  const targetId =
+    typeof parsed?.targetId === "string" && ids.has(parsed.targetId)
+      ? parsed.targetId
+      : null;
+
+  const created =
+    mode === "create"
+      ? clean({
+          summary: "",
+          context: [],
+          projects: [],
+          items: Array.isArray(parsed?.items) ? parsed.items : [],
+        }).items
+      : [];
+
+  return {
+    mode,
+    reply:
+      typeof parsed?.reply === "string" && parsed.reply.trim()
+        ? parsed.reply.trim().slice(0, 2000)
+        : mode === "clarify"
+          ? "Maksudmu yang mana?"
+          : "Siap.",
+    confidence:
+      typeof parsed?.confidence === "number"
+        ? Math.max(0, Math.min(1, parsed.confidence))
+        : 0.7,
+    targetId,
+    dueText: typeof parsed?.dueText === "string" ? parsed.dueText : null,
+    time: typeof parsed?.time === "string" ? parsed.time : null,
+    reminderOffsetMinutes:
+      typeof parsed?.reminderOffsetMinutes === "number"
+        ? Math.max(0, Math.min(43200, parsed.reminderOffsetMinutes))
+        : null,
+    title: typeof parsed?.title === "string" ? parsed.title.slice(0, 500) : null,
+    priority:
+      parsed?.priority === "low" ||
+      parsed?.priority === "medium" ||
+      parsed?.priority === "high"
+        ? parsed.priority
+        : null,
+    personName:
+      typeof parsed?.personName === "string" ? parsed.personName.slice(0, 200) : null,
+    projectName:
+      typeof parsed?.projectName === "string" ? parsed.projectName.slice(0, 200) : null,
+    learningType:
+      parsed?.learningType === "phrase_alias" ||
+      parsed?.learningType === "entity_alias" ||
+      parsed?.learningType === "reminder_preference" ||
+      parsed?.learningType === "style_preference"
+        ? parsed.learningType
+        : null,
+    learningEntityType:
+      parsed?.learningEntityType === "person" ||
+      parsed?.learningEntityType === "project" ||
+      parsed?.learningEntityType === "location"
+        ? parsed.learningEntityType
+        : null,
+    learningPattern:
+      typeof parsed?.learningPattern === "string"
+        ? parsed.learningPattern.slice(0, 500)
+        : null,
+    learningMeaning:
+      typeof parsed?.learningMeaning === "string"
+        ? parsed.learningMeaning.slice(0, 1000)
+        : null,
+    items: created,
   };
 }

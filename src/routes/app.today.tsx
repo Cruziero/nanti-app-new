@@ -11,7 +11,6 @@ import {
   jakartaHour,
 } from "@/lib/nanti-utils";
 import { useItemDetail } from "@/components/nanti/item-detail";
-import { DashboardAssistant } from "@/components/nanti/dashboard-assistant";
 import { generateFollowUpMessageServer } from "@/lib/nanti-ai.functions";
 import {
   Dialog,
@@ -146,12 +145,12 @@ export function Today() {
           <p className="mb-3 text-sm text-muted-foreground">
             {formatDayHeadline("en-GB")} · Jakarta time
           </p>
-          <h1 className="font-serif text-3xl leading-tight tracking-tight sm:text-4xl xl:text-5xl">
+          <h1 className="text-[28px] font-semibold leading-tight tracking-tight sm:text-[34px]">
             {salutation}
             {settings.name ? `, ${settings.name}` : ""}.
           </h1>
-          <p className="mt-3 text-sm text-muted-foreground sm:text-base">
-            Start with what needs your attention.
+          <p className="mt-2 text-sm text-muted-foreground">
+            Here’s what needs your attention.
           </p>
         </div>
         <Link
@@ -164,15 +163,15 @@ export function Today() {
 
       <section
         aria-label="Daily briefing"
-        className="rounded-xl border border-border bg-secondary/35 p-5 sm:p-6"
+        className="border-b border-border pb-7"
       >
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               Daily briefing
             </p>
-            <h2 className="mt-2 font-serif text-2xl sm:text-3xl">
-              {briefing?.greeting || "Your morning brief"}
+            <h2 className="mt-1 text-lg font-semibold">
+              {briefing?.greeting || "Your daily brief"}
             </h2>
           </div>
           <button
@@ -248,12 +247,11 @@ export function Today() {
         )}
       </section>
 
-      <DashboardAssistant />
       <div className="grid gap-10 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,1fr)]">
         <div className="min-w-0">
           <section id="priorities" aria-labelledby="priorities-heading">
             <div className="flex flex-wrap items-baseline justify-between gap-3">
-              <h2 id="priorities-heading" className="font-serif text-2xl sm:text-3xl">
+              <h2 id="priorities-heading" className="text-xl font-semibold sm:text-2xl">
                 {view === "all" ? "All tasks" : "Your priorities"}
               </h2>
               {overdue > 0 && (
@@ -403,7 +401,7 @@ export function Today() {
         <aside className="min-w-0 border-t border-border pt-8 xl:border-l xl:border-t-0 xl:pl-7 xl:pt-0">
           <section aria-labelledby="waiting-heading">
             <div className="flex items-baseline justify-between gap-3">
-              <h2 id="waiting-heading" className="font-serif text-2xl sm:text-3xl">
+              <h2 id="waiting-heading" className="text-xl font-semibold sm:text-2xl">
                 Waiting for
               </h2>
               <Link
