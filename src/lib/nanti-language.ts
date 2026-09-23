@@ -254,18 +254,34 @@ export function detectExplicitLanguageTeaching(text: string): ExplicitLanguageTe
   }
 
   const directEntity =
-    /^((?:pak|bapak|bu|ibu|mas|mbak)\s+.+?|(?:project|proyek)\s+.+?|(?:lokasi|tempat)\s+.+?)\s+(?:itu|adalah|=)\s+(.+)$/i.exec(
+    /^((?:pak|bapak|bu|ibu|mas|mbak)\s+.+?|(?:project|proyek)\s+.+?|(?:lokasi|tempat)\s+.+?)\s+(maksudnya|artinya|alias(?:nya)?|itu|adalah|=)\s+(.+)$/i.exec(
       casual,
     );
   if (directEntity) {
     const pattern = directEntity[1]!.trim();
+    const connector = directEntity[2]!.toLowerCase();
+    const meaning = directEntity[3]!.trim();
     const entityType = inferTaughtEntityType(pattern);
-    if (entityType) {
+    const ambiguousPredicate =
+      /^(belum|sudah|udah|lagi|sedang|harus|mau|akan|bisa|tidak|nggak|ga|gak|baru|perlu|punya|kirim|balas|bales|datang|pergi)\b/i.test(
+        meaning,
+      );
+    const looksLikeCompactCanonical = meaning.split(/\s+/).length <= 6;
+    const explicitConnector =
+      connector === "maksudnya" ||
+      connector === "artinya" ||
+      connector.startsWith("alias") ||
+      connector === "=";
+
+    if (
+      entityType &&
+      (explicitConnector || (looksLikeCompactCanonical && !ambiguousPredicate))
+    ) {
       return {
         memoryType: "entity_alias",
         entityType,
         pattern,
-        meaning: directEntity[2]!.trim(),
+        meaning,
       };
     }
   }
