@@ -683,6 +683,17 @@ export const createAiMessage = createServerFn({ method: "POST" }).middleware([re
     return msg;
   });
 
+export const clearAiMessages = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId, supabase } = context;
+    const { error } = await supabase
+      .from("ai_messages")
+      .delete()
+      .eq("user_id", userId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
 // Notifications
 export const fetchNotifications = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

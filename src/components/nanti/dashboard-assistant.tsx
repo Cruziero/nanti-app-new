@@ -18,7 +18,7 @@ import {
 } from "@/lib/nanti-language";
 import { recordLanguageMemory } from "@/lib/nanti-learning.functions";
 import { recordEntityAlias } from "@/lib/nanti-context-memory.functions";
-import { createAiMessage, fetchAiMessages } from "@/lib/nanti-supabase";
+import { createAiMessage, clearAiMessages, fetchAiMessages } from "@/lib/nanti-supabase";
 
 type Message = { role: "user" | "assistant"; text: string };
 type SavedCard = Pick<
@@ -395,6 +395,22 @@ export function DashboardAssistant() {
       { role: "assistant", text: answer },
     ]);
     await persistChatTurn(question, answer, metadata);
+  };
+
+  const clearChat = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await clearAiMessages();
+      setMessages([]);
+      setSavedCards([]);
+      setPendingClarification(null);
+      setError("");
+    } catch {
+      setError("Chat history couldn't be cleared. Please try again.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const learnCorrection = (
@@ -1136,6 +1152,16 @@ export function DashboardAssistant() {
               {value === "ask" ? "Chat" : "Paste conversation"}
             </button>
           ))}
+          {mode === "ask" && messages.length > 0 && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void clearChat()}
+              className="min-h-11 rounded-md px-3 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 dark:hover:bg-red-950"
+            >
+              Clear
+            </button>
+          )}
         </div>
       </div>
 
