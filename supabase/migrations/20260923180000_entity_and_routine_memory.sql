@@ -31,6 +31,10 @@ create index if not exists entity_aliases_project_idx
   where entity_type = 'project' and active;
 create index if not exists entity_aliases_rank_idx
   on public.entity_aliases(user_id, entity_type, active, confidence desc, evidence_count desc, updated_at desc);
+create index if not exists entity_aliases_person_fk_idx
+  on public.entity_aliases(person_id);
+create index if not exists entity_aliases_project_fk_idx
+  on public.entity_aliases(project_id);
 
 alter table public.entity_aliases enable row level security;
 
