@@ -1,14 +1,11 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  Plus,
   MessageSquare,
   CalendarDays,
   Inbox,
   Hourglass,
   Settings,
   LogOut,
-  ListTodo,
-  Link2,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -17,11 +14,10 @@ import { useNanti } from "@/lib/nanti-store";
 import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
 
 const destinations = [
+  { to: "/app", label: "Ask NANTI", icon: MessageSquare },
   { to: "/app/today", label: "Today", icon: CalendarDays },
   { to: "/app/inbox", label: "Inbox", icon: Inbox },
-  { to: "/app/today", label: "Tasks", icon: ListTodo, view: "all" },
-  { to: "/app/waiting", label: "Waiting for", icon: Hourglass },
-  { to: "/app", label: "NANTI AI", icon: MessageSquare },
+  { to: "/app/waiting", label: "Waiting", icon: Hourglass },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -30,13 +26,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const location = useRouterState({ select: (state) => state.location });
   const [leaving, setLeaving] = useState(false);
   const inbox = hydrated ? items.filter((i) => i.status === "inbox").length : 0;
-  const allTasks = (location.search as { view?: string }).view === "all";
-  const active = (label: string, to: string) =>
-    label === "Tasks"
-      ? location.pathname === to && allTasks
-      : label === "Today"
-        ? location.pathname === to && !allTasks
-        : location.pathname.replace(/\/$/, "") === to;
+  const active = (label: string, to: string) => {
+    const path = location.pathname.replace(/\/$/, "") || "/app";
+    const target = to.replace(/\/$/, "");
+    return path === target;
+  };
   const logout = async () => {
     setLeaving(true);
     try {
@@ -56,7 +50,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         Skip to content
       </a>
       <aside className="fixed inset-y-0 left-0 hidden w-[224px] flex-col border-r border-border bg-sidebar px-4 py-8 lg:flex">
-        <Link to="/app/today" className="px-3 font-serif text-3xl font-semibold text-primary">
+        <Link to="/app" className="px-3 font-serif text-3xl font-semibold text-primary">
           NANTI
         </Link>
         <p className="mb-8 mt-4 break-words px-3 text-sm text-muted-foreground">
@@ -67,7 +61,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link
               key={item.label}
               to={item.to}
-              search={"view" in item ? { view: "all" } : { view: undefined }}
               aria-current={active(item.label, item.to) ? "page" : undefined}
               className={cn(
                 "flex min-h-12 items-center gap-3 rounded-lg px-3 text-sm transition-colors",
@@ -85,14 +78,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
         <div className="mt-8 space-y-2 border-t border-border pt-5">
-          <Link
-            to="/app/today"
-            hash="connections"
-            className="flex min-h-12 items-center gap-3 rounded-lg px-3 text-sm hover:bg-sidebar-accent"
-          >
-            <Link2 aria-hidden="true" className="size-5" />
-            Integrations
-          </Link>
           <Link
             to="/app/settings"
             className="flex min-h-12 items-center gap-3 rounded-lg px-3 text-sm hover:bg-sidebar-accent"
@@ -126,7 +111,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background px-4 py-2 lg:hidden">
-        <Link to="/app/today" className="font-serif text-2xl font-semibold text-primary">
+        <Link to="/app" className="font-serif text-2xl font-semibold text-primary">
           NANTI
         </Link>
         <div className="flex gap-2">
@@ -163,17 +148,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         aria-label="Mobile navigation"
         className="fixed inset-x-0 bottom-0 z-30 flex justify-around gap-1 border-t border-border bg-background px-2 pb-[env(safe-area-inset-bottom)] lg:hidden"
       >
-        {[
-          destinations[0],
-          destinations[1],
-          { to: "/app/import", label: "Import", icon: Plus },
-          destinations[3],
-          destinations[4],
-        ].map((item) => (
+        {destinations.map((item) => (
           <Link
             key={item.label}
             to={item.to}
-            search={{ view: undefined }}
             aria-current={active(item.label, item.to) ? "page" : undefined}
             className={cn(
               "flex min-h-16 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg text-[11px]",
@@ -181,11 +159,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             )}
           >
             <item.icon aria-hidden="true" className="size-5" />
-            {item.label === "Waiting for"
-              ? "Waiting"
-              : item.label === "NANTI AI"
-                ? "Ask"
-                : item.label}
+            {item.label === "Ask NANTI" ? "Ask" : item.label}
           </Link>
         ))}
       </nav>
