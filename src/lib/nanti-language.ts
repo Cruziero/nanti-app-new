@@ -135,7 +135,7 @@ function normalizeWord(word: string) {
   const expanded = EXPANSIONS[lower];
   if (expanded) return preserveCase(word, expanded);
 
-  if (lower.length < 4 || !/^[a-z]+$/.test(lower)) return word;
+  if (lower.length < 5 || !/^[a-z]+$/.test(lower)) return word;
 
   let best: string | null = null;
   let bestDistance = Number.POSITIVE_INFINITY;
