@@ -3,6 +3,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { extractItems, type ExtractedItem } from "@/lib/nanti-ai.server";
 import { loadLanguageLearningPrompt } from "@/lib/nanti-learning.functions";
+import { loadEntityRoutinePrompt } from "@/lib/nanti-context-memory.functions";
 import { detectExplicitLanguageTeaching, normalizedIntentText } from "@/lib/nanti-language";
 import { parseSmartDate } from "@/lib/nanti-dates";
 import { addDays, todayISO } from "@/lib/nanti-utils";
@@ -339,8 +340,15 @@ async function handleMessage(message: IncomingMessage) {
       .single();
     if (conversationError) throw conversationError;
 
-    const learning = await loadLanguageLearningPrompt(supabase, link.user_id);
-    const extraction = await extractItems(content, "WhatsApp", learning);
+    const [learning, entityRoutineMemory] = await Promise.all([
+      loadLanguageLearningPrompt(supabase, link.user_id),
+      loadEntityRoutinePrompt(supabase, link.user_id),
+    ]);
+    const extraction = await extractItems(
+      content,
+      "WhatsApp",
+      [learning, entityRoutineMemory].filter(Boolean).join("\n\n"),
+    );
     const created = [];
     let clarification: { id: string; question: string } | null = null;
 
@@ -617,6 +625,20 @@ async function persistExtractedItem(
       metadata: { kind: item.kind },
     });
   }
+  await observeRoutineAdmin(supabase, userId, {
+    sourceItemId: data.id,
+    what: semantics.what || item.title,
+    where: semantics.where,
+    how: semantics.how,
+    time,
+    person: person?.name || item.person || null,
+    project: project?.name || item.project || null,
+    reminderOffsetMinutes: item.reminder?.offsetMinutes ?? null,
+    exampleText: item.quote || original,
+    explicitRecurrence: /\b(setiap|tiap|biasanya|rutin|selalu|every|usually|weekly|daily|harian|mingguan)\b/i.test(
+      [item.quote, item.normalizedText, original].filter(Boolean).join(" "),
+    ),
+  });
   return { entity: "task", id: data.id, title: data.title };
 }
 
@@ -808,6 +830,89 @@ async function promoteInboxAdmin(
   return { ...data, kind: inbox.type };
 }
 
+async function recordEntityAliasAdmin(
+  supabase: ReturnType<typeof adminClient>,
+  input: {
+    userId: string;
+    entityType: "person" | "project" | "location";
+    entityId?: string | null;
+    canonicalName: string;
+    aliasText: string;
+    confidence?: number;
+    source?: string;
+    metadata?: Record<string, unknown>;
+  },
+) {
+  const aliasKey = input.aliasText.trim().toLowerCase().replace(/\s+/g, " ").slice(0, 500);
+  if (!aliasKey) return;
+
+  const payload = {
+    user_id: input.userId,
+    entity_type: input.entityType,
+    person_id: input.entityType === "person" ? input.entityId || null : null,
+    project_id: input.entityType === "project" ? input.entityId || null : null,
+    canonical_name: input.canonicalName.trim().slice(0, 500),
+    alias_text: input.aliasText.trim().slice(0, 1000),
+    alias_key: aliasKey,
+    metadata: input.metadata || {},
+    confidence: Math.max(0, Math.min(1, input.confidence ?? 0.78)),
+    evidence_count: 1,
+    active: true,
+    source: input.source || null,
+    last_seen_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data: existing, error: existingError } = await supabase
+    .from("entity_aliases")
+    .select("id,evidence_count,confidence,canonical_name")
+    .eq("user_id", input.userId)
+    .eq("entity_type", input.entityType)
+    .eq("alias_key", aliasKey)
+    .maybeSingle();
+  if (existingError) throw existingError;
+
+  if (existing) {
+    const sameCanonical =
+      String(existing.canonical_name || "").toLowerCase() ===
+      input.canonicalName.trim().toLowerCase();
+    const { error } = await supabase
+      .from("entity_aliases")
+      .update({
+        ...payload,
+        evidence_count: Number(existing.evidence_count || 1) + 1,
+        confidence: Math.min(
+          0.99,
+          Math.max(Number(existing.confidence || 0), payload.confidence) +
+            (sameCanonical ? 0.04 : 0.01),
+        ),
+      })
+      .eq("id", existing.id)
+      .eq("user_id", input.userId);
+    if (error) throw error;
+    return;
+  }
+
+  const { error } = await supabase.from("entity_aliases").insert(payload);
+  if (error) throw error;
+}
+
+function stripPersonHonorific(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/^(pak|bapak|bu|ibu|mas|mbak)\s+/, "");
+}
+
+function stripProjectPrefix(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/^(project|proyek)\s+/, "");
+}
+
 async function resolvePersonAdmin(
   supabase: ReturnType<typeof adminClient>,
   userId: string,
@@ -816,17 +921,72 @@ async function resolvePersonAdmin(
 ) {
   const cleanName = name.trim().slice(0, 200);
   if (!cleanName) return null;
+  const aliasKey = cleanName.toLowerCase().replace(/\s+/g, " ");
 
-  const { data: existing, error: existingError } = await supabase
-    .from("people")
-    .select("*")
+  const { data: alias, error: aliasError } = await supabase
+    .from("entity_aliases")
+    .select("person_id")
     .eq("user_id", userId)
-    .ilike("name", cleanName)
+    .eq("entity_type", "person")
+    .eq("active", true)
+    .eq("alias_key", aliasKey)
+    .order("confidence", { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (existingError) throw existingError;
+  if (aliasError) throw aliasError;
+
+  let existing: any = null;
+  if (alias?.person_id) {
+    const { data, error } = await supabase
+      .from("people")
+      .select("*")
+      .eq("id", alias.person_id)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) throw error;
+    existing = data;
+  }
+
+  if (!existing) {
+    const { data, error } = await supabase
+      .from("people")
+      .select("*")
+      .eq("user_id", userId)
+      .ilike("name", cleanName)
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    existing = data;
+  }
+
+  if (!existing) {
+    const { data: candidates, error } = await supabase
+      .from("people")
+      .select("*")
+      .eq("user_id", userId)
+      .limit(100);
+    if (error) throw error;
+    const stripped = stripPersonHonorific(cleanName);
+    if (stripped.length >= 3) {
+      existing = (candidates || []).find(
+        (candidate: any) => stripPersonHonorific(String(candidate.name || "")) === stripped,
+      ) || null;
+    }
+  }
 
   if (existing) {
+    if (aliasKey !== String(existing.name || "").trim().toLowerCase().replace(/\s+/g, " ")) {
+      await recordEntityAliasAdmin(supabase, {
+        userId,
+        entityType: "person",
+        entityId: existing.id,
+        canonicalName: existing.name,
+        aliasText: cleanName,
+        confidence: 0.82,
+        source: "whatsapp_resolver",
+        metadata: { auto: true },
+      });
+    }
     if (company && !existing.company) {
       const { data: updated, error } = await supabase
         .from("people")
@@ -872,16 +1032,74 @@ async function resolveProjectAdmin(
 ) {
   const cleanName = name.trim().slice(0, 200);
   if (!cleanName) return null;
+  const aliasKey = cleanName.toLowerCase().replace(/\s+/g, " ");
 
-  const { data: existing, error: existingError } = await supabase
-    .from("projects")
-    .select("*")
+  const { data: alias, error: aliasError } = await supabase
+    .from("entity_aliases")
+    .select("project_id")
     .eq("user_id", userId)
-    .ilike("name", cleanName)
+    .eq("entity_type", "project")
+    .eq("active", true)
+    .eq("alias_key", aliasKey)
+    .order("confidence", { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (existingError) throw existingError;
-  if (existing) return existing;
+  if (aliasError) throw aliasError;
+
+  let existing: any = null;
+  if (alias?.project_id) {
+    const { data, error } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("id", alias.project_id)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) throw error;
+    existing = data;
+  }
+
+  if (!existing) {
+    const { data, error } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("user_id", userId)
+      .ilike("name", cleanName)
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    existing = data;
+  }
+
+  if (!existing) {
+    const { data: candidates, error } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("user_id", userId)
+      .limit(100);
+    if (error) throw error;
+    const stripped = stripProjectPrefix(cleanName);
+    if (stripped.length >= 2) {
+      existing = (candidates || []).find(
+        (candidate: any) => stripProjectPrefix(String(candidate.name || "")) === stripped,
+      ) || null;
+    }
+  }
+
+  if (existing) {
+    if (aliasKey !== String(existing.name || "").trim().toLowerCase().replace(/\s+/g, " ")) {
+      await recordEntityAliasAdmin(supabase, {
+        userId,
+        entityType: "project",
+        entityId: existing.id,
+        canonicalName: existing.name,
+        aliasText: cleanName,
+        confidence: 0.82,
+        source: "whatsapp_resolver",
+        metadata: { auto: true },
+      });
+    }
+    return existing;
+  }
 
   const { data, error } = await supabase
     .from("projects")
@@ -900,6 +1118,105 @@ async function resolveProjectAdmin(
     .single();
   if (racedError) throw racedError;
   return raced;
+}
+
+async function observeRoutineAdmin(
+  supabase: ReturnType<typeof adminClient>,
+  userId: string,
+  input: {
+    sourceItemId: string;
+    what: string;
+    where?: string | null;
+    how?: string | null;
+    time?: string | null;
+    person?: string | null;
+    project?: string | null;
+    reminderOffsetMinutes?: number | null;
+    exampleText?: string | null;
+    explicitRecurrence?: boolean;
+  },
+) {
+  const key = [
+    "action",
+    normalizedIntentText(input.what).slice(0, 260),
+    input.where ? `where:${normalizedIntentText(input.where).slice(0, 160)}` : "",
+    input.time ? `time:${input.time}` : "",
+    input.person ? `person:${normalizedIntentText(input.person).slice(0, 120)}` : "",
+    input.project ? `project:${normalizedIntentText(input.project).slice(0, 120)}` : "",
+  ].filter(Boolean).join("|");
+
+  const learnedValue = {
+    what: input.what,
+    ...(input.where ? { where: input.where } : {}),
+    ...(input.how ? { how: input.how } : {}),
+    ...(input.time ? { time: input.time } : {}),
+    ...(input.person ? { person: input.person } : {}),
+    ...(input.project ? { project: input.project } : {}),
+    ...(input.reminderOffsetMinutes != null
+      ? { reminderOffsetMinutes: input.reminderOffsetMinutes }
+      : {}),
+  };
+
+  const { data: existing, error: existingError } = await supabase
+    .from("user_routines")
+    .select("id,evidence_count,confidence,learned_value")
+    .eq("user_id", userId)
+    .eq("routine_key", key)
+    .maybeSingle();
+  if (existingError) throw existingError;
+
+  const startingConfidence = input.explicitRecurrence ? 0.9 : 0.55;
+  if (existing) {
+    const sameValue =
+      JSON.stringify(existing.learned_value || {}) === JSON.stringify(learnedValue);
+    const { error } = await supabase
+      .from("user_routines")
+      .update({
+        title: input.what.slice(0, 500),
+        learned_value: learnedValue,
+        example_text: input.exampleText?.slice(0, 3000) || null,
+        source_item_id: input.sourceItemId,
+        evidence_count: Number(existing.evidence_count || 1) + 1,
+        confidence: Math.min(
+          0.97,
+          Math.max(Number(existing.confidence || 0), startingConfidence) +
+            (sameValue ? 0.06 : 0.02),
+        ),
+        active: true,
+        last_observed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existing.id)
+      .eq("user_id", userId);
+    if (error) throw error;
+  } else {
+    const { error } = await supabase.from("user_routines").insert({
+      user_id: userId,
+      routine_type: "action",
+      routine_key: key,
+      title: input.what.slice(0, 500),
+      learned_value: learnedValue,
+      example_text: input.exampleText?.slice(0, 3000) || null,
+      source_item_id: input.sourceItemId,
+      confidence: startingConfidence,
+      evidence_count: 1,
+      active: true,
+      last_observed_at: new Date().toISOString(),
+    });
+    if (error) throw error;
+  }
+
+  if (input.where) {
+    await recordEntityAliasAdmin(supabase, {
+      userId,
+      entityType: "location",
+      canonicalName: input.where,
+      aliasText: input.where,
+      confidence: input.explicitRecurrence ? 0.88 : 0.62,
+      source: "routine_observation",
+      metadata: { observed_from_routine: true },
+    });
+  }
 }
 
 async function recordPersonActivityAdmin(
