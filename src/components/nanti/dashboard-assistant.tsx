@@ -230,7 +230,7 @@ function fallbackCommand(message: string, target?: Item): Command | null {
     };
   }
   if (
-    /^(actually|sebenarnya|ubah|ganti|jadikan|make it|pindah)/.test(lower) &&
+    /\b(actually|sebenarnya|ubah|ganti|jadikan|make it|pindah|pindahin|pindahkan|geser|reschedule)\b/.test(lower) &&
     (parsed.date || parsed.time)
   ) {
     return {
@@ -669,9 +669,21 @@ export function DashboardAssistant() {
       const deterministicAnswer = deterministicMemoryAnswer(question, items, people);
 
       const [commandResult, answerResult, extractionResult] = await Promise.allSettled([
-        interpretTaskCommand({ data: { message: question, items: commandItems } }),
+        interpretTaskCommand({
+          data: {
+            message: question,
+            items: commandItems,
+            recentConversation: history.slice(0, 8000),
+          },
+        }),
         askAssistant({ data: { question, context } }),
-        analyzeConversation({ data: { text: question, source: "Chat dengan NANTI" } }),
+        analyzeConversation({
+          data: {
+            text: question,
+            source: "Chat dengan NANTI",
+            context: context.slice(0, 16000),
+          },
+        }),
       ]);
 
       const aiCommand =
