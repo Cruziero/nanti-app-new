@@ -197,6 +197,11 @@ export function normalizeActionTitle(text: string) {
       /\s+(?:pada\s+)?(?:jam|pukul)\s+\d{1,2}(?:[.:]\d{2})?(?:\s*(?:pagi|siang|sore|malam|am|pm))?\s*$/i,
       "",
     )
+    .replace(
+      /\s+(?:pada\s+)?tanggal\s+\d{1,2}(?:\s+[A-Za-z]+(?:\s+\d{4})?)?\s*$/i,
+      "",
+    )
+    .replace(/\s+(?:hari\s+ini|besok|lusa)\s*$/i, "")
     .replace(/[.!?,;:]+\s*$/, "")
     .trim();
 
