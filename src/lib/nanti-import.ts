@@ -28,6 +28,27 @@ function inferLocation(text: string) {
   return match?.[1]?.trim().replace(/[.,!?;:]+$/, "") || undefined;
 }
 
+function inferRelatedPerson(text: string) {
+  const normalized = normalizeCasualIndonesian(text);
+  const match = /\b(pak|bapak|bu|ibu|mbak|mas)\s+([A-Za-z][A-Za-z'-]*(?:\s+[A-Za-z][A-Za-z'-]*)?)/i.exec(
+    normalized,
+  );
+  if (!match) return undefined;
+  return `${match[1]} ${match[2]}`.trim();
+}
+
+function inferMethod(text: string) {
+  const lower = normalizeCasualIndonesian(text).toLowerCase();
+  if (/\b(whatsapp|via\s+wa|lewat\s+wa)\b/.test(lower)) return "WhatsApp";
+  if (/\b(email|e-mail)\b/.test(lower)) return "Email";
+  if (/\b(telepon|call|phone)\b/.test(lower)) return "Telepon";
+  if (/\b(zoom)\b/.test(lower)) return "Zoom";
+  if (/\b(gmeet|google\s+meet)\b/.test(lower)) return "Google Meet";
+  if (/\b(transfer|bank\s+transfer)\b/.test(lower)) return "Transfer";
+  const transport = /\b(?:naik\s+)?(mobil|motor|kereta|pesawat|ojek|taxi|taksi)\b/.exec(lower);
+  return transport ? `Naik ${transport[1]}` : undefined;
+}
+
 function fallbackReminderPlan(title: string, text: string, due?: string, time?: string) {
   if (!due && !time) return undefined;
   const lower = normalizeCasualIndonesian(text).toLowerCase();
@@ -206,6 +227,9 @@ export function chatMessageToFallbackItem(
   const parsed = parseSmartDate(normalized);
   const title = normalizeActionTitle(normalized);
   const where = inferLocation(normalized);
+  const how = inferMethod(normalized);
+  const relatedPersonName = inferRelatedPerson(normalized);
+  const relatedPerson = matchPerson(ctx.people, relatedPersonName);
   const reminderPlan = fallbackReminderPlan(title, normalized, parsed.date ?? undefined, parsed.time ?? undefined);
   const when = [
     parsed.date || (/\bbesok\b/i.test(normalized) ? "besok" : undefined),
@@ -222,26 +246,19 @@ export function chatMessageToFallbackItem(
     priority: "medium",
     ...(parsed.date ? { due: parsed.date } : {}),
     ...(parsed.time ? { time: parsed.time } : {}),
-    ...(where ? { semanticContext: {
+    semanticContext: {
       normalizedText: normalized,
       what: title || normalized,
       who: "user",
       when: when || undefined,
       where,
+      how,
       owner: "me",
       reminder: reminderPlan,
       typoCorrected: normalized.toLowerCase() !== raw.toLowerCase(),
-    } } : {
-      semanticContext: {
-        normalizedText: normalized,
-        what: title || normalized,
-        who: "user",
-        when: when || undefined,
-        owner: "me",
-        reminder: reminderPlan,
-        typoCorrected: normalized.toLowerCase() !== raw.toLowerCase(),
-      },
-    }),
+    },
+    ...(relatedPerson ? { personId: relatedPerson.id } : {}),
+    ...(relatedPersonName ? { personName: relatedPersonName } : {}),
     source: "Chat dengan NANTI",
     sourceType: "chat",
     quote: raw,
