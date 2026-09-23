@@ -485,7 +485,7 @@ Balas hanya JSON.`,
         ],
       },
     ],
-    { model: VISION_MODEL },
+    {},
   );
   const parsed = parseJson<ExtractResult>(raw);
   if (!parsed) return { ...EMPTY, summary: "NANTI tidak dapat membaca screenshot ini." };
@@ -743,6 +743,7 @@ PRINSIP:
 13. Untuk answer, jawab langsung dari workspace memory. Jangan mengarang.
 14. Untuk typo yang jelas, perbaiki diam-diam. Jangan bertanya hanya karena typo.
 15. Current message selalu mengalahkan learned memory lama.
+16. Jika recent chat menunjukkan NANTI baru saja menanyakan SATU klarifikasi untuk sebuah item, jawaban pendek berikutnya seperti "jam 10 pagi", "Budi", "Jumat", atau "iya" harus diperlakukan sebagai jawaban atas klarifikasi itu — bukan task baru.
 
 CONTOH:
 RAW: "Saya beosok harus oulang dr puncak jam 10 pagi"
