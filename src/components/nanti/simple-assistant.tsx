@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUp, Check, Loader2 } from "lucide-react";
-import { toast } from "sonner";
 import { useNanti } from "@/lib/nanti-store";
 import { processAssistantTurn } from "@/lib/nanti-ai.functions";
 import { draftToItem } from "@/lib/nanti-import";
