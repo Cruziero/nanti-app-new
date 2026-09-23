@@ -311,11 +311,64 @@ async function handleMessage(message: IncomingMessage) {
         patternText: teaching.pattern,
         learnedValue: {
           meaning: teaching.meaning,
+          ...(teaching.entityType ? { entityType: teaching.entityType } : {}),
           ...(teaching.offsetMinutes != null ? { offsetMinutes: teaching.offsetMinutes } : {}),
         },
         exampleText: content,
         confidence: 0.96,
       });
+
+      if (teaching.memoryType === "entity_alias" && teaching.entityType) {
+        if (teaching.entityType === "person") {
+          const canonical = await resolvePersonAdmin(
+            supabase,
+            link.user_id,
+            teaching.meaning,
+            null,
+          );
+          if (canonical?.id) {
+            await recordEntityAliasAdmin(supabase, {
+              userId: link.user_id,
+              entityType: "person",
+              entityId: canonical.id,
+              canonicalName: canonical.name,
+              aliasText: teaching.pattern,
+              confidence: 0.96,
+              source: "whatsapp_explicit_teaching",
+              metadata: { taught_from: content },
+            });
+          }
+        } else if (teaching.entityType === "project") {
+          const canonical = await resolveProjectAdmin(
+            supabase,
+            link.user_id,
+            teaching.meaning,
+          );
+          if (canonical?.id) {
+            await recordEntityAliasAdmin(supabase, {
+              userId: link.user_id,
+              entityType: "project",
+              entityId: canonical.id,
+              canonicalName: canonical.name,
+              aliasText: teaching.pattern,
+              confidence: 0.96,
+              source: "whatsapp_explicit_teaching",
+              metadata: { taught_from: content },
+            });
+          }
+        } else {
+          await recordEntityAliasAdmin(supabase, {
+            userId: link.user_id,
+            entityType: "location",
+            canonicalName: teaching.meaning,
+            aliasText: teaching.pattern,
+            confidence: 0.96,
+            source: "whatsapp_explicit_teaching",
+            metadata: { taught_from: content },
+          });
+        }
+      }
+
       await updateMessageStatus(supabase, message.id, "processed");
       await sendText(
         message.from,
