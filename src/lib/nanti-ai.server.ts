@@ -88,6 +88,12 @@ CARA MEMAHAMI CHAT PENGGUNA:
 - Jangan mengoreksi nama orang, brand, proyek, atau tempat hanya karena terlihat tidak umum.
 - Untuk jam tanpa pagi/siang/sore/malam, jangan mengarang AM/PM bila benar-benar ambigu.
 - Jangan menganggap percakapan santai sebagai tugas kecuali ada tindakan, komitmen, deadline, waiting, follow-up, atau permintaan reminder yang nyata.
+- Bila ENTITY & ROUTINE MEMORY berisi satu kandidat orang/proyek yang jelas cocok dengan alias, role, company, atau recent activity, gunakan NAMA KANONIS kandidat itu pada field person/project.
+- Contoh: bila memory bilang "Budi · role=procurement · aliases=Pak B, Budi vendor", maka "orang procurement itu" atau "Pak B" boleh di-resolve ke Budi hanya bila tidak ada kandidat lain yang sama kuat.
+- Jika dua orang/proyek sama-sama masuk akal, JANGAN memilih sendiri: set needsClarification=true dan tanya satu pertanyaan.
+- Routine memory adalah bukti kebiasaan, BUKAN fakta bahwa tugas baru pasti ada. Jangan membuat task hanya karena sebuah routine tersimpan.
+- Isi detail rutin yang tidak disebut (mis. jam/tempat biasa) hanya jika pesan sekarang jelas merujuk kebiasaan itu, mis. "seperti biasa", "yang biasanya", "same as usual", atau konteks percakapan membuat referensinya tunggal dan kuat.
+- Pesan eksplisit saat ini selalu mengalahkan alias/routine memory lama.
 
 CONTOH PEMAHAMAN:
 1) "Saya beosok harus oulang dr puncak jam 10 pagi"
@@ -414,6 +420,7 @@ export interface AssistantCommand {
     | "reminder_preference"
     | "style_preference"
     | null;
+  learningEntityType: "person" | "project" | "location" | null;
   learningPattern: string | null;
   learningMeaning: string | null;
   confidence: number;
@@ -448,7 +455,7 @@ ATURAN:
 - Untuk edit, isi hanya field yang diminta: title, priority, personName, projectName.
 - Untuk teach_language, targetId HARUS null. Isi:
   * learningType="phrase_alias" untuk "kalau aku bilang X maksudnya Y"
-  * learningType="entity_alias" untuk alias orang/proyek, mis. "Pak B itu Pak Budi"
+  * learningType="entity_alias" untuk alias orang/proyek/lokasi, mis. "Pak B itu Budi"; isi learningEntityType="person|project|location"
   * learningType="reminder_preference" untuk kebiasaan reminder, mis. "kalau meeting ingetin 30 menit sebelum"
   * learningType="style_preference" untuk gaya respons, mis. "jawab singkat aja"
   * learningPattern = kata/frasa/konteks pemicu
@@ -528,6 +535,12 @@ ${message}`,
       parsed?.learningType === "reminder_preference" ||
       parsed?.learningType === "style_preference"
         ? parsed.learningType
+        : null,
+    learningEntityType:
+      parsed?.learningEntityType === "person" ||
+      parsed?.learningEntityType === "project" ||
+      parsed?.learningEntityType === "location"
+        ? parsed.learningEntityType
         : null,
     learningPattern:
       typeof parsed?.learningPattern === "string" ? parsed.learningPattern.slice(0, 500) : null,

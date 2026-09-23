@@ -135,6 +135,35 @@ assert.equal(taughtReminder.memoryType, "reminder_preference");
 assert.equal(taughtReminder.pattern.toLowerCase(), "meeting");
 assert.equal(taughtReminder.offsetMinutes, 30);
 
+const taughtPerson = language.detectExplicitLanguageTeaching("Pak B itu Budi");
+assert.ok(taughtPerson);
+assert.equal(taughtPerson.memoryType, "entity_alias");
+assert.equal(taughtPerson.entityType, "person");
+assert.equal(taughtPerson.pattern.toLowerCase(), "pak b");
+assert.equal(taughtPerson.meaning.toLowerCase(), "budi");
+
+const taughtProject = language.detectExplicitLanguageTeaching(
+  "proyek TPS maksudnya The Padel Side",
+);
+assert.ok(taughtProject);
+assert.equal(taughtProject.memoryType, "entity_alias");
+assert.equal(taughtProject.entityType, "project");
+assert.equal(taughtProject.meaning, "The Padel Side");
+
+const taughtLocation = language.detectExplicitLanguageTeaching(
+  "lokasi kantor = SCBD",
+);
+assert.ok(taughtLocation);
+assert.equal(taughtLocation.memoryType, "entity_alias");
+assert.equal(taughtLocation.entityType, "location");
+assert.equal(taughtLocation.meaning, "SCBD");
+
+assert.equal(
+  language.detectExplicitLanguageTeaching("Pak B itu belum bales"),
+  null,
+  "ordinary entity statements must not be misclassified as alias teaching",
+);
+
 assert.equal(
   language.detectExplicitLanguageTeaching("besok saya meeting jam 10"),
   null,

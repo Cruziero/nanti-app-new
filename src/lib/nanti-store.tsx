@@ -21,6 +21,7 @@ import type {
 import { demoItems, demoPeople, demoProjects, dayOffset } from "./nanti-demo";
 import { addDays, normalizeDay, todayISO } from "./nanti-utils";
 import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
+import { observeUserRoutine } from "./nanti-context-memory.functions";
 import {
   fetchProjects,
   fetchPeople,
@@ -750,6 +751,44 @@ export function NantiProvider({ children }: { children: ReactNode }) {
           };
         });
         for (const savedItem of savedItems) {
+          if (savedItem.status !== "inbox" && savedItem.kind !== "waiting") {
+            const semantic = savedItem.semanticContext;
+            const recurrenceText = [
+              savedItem.quote,
+              semantic?.normalizedText,
+              savedItem.description,
+            ]
+              .filter(Boolean)
+              .join(" ");
+            const explicitRecurrence =
+              /\b(setiap|tiap|biasanya|rutin|selalu|every|usually|weekly|daily|harian|mingguan)\b/i.test(
+                recurrenceText,
+              );
+            const reminderOffset =
+              semantic?.reminder?.offsetMinutes == null
+                ? null
+                : semantic.reminder.offsetMinutes;
+            void observeUserRoutine({
+              data: {
+                source_item_id: savedItem.id,
+                what: semantic?.what || savedItem.title,
+                where: semantic?.where || null,
+                how: semantic?.how || null,
+                time: savedItem.time || null,
+                person: savedItem.personName || null,
+                project: savedItem.projectName || null,
+                reminder_offset_minutes: reminderOffset,
+                example_text:
+                  savedItem.quote ||
+                  semantic?.normalizedText ||
+                  savedItem.title,
+                explicit_recurrence: explicitRecurrence,
+              },
+            }).catch((error) =>
+              console.error("Failed to observe NANTI routine:", error),
+            );
+          }
+
           void logProductEvent({
             data: {
               event_name: "capture_saved",

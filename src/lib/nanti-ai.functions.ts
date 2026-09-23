@@ -2,6 +2,18 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function loadPersonalAiContext(context: { supabase: any; userId: string }) {
+  const [{ loadLanguageLearningPrompt }, { loadEntityRoutinePrompt }] = await Promise.all([
+    import("./nanti-learning.functions"),
+    import("./nanti-context-memory.functions"),
+  ]);
+  const [language, entities] = await Promise.all([
+    loadLanguageLearningPrompt(context.supabase, context.userId),
+    loadEntityRoutinePrompt(context.supabase, context.userId),
+  ]);
+  return [language, entities].filter(Boolean).join("\n\n");
+}
+
 export const analyzeConversation = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
@@ -13,12 +25,11 @@ export const analyzeConversation = createServerFn({ method: "POST" }).middleware
       .parse(data),
   )
   .handler(async ({ data, context }) => {
-    const [{ extractItems }, { loadLanguageLearningPrompt }] = await Promise.all([
+    const [{ extractItems }, personalContext] = await Promise.all([
       import("./nanti-ai.server"),
-      import("./nanti-learning.functions"),
+      loadPersonalAiContext(context),
     ]);
-    const learning = await loadLanguageLearningPrompt(context.supabase, context.userId);
-    const combinedContext = [data.context, learning].filter(Boolean).join("\n\n");
+    const combinedContext = [data.context, personalContext].filter(Boolean).join("\n\n");
     return extractItems(data.text, data.source, combinedContext);
   });
 
@@ -32,12 +43,11 @@ export const analyzeScreenshot = createServerFn({ method: "POST" }).middleware([
       .parse(data),
   )
   .handler(async ({ data, context }) => {
-    const [{ extractFromImage }, { loadLanguageLearningPrompt }] = await Promise.all([
+    const [{ extractFromImage }, personalContext] = await Promise.all([
       import("./nanti-ai.server"),
-      import("./nanti-learning.functions"),
+      loadPersonalAiContext(context),
     ]);
-    const learning = await loadLanguageLearningPrompt(context.supabase, context.userId);
-    return extractFromImage(data.image, data.source, learning);
+    return extractFromImage(data.image, data.source, personalContext);
   });
 
 export const askAssistant = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
@@ -45,15 +55,14 @@ export const askAssistant = createServerFn({ method: "POST" }).middleware([requi
     z.object({ question: z.string().min(1).max(2000), context: z.string().max(20000) }).parse(data),
   )
   .handler(async ({ data, context }) => {
-    const [{ askNanti }, { loadLanguageLearningPrompt }] = await Promise.all([
+    const [{ askNanti }, personalContext] = await Promise.all([
       import("./nanti-ai.server"),
-      import("./nanti-learning.functions"),
+      loadPersonalAiContext(context),
     ]);
-    const learning = await loadLanguageLearningPrompt(context.supabase, context.userId);
     return {
       answer: await askNanti(
         data.question,
-        [data.context, learning].filter(Boolean).join("\n\n"),
+        [data.context, personalContext].filter(Boolean).join("\n\n"),
       ),
     };
   });
@@ -80,15 +89,14 @@ export const interpretTaskCommand = createServerFn({ method: "POST" }).middlewar
     }).parse(data),
   )
   .handler(async ({ data, context }) => {
-    const [{ interpretAssistantCommand }, { loadLanguageLearningPrompt }] = await Promise.all([
+    const [{ interpretAssistantCommand }, personalContext] = await Promise.all([
       import("./nanti-ai.server"),
-      import("./nanti-learning.functions"),
+      loadPersonalAiContext(context),
     ]);
-    const learning = await loadLanguageLearningPrompt(context.supabase, context.userId);
     return interpretAssistantCommand(
       data.message,
       data.items,
-      [data.recentConversation, learning].filter(Boolean).join("\n\n"),
+      [data.recentConversation, personalContext].filter(Boolean).join("\n\n"),
     );
   });
 

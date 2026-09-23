@@ -32,6 +32,16 @@ import {
   setLanguageMemoryActive,
   type LanguageMemoryRow,
 } from "@/lib/nanti-learning.functions";
+import {
+  deleteEntityAlias,
+  deleteUserRoutine,
+  fetchEntityAliases,
+  fetchUserRoutines,
+  setEntityAliasActive,
+  setUserRoutineActive,
+  type EntityAliasRow,
+  type UserRoutineRow,
+} from "@/lib/nanti-context-memory.functions";
 
 export const Route = createFileRoute("/app/settings")({
   head: () => ({
@@ -72,7 +82,10 @@ function SettingsPage() {
   const [whatsAppLink, setWhatsAppLink] = useState<WhatsAppLinkState | null>(null);
   const [whatsAppLoading, setWhatsAppLoading] = useState(true);
   const [languageMemories, setLanguageMemories] = useState<LanguageMemoryRow[]>([]);
+  const [entityAliases, setEntityAliases] = useState<EntityAliasRow[]>([]);
+  const [routines, setRoutines] = useState<UserRoutineRow[]>([]);
   const [languageLoading, setLanguageLoading] = useState(true);
+  const [contextLoading, setContextLoading] = useState(true);
   const nantiWhatsAppNumber = String(import.meta.env.VITE_NANTI_WHATSAPP_NUMBER || "").replace(/\D/g, "");
   const whatsappConnected = Boolean(whatsAppLink?.verified_at && whatsAppLink?.phone_number);
   const { signOut } = useSupabaseAuth();
@@ -114,6 +127,25 @@ function SettingsPage() {
   useEffect(() => {
     void refreshLanguageMemory();
   }, [refreshLanguageMemory]);
+
+  const refreshContextMemory = useCallback(async () => {
+    try {
+      const [aliases, learnedRoutines] = await Promise.all([
+        fetchEntityAliases(),
+        fetchUserRoutines(),
+      ]);
+      setEntityAliases(aliases);
+      setRoutines(learnedRoutines);
+    } catch (error) {
+      console.error("Failed to load NANTI context memory:", error);
+    } finally {
+      setContextLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshContextMemory();
+  }, [refreshContextMemory]);
 
   useEffect(() => {
     if (!whatsAppLink?.link_code || whatsappConnected) return;
@@ -208,6 +240,71 @@ function SettingsPage() {
       return `${value.field}: ${String(value.answer || "")}`;
     }
     return JSON.stringify(value).slice(0, 220);
+  };
+
+  const toggleEntityAlias = async (alias: EntityAliasRow) => {
+    try {
+      const updated = await setEntityAliasActive({
+        data: { id: alias.id, active: !alias.active },
+      });
+      setEntityAliases((current) =>
+        current.map((item) => (item.id === alias.id ? updated : item)),
+      );
+    } catch (error) {
+      console.error("Failed to update entity alias:", error);
+      toast.error("Could not update that alias.");
+    }
+  };
+
+  const removeEntityAlias = async (alias: EntityAliasRow) => {
+    try {
+      await deleteEntityAlias({ data: { id: alias.id } });
+      setEntityAliases((current) => current.filter((item) => item.id !== alias.id));
+      toast.success("Alias removed.");
+    } catch (error) {
+      console.error("Failed to remove entity alias:", error);
+      toast.error("Could not remove that alias.");
+    }
+  };
+
+  const toggleRoutine = async (routine: UserRoutineRow) => {
+    try {
+      const updated = await setUserRoutineActive({
+        data: { id: routine.id, active: !routine.active },
+      });
+      setRoutines((current) =>
+        current.map((item) => (item.id === routine.id ? updated : item)),
+      );
+    } catch (error) {
+      console.error("Failed to update routine memory:", error);
+      toast.error("Could not update that routine.");
+    }
+  };
+
+  const removeRoutine = async (routine: UserRoutineRow) => {
+    try {
+      await deleteUserRoutine({ data: { id: routine.id } });
+      setRoutines((current) => current.filter((item) => item.id !== routine.id));
+      toast.success("Routine forgotten.");
+    } catch (error) {
+      console.error("Failed to remove routine:", error);
+      toast.error("Could not remove that routine.");
+    }
+  };
+
+  const routineSummary = (routine: UserRoutineRow) => {
+    const value = routine.learned_value || {};
+    return [
+      typeof value.where === "string" ? `where: ${value.where}` : "",
+      typeof value.time === "string" ? `time: ${value.time}` : "",
+      typeof value.person === "string" ? `with: ${value.person}` : "",
+      typeof value.project === "string" ? `project: ${value.project}` : "",
+      typeof value.reminderOffsetMinutes === "number"
+        ? `remind ${value.reminderOffsetMinutes}m before`
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" · ") || "Recurring action pattern";
   };
 
   const handleSignOut = async () => {
@@ -316,6 +413,106 @@ function SettingsPage() {
             Nothing learned yet. Correct NANTI naturally or teach it a phrase in Ask NANTI.
           </div>
         )}
+
+        <div className="mt-6 border-t border-border pt-5">
+          <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+            People, projects & places
+          </p>
+          {contextLoading ? (
+            <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+              <Loader2 className="size-3.5 animate-spin" />
+              Loading entity memory…
+            </div>
+          ) : entityAliases.length ? (
+            <div className="mt-3 divide-y divide-border rounded-lg border border-border">
+              {entityAliases.slice(0, 12).map((alias) => (
+                <div key={alias.id} className="flex items-start gap-3 p-3">
+                  <Switch
+                    className="mt-0.5"
+                    checked={alias.active}
+                    onCheckedChange={() => void toggleEntityAlias(alias)}
+                    aria-label={`${alias.active ? "Disable" : "Enable"} alias ${alias.alias_text}`}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-medium">
+                      {alias.alias_text}
+                      {alias.alias_text !== alias.canonical_name ? (
+                        <span className="font-normal text-muted-foreground">
+                          {" "}→ {alias.canonical_name}
+                        </span>
+                      ) : null}
+                    </p>
+                    <p className="mt-1 text-[10.5px] text-muted-foreground/60">
+                      {alias.entity_type} · {Math.round(alias.confidence * 100)}% confidence · {alias.evidence_count} evidence
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label={`Delete alias ${alias.alias_text}`}
+                    onClick={() => void removeEntityAlias(alias)}
+                    className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-3 text-[12.5px] text-muted-foreground">
+              No aliases learned yet.
+            </p>
+          )}
+        </div>
+
+        <div className="mt-6 border-t border-border pt-5">
+          <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+            Detected routines
+          </p>
+          <p className="mt-1 text-[11.5px] leading-5 text-muted-foreground">
+            Repeated behavior becomes context after multiple observations. A routine never creates a task by itself.
+          </p>
+          {contextLoading ? (
+            <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+              <Loader2 className="size-3.5 animate-spin" />
+              Learning routines…
+            </div>
+          ) : routines.length ? (
+            <div className="mt-3 divide-y divide-border rounded-lg border border-border">
+              {routines.slice(0, 12).map((routine) => (
+                <div key={routine.id} className="flex items-start gap-3 p-3">
+                  <Switch
+                    className="mt-0.5"
+                    checked={routine.active}
+                    onCheckedChange={() => void toggleRoutine(routine)}
+                    aria-label={`${routine.active ? "Disable" : "Enable"} routine ${routine.title}`}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-medium">{routine.title}</p>
+                    <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
+                      {routineSummary(routine)}
+                    </p>
+                    <p className="mt-1 text-[10.5px] text-muted-foreground/60">
+                      {routine.evidence_count} observations · {Math.round(routine.confidence * 100)}% confidence
+                      {routine.evidence_count < 2 && routine.confidence < 0.85 ? " · still learning" : ""}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label={`Delete routine ${routine.title}`}
+                    onClick={() => void removeRoutine(routine)}
+                    className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-3 text-[12.5px] text-muted-foreground">
+              No recurring patterns detected yet.
+            </p>
+          )}
+        </div>
       </section>
 
       <section className="mb-10">

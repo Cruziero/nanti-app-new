@@ -17,6 +17,7 @@ import {
   normalizedIntentText,
 } from "@/lib/nanti-language";
 import { recordLanguageMemory } from "@/lib/nanti-learning.functions";
+import { recordEntityAlias } from "@/lib/nanti-context-memory.functions";
 import { createAiMessage, fetchAiMessages } from "@/lib/nanti-supabase";
 
 type Message = { role: "user" | "assistant"; text: string };
@@ -56,6 +57,7 @@ type Command = {
     | "reminder_preference"
     | "style_preference"
     | null;
+  learningEntityType: "person" | "project" | "location" | null;
   learningPattern: string | null;
   learningMeaning: string | null;
   confidence: number;
@@ -187,6 +189,7 @@ function fallbackCommand(message: string, target?: Item): Command | null {
       personName: null,
       projectName: null,
       learningType: teaching.memoryType,
+      learningEntityType: teaching.entityType ?? null,
       learningPattern: teaching.pattern,
       learningMeaning: teaching.meaning,
       confidence: 0.96,
@@ -209,6 +212,7 @@ function fallbackCommand(message: string, target?: Item): Command | null {
       personName: null,
       projectName: null,
       learningType: null,
+      learningEntityType: null,
       learningPattern: null,
       learningMeaning: null,
       confidence: 0.9,
@@ -228,6 +232,7 @@ function fallbackCommand(message: string, target?: Item): Command | null {
       personName: null,
       projectName: null,
       learningType: null,
+      learningEntityType: null,
       learningPattern: null,
       learningMeaning: null,
       confidence: 0.86,
@@ -247,6 +252,7 @@ function fallbackCommand(message: string, target?: Item): Command | null {
       personName: null,
       projectName: null,
       learningType: null,
+      learningEntityType: null,
       learningPattern: null,
       learningMeaning: null,
       confidence: 0.88,
@@ -269,6 +275,7 @@ function fallbackCommand(message: string, target?: Item): Command | null {
       personName: null,
       projectName: null,
       learningType: null,
+      learningEntityType: null,
       learningPattern: null,
       learningMeaning: null,
       confidence: 0.84,
@@ -291,6 +298,7 @@ function fallbackCommand(message: string, target?: Item): Command | null {
       personName: null,
       projectName: null,
       learningType: null,
+      learningEntityType: null,
       learningPattern: null,
       learningMeaning: null,
       confidence: 0.84,
@@ -472,6 +480,26 @@ export function DashboardAssistant() {
       learnCorrection(item, item.quote || pendingClarification.question, "clarify_person", {
         personName: answer.trim(),
       }, 0.84);
+      const previousPersonReference =
+        item.personName ||
+        (item.semanticContext?.who && item.semanticContext.who !== "user"
+          ? item.semanticContext.who
+          : undefined);
+      if (
+        previousPersonReference &&
+        normalizedIntentText(previousPersonReference) !== normalizedIntentText(answer.trim())
+      ) {
+        void recordEntityAlias({
+          data: {
+            entity_type: "person",
+            canonical_name: answer.trim(),
+            alias_text: previousPersonReference,
+            confidence: 0.86,
+            source: "clarification",
+            metadata: { itemId: item.id },
+          },
+        }).catch(() => {});
+      }
       await appendTurn(answer, `Siap. Saya catat kamu menunggu ${answer.trim()}.`, {
         clarification_resolved: true,
         item_id: promotedId,
@@ -525,6 +553,7 @@ export function DashboardAssistant() {
             pattern_text: command.learningPattern,
             learned_value: {
               meaning: command.learningMeaning,
+              ...(command.learningEntityType ? { entityType: command.learningEntityType } : {}),
               ...(command.reminderOffsetMinutes != null
                 ? { offsetMinutes: command.reminderOffsetMinutes }
                 : {}),
@@ -533,6 +562,34 @@ export function DashboardAssistant() {
             confidence: Math.max(0.85, command.confidence),
           },
         });
+
+        if (command.learningType === "entity_alias") {
+          const inferredType =
+            command.learningEntityType ||
+            (people.some(
+              (person) =>
+                normalizedIntentText(person.name) === normalizedIntentText(command.learningMeaning!),
+            )
+              ? "person"
+              : projects.some(
+                    (project) =>
+                      normalizedIntentText(project.name) === normalizedIntentText(command.learningMeaning!),
+                  )
+                ? "project"
+                : null);
+          if (inferredType) {
+            await recordEntityAlias({
+              data: {
+                entity_type: inferredType,
+                canonical_name: command.learningMeaning,
+                alias_text: command.learningPattern,
+                confidence: Math.max(0.9, command.confidence),
+                source: "explicit_teaching",
+                metadata: { taught_from: rawMessage },
+              },
+            });
+          }
+        }
       } catch (error) {
         console.error("Failed to teach NANTI:", error);
         return { handled: true, answer: "Pelajaran itu belum berhasil saya simpan." };
@@ -646,6 +703,38 @@ export function DashboardAssistant() {
         return { handled: true, answer: "Perubahannya belum berhasil saya simpan." };
       }
       learnCorrection(target, rawMessage, "edit", patch, 0.82);
+      if (
+        command.personName?.trim() &&
+        target.personName &&
+        normalizedIntentText(command.personName) !== normalizedIntentText(target.personName)
+      ) {
+        void recordEntityAlias({
+          data: {
+            entity_type: "person",
+            canonical_name: command.personName.trim(),
+            alias_text: target.personName,
+            confidence: 0.88,
+            source: "task_correction",
+            metadata: { itemId: target.id },
+          },
+        }).catch(() => {});
+      }
+      if (
+        command.projectName?.trim() &&
+        target.projectName &&
+        normalizedIntentText(command.projectName) !== normalizedIntentText(target.projectName)
+      ) {
+        void recordEntityAlias({
+          data: {
+            entity_type: "project",
+            canonical_name: command.projectName.trim(),
+            alias_text: target.projectName,
+            confidence: 0.88,
+            source: "task_correction",
+            metadata: { itemId: target.id },
+          },
+        }).catch(() => {});
+      }
       return {
         handled: true,
         answer: command.acknowledgement || `Siap. “${target.title}” sudah saya perbarui.`,
@@ -858,6 +947,7 @@ export function DashboardAssistant() {
           personName: null,
           projectName: null,
           learningType: null,
+          learningEntityType: null,
           learningPattern: null,
           learningMeaning: null,
           confidence: 0,

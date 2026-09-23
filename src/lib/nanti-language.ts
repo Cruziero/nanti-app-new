@@ -219,11 +219,20 @@ export function normalizedIntentText(text: string) {
 
 
 export type ExplicitLanguageTeaching = {
-  memoryType: "phrase_alias" | "reminder_preference";
+  memoryType: "phrase_alias" | "entity_alias" | "reminder_preference";
+  entityType?: "person" | "project" | "location";
   pattern: string;
   meaning: string;
   offsetMinutes?: number;
 };
+
+function inferTaughtEntityType(pattern: string) {
+  const normalized = pattern.trim().toLowerCase();
+  if (/^(pak|bapak|bu|ibu|mas|mbak)\b/.test(normalized)) return "person" as const;
+  if (/^(project|proyek)\b/.test(normalized)) return "project" as const;
+  if (/^(lokasi|tempat)\b/.test(normalized)) return "location" as const;
+  return undefined;
+}
 
 export function detectExplicitLanguageTeaching(text: string): ExplicitLanguageTeaching | null {
   const casual = normalizeCasualIndonesian(text).trim();
@@ -233,11 +242,48 @@ export function detectExplicitLanguageTeaching(text: string): ExplicitLanguageTe
     /^["“']?(.+?)["”']?\s+(?:artinya|maksudnya)\s+["“']?(.+?)["”']?$/i.exec(casual);
 
   if (alias) {
+    const pattern = alias[1]!.trim();
+    const meaning = alias[2]!.trim();
+    const entityType = inferTaughtEntityType(pattern);
     return {
-      memoryType: "phrase_alias",
-      pattern: alias[1]!.trim(),
-      meaning: alias[2]!.trim(),
+      memoryType: entityType ? "entity_alias" : "phrase_alias",
+      ...(entityType ? { entityType } : {}),
+      pattern,
+      meaning,
     };
+  }
+
+  const directEntity =
+    /^((?:pak|bapak|bu|ibu|mas|mbak)\s+.+?|(?:project|proyek)\s+.+?|(?:lokasi|tempat)\s+.+?)\s+(maksudnya|artinya|alias(?:nya)?|itu|adalah|=)\s+(.+)$/i.exec(
+      casual,
+    );
+  if (directEntity) {
+    const pattern = directEntity[1]!.trim();
+    const connector = directEntity[2]!.toLowerCase();
+    const meaning = directEntity[3]!.trim();
+    const entityType = inferTaughtEntityType(pattern);
+    const ambiguousPredicate =
+      /^(belum|sudah|udah|lagi|sedang|harus|mau|akan|bisa|tidak|nggak|ga|gak|baru|perlu|punya|kirim|balas|bales|datang|pergi)\b/i.test(
+        meaning,
+      );
+    const looksLikeCompactCanonical = meaning.split(/\s+/).length <= 6;
+    const explicitConnector =
+      connector === "maksudnya" ||
+      connector === "artinya" ||
+      connector.startsWith("alias") ||
+      connector === "=";
+
+    if (
+      entityType &&
+      (explicitConnector || (looksLikeCompactCanonical && !ambiguousPredicate))
+    ) {
+      return {
+        memoryType: "entity_alias",
+        entityType,
+        pattern,
+        meaning,
+      };
+    }
   }
 
   const reminder =
