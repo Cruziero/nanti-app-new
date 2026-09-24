@@ -40,9 +40,11 @@ WhatsApp is intentionally **not part of the launch scope** and remains hidden be
 - [x] Calendar events feed Ask NANTI schedule context.
 - [x] Push configuration is checked at runtime; unavailable Push is shown as unavailable instead of failing silently.
 - [x] Reminder worker skips Push safely if VAPID keys are absent.
-- [x] 96 deterministic messy-language cases remain a blocking CI gate.
+- [x] 146 deterministic messy-language cases remain a blocking CI gate.
 - [x] Live-model benchmark expanded to 66 behavior cases.
 - [x] Production AI smoke monitoring remains enabled.
+- [x] Social share image `/og-image.png` exists; OG/Twitter tags share one canonical site URL.
+- [x] `/api/health` reports integration readiness (append `?key=<CRON_SECRET>` for per-integration booleans).
 
 ## Owner / infrastructure requirements before public launch
 
@@ -55,6 +57,7 @@ These cannot be safely completed or verified through the currently authorized co
 - [ ] Set `GEMINI_MODEL=gemini-3.5-flash` (optional; defaults to `gemini-3.5-flash`).
 - [ ] Remove the obsolete `OPENAI_API_KEY` variable from Vercel and local `.env`.
 - [ ] Confirm one Ask NANTI create + answer flow works in production after deploy.
+- [ ] Add `GEMINI_API_KEY` as a GitHub Actions secret so the scheduled live eval runs (it skips cleanly without it).
 
 ### Supabase Auth
 
@@ -90,7 +93,8 @@ These cannot be safely completed or verified through the currently authorized co
 - [ ] Enable Push (when configured) and receive a real test reminder.
 - [ ] Run Ask NANTI core flows: create, answer, edit, reschedule, complete, reminder, Waiting follow-up, clarify.
 - [ ] Verify mobile layout and keyboard/composer behavior.
-- [ ] Confirm social share preview: `og-image.png` exists and returns 200 (currently referenced by the homepage but missing from `public/`).
+- [ ] Confirm `https://<domain>/og-image.png` returns 200 and social previews render.
+- [ ] Open `https://<domain>/api/health?key=<CRON_SECRET>` and confirm all `checks` are `true`.
 - [ ] Review production runtime errors after the test session.
 
 ## Go / no-go
