@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/nanti/app-shell";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -125,6 +126,7 @@ function SettingsPage() {
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [accountDeleting, setAccountDeleting] = useState(false);
+  const [pushTesting, setPushTesting] = useState(false);
   const nantiWhatsAppNumber = String(import.meta.env.VITE_NANTI_WHATSAPP_NUMBER || "").replace(/\D/g, "");
   const whatsappConnected = Boolean(whatsAppLink?.verified_at && whatsAppLink?.phone_number);
   const { user, signOut } = useSupabaseAuth();
@@ -528,6 +530,42 @@ function SettingsPage() {
       console.error("NANTI account deletion failed:", error);
       toast.error("Could not delete your account. Please try again.");
       setAccountDeleting(false);
+    }
+  };
+
+  const testPushNotification = async () => {
+    if (pushTesting || !isSubscribed || !pushConfigured) return;
+    setPushTesting(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("No authenticated session");
+
+      const response = await fetch("/api/push/test", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(
+          typeof payload?.error === "string"
+            ? payload.error
+            : "Test notification could not be delivered.",
+        );
+      }
+      toast.success("Test notification sent.");
+    } catch (error) {
+      console.error("Push test failed:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Test notification could not be delivered.",
+      );
+    } finally {
+      setPushTesting(false);
     }
   };
 
@@ -1182,6 +1220,21 @@ function SettingsPage() {
             </Button>
           )}
         </div>
+        {isSubscribed && pushConfigured ? (
+          <div className="mt-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={pushTesting || pushLoading}
+              onClick={() => void testPushNotification()}
+            >
+              {pushTesting ? (
+                <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+              ) : null}
+              Send test notification
+            </Button>
+          </div>
+        ) : null}
       </section>
 
       <section className="border-t border-border pt-6">
