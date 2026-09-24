@@ -48,6 +48,14 @@ WhatsApp is intentionally **not part of the launch scope** and remains hidden be
 
 These cannot be safely completed or verified through the currently authorized connectors.
 
+### AI provider (Google Gemini)
+
+- [x] OpenAI removed entirely; Google Gemini is the only provider (Phase 65).
+- [ ] Set `GEMINI_API_KEY` in the production deployment (free key from https://aistudio.google.com/apikey). **Without it, every AI feature is disabled.**
+- [ ] Set `GEMINI_MODEL=gemini-3.5-flash` (optional; defaults to `gemini-3.5-flash`).
+- [ ] Remove the obsolete `OPENAI_API_KEY` variable from Vercel and local `.env`.
+- [ ] Confirm one Ask NANTI create + answer flow works in production after deploy.
+
 ### Supabase Auth
 
 - [ ] Enable **Leaked Password Protection** in Supabase Auth. The Supabase security advisor currently reports it disabled.
@@ -82,6 +90,7 @@ These cannot be safely completed or verified through the currently authorized co
 - [ ] Enable Push (when configured) and receive a real test reminder.
 - [ ] Run Ask NANTI core flows: create, answer, edit, reschedule, complete, reminder, Waiting follow-up, clarify.
 - [ ] Verify mobile layout and keyboard/composer behavior.
+- [ ] Confirm social share preview: `og-image.png` exists and returns 200 (currently referenced by the homepage but missing from `public/`).
 - [ ] Review production runtime errors after the test session.
 
 ## Go / no-go
