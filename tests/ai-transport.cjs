@@ -39,9 +39,6 @@ function setup(env, responses) {
 const gemini = (text = "Test answer", finishReason = "STOP") => ({
   candidates: [{ finishReason, content: { parts: [{ text }] } }],
 });
-const openai = (text = "Fallback answer", finish_reason = "stop") => ({
-  choices: [{ finish_reason, message: { content: text } }],
-});
 
 test("Gemini uses a header key, an escaped model path and a bounded request", async () => {
   const h = setup({ GEMINI_API_KEY: "fixture-key", GEMINI_MODEL: "model/name" }, [gemini()]);
@@ -83,20 +80,19 @@ for (const [name, response] of [
   });
 }
 
-test("failed Gemini request falls back once when OpenAI is configured", async () => {
-  const h = setup({ GEMINI_API_KEY: "fixture-key", OPENAI_API_KEY: "fallback-key" }, [
+test("Gemini errors do not leak upstream payloads or call another provider", async () => {
+  const h = setup({ GEMINI_API_KEY: "fixture-key", OPENAI_API_KEY: "unused" }, [
     { ok: false, status: 503, text: async () => "sensitive upstream payload" },
-    openai(),
   ]);
-  assert.equal(await h.api.askNanti("Test question", ""), "Fallback answer");
-  assert.equal(h.requests.length, 2);
-  assert.deepEqual(h.timeouts, [20000, 20000]);
+  await assert.rejects(h.api.askNanti("Test question", ""), /AI sedang bermasalah/);
+  assert.equal(h.requests.length, 1);
   assert.ok(!h.logs.join(" ").includes("sensitive upstream payload"));
 });
 
-test("OpenAI rejects incomplete output", async () => {
-  const h = setup({ OPENAI_API_KEY: "fixture-key" }, [openai("Partial", "length")]);
-  await assert.rejects(h.api.askNanti("Test question", ""), /AI sedang bermasalah/);
+test("a legacy OpenAI key does not enable an unapproved provider", async () => {
+  const h = setup({ OPENAI_API_KEY: "unused" }, []);
+  await assert.rejects(h.api.askNanti("Test question", ""), /AI belum dikonfigurasi/);
+  assert.equal(h.requests.length, 0);
 });
 
 test("malformed extraction JSON rejects instead of reporting zero tasks", async () => {

@@ -41,8 +41,8 @@ function loadTs(filename) {
 const ai = loadTs(path.join(root, "src/lib/nanti-ai.server.ts"));
 const language = loadTs(path.join(root, "src/lib/nanti-language.ts"));
 
-if (!process.env.GEMINI_API_KEY && !process.env.OPENAI_API_KEY) {
-  console.error("Live eval requires GEMINI_API_KEY or OPENAI_API_KEY.");
+if (!process.env.GEMINI_API_KEY) {
+  console.error("Live eval requires GEMINI_API_KEY.");
   process.exit(2);
 }
 
@@ -190,7 +190,7 @@ async function runPool(items, concurrency) {
   const report = {
     startedAt,
     finishedAt: new Date().toISOString(),
-    model: process.env.GEMINI_MODEL || process.env.OPENAI_MODEL || "default",
+    model: process.env.GEMINI_MODEL || "default",
     total: results.length,
     passed,
     failed,
