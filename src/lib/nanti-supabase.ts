@@ -2,6 +2,100 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+
+type MemoryRefInput = {
+  person_id?: string | null;
+  person_name?: string | null;
+  project_id?: string | null;
+  project_name?: string | null;
+};
+
+async function resolveMemoryRefs(supabase: any, input: MemoryRefInput) {
+  const resolved: MemoryRefInput = {};
+
+  if (input.person_id !== undefined) {
+    resolved.person_id = input.person_id;
+    if (input.person_name !== undefined) resolved.person_name = input.person_name;
+  } else if (input.person_name === null) {
+    resolved.person_id = null;
+    resolved.person_name = null;
+  } else if (input.person_name?.trim()) {
+    const { data: person, error } = await supabase.rpc("resolve_person_memory", {
+      p_name: input.person_name.trim(),
+      p_company: null,
+    });
+    if (error) throw error;
+    const row = Array.isArray(person) ? person[0] : person;
+    if (!row?.id) throw new Error("Person memory could not be resolved.");
+    resolved.person_id = row.id;
+    resolved.person_name = row.name || input.person_name.trim();
+  }
+
+  if (input.project_id !== undefined) {
+    resolved.project_id = input.project_id;
+    if (input.project_name !== undefined) resolved.project_name = input.project_name;
+  } else if (input.project_name === null) {
+    resolved.project_id = null;
+    resolved.project_name = null;
+  } else if (input.project_name?.trim()) {
+    const { data: project, error } = await supabase.rpc("resolve_project_memory", {
+      p_name: input.project_name.trim(),
+    });
+    if (error) throw error;
+    const row = Array.isArray(project) ? project[0] : project;
+    if (!row?.id) throw new Error("Project memory could not be resolved.");
+    resolved.project_id = row.id;
+    resolved.project_name = row.name || input.project_name.trim();
+  }
+
+  return resolved;
+}
+
+async function recordTaskPersonMemory(
+  supabase: any,
+  input: {
+    userId: string;
+    personId?: string | null;
+    itemId: string;
+    title: string;
+    eventType?: "captured" | "note";
+    dedupePrefix?: string;
+    source?: string | null;
+  },
+) {
+  if (!input.personId) return;
+
+  const occurredAt = new Date().toISOString();
+  const eventType = input.eventType || "captured";
+  const dedupeKey = `${input.dedupePrefix || eventType}:${input.itemId}:${input.personId}`;
+  const { error } = await supabase.from("person_activity").insert({
+    user_id: input.userId,
+    person_id: input.personId,
+    event_type: eventType,
+    item_id: input.itemId,
+    summary:
+      eventType === "captured"
+        ? `Captured: ${input.title}`
+        : `Associated with task: ${input.title}`,
+    source: input.source || "NANTI",
+    occurred_at: occurredAt,
+    dedupe_key: dedupeKey,
+    metadata: { automatic: true },
+  });
+
+  if (error && (error as { code?: string }).code !== "23505") throw error;
+
+  const { error: personError } = await supabase
+    .from("people")
+    .update({
+      last_conversation_at: occurredAt,
+      updated_at: occurredAt,
+    })
+    .eq("id", input.personId)
+    .eq("user_id", input.userId);
+  if (personError) throw personError;
+}
+
 // Projects
 export const fetchProjects = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { userId, supabase } = context;
@@ -282,12 +376,22 @@ export const createTask = createServerFn({ method: "POST" }).middleware([require
   )
   .handler(async ({ data, context }) => {
     const { userId, supabase } = context;
+    const memoryRefs = await resolveMemoryRefs(supabase, data);
+    const payload = { ...data, ...memoryRefs, user_id: userId };
     const { data: task, error } = await supabase
       .from("tasks")
-      .insert({ ...data, user_id: userId })
+      .insert(payload)
       .select()
       .single();
     if (error) throw error;
+
+    await recordTaskPersonMemory(supabase, {
+      userId,
+      personId: task.person_id,
+      itemId: task.id,
+      title: task.title,
+      source: task.source,
+    });
     return task;
   });
 
@@ -318,12 +422,28 @@ export const updateTask = createServerFn({ method: "POST" }).middleware([require
   .handler(async ({ data, context }) => {
     const { userId, supabase } = context;
     const { id, ...updates } = data;
-    const { error } = await supabase
+    const memoryRefs = await resolveMemoryRefs(supabase, updates);
+    const { data: task, error } = await supabase
       .from("tasks")
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .update({ ...updates, ...memoryRefs, updated_at: new Date().toISOString() })
       .eq("id", id)
-      .eq("user_id", userId).select("id").single();
+      .eq("user_id", userId)
+      .select("*")
+      .single();
     if (error) throw error;
+
+    if (memoryRefs.person_id) {
+      await recordTaskPersonMemory(supabase, {
+        userId,
+        personId: memoryRefs.person_id,
+        itemId: task.id,
+        title: task.title,
+        eventType: "note",
+        dedupePrefix: "person_assignment",
+        source: task.source,
+      });
+    }
+    return task;
   });
 
 export const deleteTask = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
@@ -374,12 +494,22 @@ export const createWaitingItem = createServerFn({ method: "POST" }).middleware([
   )
   .handler(async ({ data, context }) => {
     const { userId, supabase } = context;
+    const memoryRefs = await resolveMemoryRefs(supabase, data);
+    const payload = { ...data, ...memoryRefs, user_id: userId };
     const { data: item, error } = await supabase
       .from("waiting_items")
-      .insert({ ...data, user_id: userId })
+      .insert(payload)
       .select()
       .single();
     if (error) throw error;
+
+    await recordTaskPersonMemory(supabase, {
+      userId,
+      personId: item.person_id,
+      itemId: item.id,
+      title: item.title,
+      source: item.source,
+    });
     return item;
   });
 
@@ -392,6 +522,8 @@ export const updateWaitingItem = createServerFn({ method: "POST" }).middleware([
         status: z.enum(["waiting", "received", "snoozed"]).optional(),
         person_id: z.string().uuid().optional().nullable(),
         project_id: z.string().uuid().optional().nullable(),
+        person_name: z.string().max(200).optional().nullable(),
+        project_name: z.string().max(200).optional().nullable(),
         follow_up_at: z.string().optional().nullable(),
         last_followed_up_at: z.string().optional().nullable(),
         follow_up_count: z.number().int().min(0).optional(),
@@ -403,12 +535,28 @@ export const updateWaitingItem = createServerFn({ method: "POST" }).middleware([
   .handler(async ({ data, context }) => {
     const { userId, supabase } = context;
     const { id, ...updates } = data;
-    const { error } = await supabase
+    const memoryRefs = await resolveMemoryRefs(supabase, updates);
+    const { data: item, error } = await supabase
       .from("waiting_items")
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .update({ ...updates, ...memoryRefs, updated_at: new Date().toISOString() })
       .eq("id", id)
-      .eq("user_id", userId).select("id").single();
+      .eq("user_id", userId)
+      .select("*")
+      .single();
     if (error) throw error;
+
+    if (memoryRefs.person_id) {
+      await recordTaskPersonMemory(supabase, {
+        userId,
+        personId: memoryRefs.person_id,
+        itemId: item.id,
+        title: item.title,
+        eventType: "note",
+        dedupePrefix: "person_assignment",
+        source: item.source,
+      });
+    }
+    return item;
   });
 
 export const deleteWaitingItem = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
