@@ -121,10 +121,7 @@ export const runAssistantSmokeCheck = createServerFn({ method: "POST" })
     const payload = {
       suite: "manual-smoke-v1",
       environment: process.env["VERCEL_ENV"] || "production",
-      model:
-        process.env["GEMINI_MODEL"] ||
-        process.env["OPENAI_MODEL"] ||
-        "default-provider-model",
+      model: process.env["GEMINI_MODEL"] || "default-provider-model",
       git_sha: process.env["VERCEL_GIT_COMMIT_SHA"] || null,
       total: results.length,
       passed,

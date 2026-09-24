@@ -1,7 +1,5 @@
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 const GEMINI_MODEL = process.env["GEMINI_MODEL"] || "gemini-3.5-flash";
-const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
-const OPENAI_TEXT_MODEL = process.env["OPENAI_MODEL"] || "gpt-4o-mini";
 
 type Content = string | Array<Record<string, unknown>>;
 
@@ -87,93 +85,18 @@ async function chatGemini(
   );
 }
 
-async function chatOpenAI(
-  messages: { role: string; content: Content }[],
-  opts: { json?: boolean; model?: string } = {},
-) {
-  const key = process.env["OPENAI_API_KEY"];
-  if (!key) throw new Error("OPENAI_API_KEY is not configured.");
-  const model = opts.model || OPENAI_TEXT_MODEL;
-
-  const formattedMessages = messages.map((message) => {
-    const role =
-      message.role === "system" ||
-      message.role === "assistant" ||
-      message.role === "user"
-        ? message.role
-        : "user";
-    if (typeof message.content === "string") {
-      return { role, content: message.content };
-    }
-    return {
-      role,
-      content: message.content.map((part) => {
-        if (part.type === "image_url") {
-          return {
-            type: "image_url",
-            image_url: { url: (part.image_url as { url?: string })?.url ?? "" },
-          };
-        }
-        return {
-          type: "text",
-          text: String((part as { text?: string }).text ?? ""),
-        };
-      }),
-    };
-  });
-
-  const response = await fetch(OPENAI_URL, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${key}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages: formattedMessages,
-      temperature: 0.2,
-      max_tokens: 8192,
-      ...(opts.json ? { response_format: { type: "json_object" } } : {}),
-    }),
-  });
-
-  if (!response.ok) {
-    const detail = await response.text().catch(() => "");
-    console.error("OpenAI API error", response.status, detail.slice(0, 500));
-    throw new Error(`OpenAI API error ${response.status}`);
-  }
-
-  const data = (await response.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
-  return data.choices?.[0]?.message?.content?.trim() || "";
-}
-
 async function chat(
   messages: { role: string; content: Content }[],
   opts: { json?: boolean; model?: string } = {},
 ) {
-  const hasGemini = Boolean(process.env["GEMINI_API_KEY"]);
-  const hasOpenAI = Boolean(process.env["OPENAI_API_KEY"]);
-
-  if (!hasGemini && !hasOpenAI) {
+  if (!process.env["GEMINI_API_KEY"]) {
     throw new Error("AI belum dikonfigurasi.");
   }
 
-  if (hasGemini) {
-    try {
-      return await chatGemini(messages, opts);
-    } catch (error) {
-      if (!hasOpenAI) {
-        throw new Error("AI sedang bermasalah. Coba lagi sebentar lagi.");
-      }
-      console.error("Gemini failed; falling back to OpenAI:", error);
-    }
-  }
-
   try {
-    return await chatOpenAI(messages, opts);
-  } catch {
+    return await chatGemini(messages, opts);
+  } catch (error) {
+    console.error("Gemini API error:", error);
     throw new Error("AI sedang bermasalah. Coba lagi sebentar lagi.");
   }
 }
