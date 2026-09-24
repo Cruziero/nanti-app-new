@@ -31,14 +31,17 @@ WhatsApp is intentionally **not part of the launch scope** and remains hidden be
 - [x] Person activity is deduplicated and persisted.
 - [x] WhatsApp controls/reminder channel are hidden for launch.
 - [x] Development-only Restore demo data control removed from customer Settings.
+- [x] Customer data export is available from Settings without exposing OAuth tokens.
+- [x] Customer account deletion removes the auth account and cascades NANTI-owned data.
 - [x] Google Calendar OAuth uses one-time account-bound state.
+- [x] Calendar sync paginates Google results and purges stale/cancelled events from NANTI schedule memory.
 - [x] Google OAuth tokens are server-only; clients can read only their own synced events.
 - [x] Calendar Connect / Status / Sync / Disconnect implemented.
 - [x] Calendar events feed Ask NANTI schedule context.
 - [x] Push configuration is checked at runtime; unavailable Push is shown as unavailable instead of failing silently.
 - [x] Reminder worker skips Push safely if VAPID keys are absent.
 - [x] 96 deterministic messy-language cases remain a blocking CI gate.
-- [x] Live-model benchmark expanded to 54 behavior cases.
+- [x] Live-model benchmark expanded to 66 behavior cases.
 - [x] Production AI smoke monitoring remains enabled.
 
 ## Owner / infrastructure requirements before public launch
@@ -70,6 +73,8 @@ These cannot be safely completed or verified through the currently authorized co
 - [ ] Create a fresh customer account from a private/incognito browser.
 - [ ] Complete email confirmation if enabled, then onboarding.
 - [ ] Confirm the new customer sees only their own empty workspace.
+- [ ] Download the account export and verify it contains only that customer's NANTI data.
+- [ ] Delete a disposable test account and verify its NANTI data is removed.
 - [ ] Create a typo-heavy task with a named person and confirm the Person appears in memory.
 - [ ] Edit the task to another person and confirm relationship history updates.
 - [ ] Promote an Inbox clarification and confirm `person_id` persists.
