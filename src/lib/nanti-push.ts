@@ -31,8 +31,10 @@ export async function sendPushNotification(
   body: string,
   data?: Record<string, unknown>,
 ) {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return [];
+
   const supabase = createClient(
-    process.env.VITE_SUPABASE_URL || "",
+    process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "",
     process.env.SUPABASE_SERVICE_ROLE_KEY || "",
   );
 
