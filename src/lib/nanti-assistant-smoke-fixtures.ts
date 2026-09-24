@@ -144,8 +144,19 @@ export function getAssistantSmokeFixtures(now = new Date()): AssistantSmokeFixtu
     items: [
       { id: "t1", title: "Meeting Bu Rina", kind: "task", status: "open", due: tomorrow, time: "14:00" },
     ],
-    workspace: "Tomorrow: Meeting Bu Rina at 14:00.",
+    workspace: `Tomorrow task: Meeting Bu Rina at 14:00.
+UPCOMING GOOGLE CALENDAR:
+- Weekly Ops · start=${tomorrow}T10:00:00+07:00 · location=Google Meet`,
     expect: { mode: "answer" },
+  },
+  {
+    id: "smoke-calendar-question-not-create",
+    critical: true,
+    message: "besok meeting gue apa aja?",
+    workspace: `UPCOMING GOOGLE CALENDAR:
+- Weekly Ops · start=${tomorrow}T10:00:00+07:00 · location=Google Meet
+Calendar events are schedule facts, not tasks.`,
+    expect: { mode: "answer", targetMustBeNull: true },
   },
   ];
 }
