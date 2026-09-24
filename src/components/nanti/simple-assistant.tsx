@@ -2,7 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUp, Check, Loader2 } from "lucide-react";
 import { useNanti } from "@/lib/nanti-store";
 import { processAssistantTurn } from "@/lib/nanti-ai.functions";
-import { draftToItem } from "@/lib/nanti-import";
+import {
+  chatMessageToFallbackItems,
+  draftToItem,
+} from "@/lib/nanti-import";
 import type { Item } from "@/lib/nanti-types";
 import { parseSmartDate } from "@/lib/nanti-dates";
 import {
@@ -548,6 +551,39 @@ export function SimpleAssistant() {
     }
   };
 
+  const saveDeterministicFallback = async (
+    question: string,
+    fallbackItems: Item[],
+    reason: "fast_path" | "ai_failure",
+  ) => {
+    if (!fallbackItems.length) return false;
+
+    const saved = await addItems(fallbackItems, question);
+    if (!saved.length) return false;
+
+    const titles = saved.map(({ index }) => fallbackItems[index]!.title);
+    const timing = saved
+      .map(({ index }) => {
+        const item = fallbackItems[index]!;
+        return [item.title, item.due, item.time].filter(Boolean).join(" · ");
+      })
+      .join("\n");
+
+    setInput("");
+    await appendTurn(
+      question,
+      saved.length > 1
+        ? `Saved ${saved.length} things:\n${timing}`
+        : `Saved: ${timing}`,
+      titles,
+      {
+        route: `deterministic_${reason}`,
+        saved_count: saved.length,
+      },
+    );
+    return true;
+  };
+
   const send = async (value?: string) => {
     const question = (value ?? input).trim();
     if (!question || lock.current) return;
@@ -566,6 +602,27 @@ export function SimpleAssistant() {
       if (direct) {
         setInput("");
         await appendTurn(question, direct, [], { route: "direct_workspace_answer" });
+        return;
+      }
+
+      const deterministicItems = chatMessageToFallbackItems(question, {
+        people,
+        projects,
+      });
+      const highConfidenceFallback =
+        deterministicItems.length > 1 ||
+        (deterministicItems.length === 1 &&
+          Boolean(deterministicItems[0]!.due || deterministicItems[0]!.time) &&
+          deterministicItems[0]!.confidence >= 0.88);
+
+      if (
+        highConfidenceFallback &&
+        (await saveDeterministicFallback(
+          question,
+          deterministicItems,
+          "fast_path",
+        ))
+      ) {
         return;
       }
 
@@ -635,7 +692,29 @@ export function SimpleAssistant() {
       });
     } catch (submitError) {
       console.error("Ask NANTI failed:", submitError);
-      setError("NANTI couldn’t process that. Your message is still here — try again.");
+      try {
+        const fallbackItems = chatMessageToFallbackItems(question, {
+          people,
+          projects,
+        });
+        if (
+          fallbackItems.length &&
+          (await saveDeterministicFallback(
+            question,
+            fallbackItems,
+            "ai_failure",
+          ))
+        ) {
+          setError("");
+          return;
+        }
+      } catch (fallbackError) {
+        console.error("Ask NANTI deterministic fallback failed:", fallbackError);
+      }
+
+      setError(
+        "NANTI couldn’t process that. Your message is still here — try again.",
+      );
     } finally {
       lock.current = false;
       setBusy(false);
@@ -668,19 +747,21 @@ export function SimpleAssistant() {
               Typos are fine. Paste a conversation, change a task, set a reminder,
               or ask what you’re forgetting.
             </p>
-            <div className="mt-6 flex flex-wrap gap-2">
-              {suggestions.map((suggestion) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void send(suggestion)}
-                  className="rounded-full border border-border px-3 py-1.5 text-[13px] text-foreground hover:bg-secondary disabled:opacity-50"
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
+            {!input.trim() ? (
+              <div className="mt-6 flex flex-wrap gap-2">
+                {suggestions.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void send(suggestion)}
+                    className="rounded-full border border-border px-3 py-1.5 text-[13px] text-foreground hover:bg-secondary disabled:opacity-50"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
         ) : (
           <div
