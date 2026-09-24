@@ -198,6 +198,27 @@ assert.equal(
 assert.equal(multiItems[0].quote, multiRaw);
 assert.equal(multiItems[1].quote, multiRaw);
 
+const screenshotRaw =
+  "sy bsk harus update nanti jam 9 pagi dan jam 12 siang solat jumat";
+assert.equal(
+  language.normalizeCasualIndonesian(screenshotRaw).toLowerCase(),
+  "saya besok harus update nanti jam 9 pagi dan jam 12 siang solat jumat",
+);
+const screenshotItems = importer.chatMessageToFallbackItems(screenshotRaw, {
+  people: [],
+  projects: [],
+});
+assert.equal(
+  screenshotItems.length,
+  2,
+  "date-first Indonesian phrasing must also become two tasks",
+);
+assert.ok(screenshotItems[0].title.toLowerCase().includes("update nanti"));
+assert.equal(screenshotItems[0].time, "09:00");
+assert.ok(screenshotItems[1].title.toLowerCase().includes("solat jumat"));
+assert.equal(screenshotItems[1].time, "12:00");
+assert.equal(screenshotItems[0].due, screenshotItems[1].due);
+
 console.log(
   "PASS: typo/slang normalization, semantic extraction, teaching detection, people/place disambiguation and reminder strategy.",
 );
