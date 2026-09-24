@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { readAllExportPages } from "./nanti-export-pages";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 function adminClient() {
@@ -37,33 +38,129 @@ export const exportMyNantiData = createServerFn({ method: "GET" })
       calendarEvents,
       calendarConnection,
     ] = await Promise.all([
-      supabase.from("tasks").select("*").eq("user_id", userId),
-      supabase.from("waiting_items").select("*").eq("user_id", userId),
-      supabase.from("inbox_items").select("*").eq("user_id", userId),
-      supabase.from("people").select("*").eq("user_id", userId),
-      supabase.from("person_activity").select("*").eq("user_id", userId),
-      supabase.from("projects").select("*").eq("user_id", userId),
-      supabase.from("conversations").select("*").eq("user_id", userId),
-      supabase.from("ai_messages").select("*").eq("user_id", userId),
+      readAllExportPages((from, to) =>
+        supabase.from("tasks").select("*").eq("user_id", userId).order("id").range(from, to),
+      ),
+      readAllExportPages((from, to) =>
+        supabase
+          .from("waiting_items")
+          .select("*")
+          .eq("user_id", userId)
+          .order("id")
+          .range(from, to),
+      ),
+      readAllExportPages((from, to) =>
+        supabase.from("inbox_items").select("*").eq("user_id", userId).order("id").range(from, to),
+      ),
+      readAllExportPages((from, to) =>
+        supabase.from("people").select("*").eq("user_id", userId).order("id").range(from, to),
+      ),
+      readAllExportPages((from, to) =>
+        supabase
+          .from("person_activity")
+          .select("*")
+          .eq("user_id", userId)
+          .order("id")
+          .range(from, to),
+      ),
+      readAllExportPages((from, to) =>
+        supabase.from("projects").select("*").eq("user_id", userId).order("id").range(from, to),
+      ),
+      readAllExportPages((from, to) =>
+        supabase
+          .from("conversations")
+          .select("*")
+          .eq("user_id", userId)
+          .order("id")
+          .range(from, to),
+      ),
+      readAllExportPages((from, to) =>
+        supabase.from("ai_messages").select("*").eq("user_id", userId).order("id").range(from, to),
+      ),
       supabase.from("user_settings").select("*").eq("user_id", userId).maybeSingle(),
-      supabase.from("user_language_memory").select("*").eq("user_id", userId),
-      supabase.from("entity_aliases").select("*").eq("user_id", userId),
-      supabase.from("user_routines").select("*").eq("user_id", userId),
-      supabase.from("notifications").select("*").eq("user_id", userId),
-      supabase.from("daily_briefings").select("*").eq("user_id", userId),
-      supabase.from("product_events").select("*").eq("user_id", userId),
-      supabase.from("calendar_events").select("*").eq("user_id", userId),
+      readAllExportPages((from, to) =>
+        supabase
+          .from("user_language_memory")
+          .select("*")
+          .eq("user_id", userId)
+          .order("id")
+          .range(from, to),
+      ),
+      readAllExportPages((from, to) =>
+        supabase
+          .from("entity_aliases")
+          .select("*")
+          .eq("user_id", userId)
+          .order("id")
+          .range(from, to),
+      ),
+      readAllExportPages((from, to) =>
+        supabase
+          .from("user_routines")
+          .select("*")
+          .eq("user_id", userId)
+          .order("id")
+          .range(from, to),
+      ),
+      readAllExportPages((from, to) =>
+        supabase
+          .from("notifications")
+          .select("*")
+          .eq("user_id", userId)
+          .order("id")
+          .range(from, to),
+      ),
+      readAllExportPages((from, to) =>
+        supabase
+          .from("daily_briefings")
+          .select("*")
+          .eq("user_id", userId)
+          .order("brief_date")
+          .range(from, to),
+      ),
+      readAllExportPages((from, to) =>
+        supabase
+          .from("product_events")
+          .select("*")
+          .eq("user_id", userId)
+          .order("id")
+          .range(from, to),
+      ),
+      readAllExportPages((from, to) =>
+        supabase
+          .from("calendar_events")
+          .select("*")
+          .eq("user_id", userId)
+          .order("id")
+          .range(from, to),
+      ),
       admin
         .from("calendar_connections")
-        .select("provider,status,sync_enabled,calendar_id,connected_at,last_synced_at,created_at,updated_at")
+        .select(
+          "provider,status,sync_enabled,calendar_id,connected_at,last_synced_at,created_at,updated_at",
+        )
         .eq("user_id", userId)
         .maybeSingle(),
     ]);
 
     const results = [
-      tasks, waiting, inbox, people, personActivity, projects, conversations, messages,
-      settings, languageMemory, aliases, routines, notifications, briefings, productEvents,
-      calendarEvents, calendarConnection,
+      tasks,
+      waiting,
+      inbox,
+      people,
+      personActivity,
+      projects,
+      conversations,
+      messages,
+      settings,
+      languageMemory,
+      aliases,
+      routines,
+      notifications,
+      briefings,
+      productEvents,
+      calendarEvents,
+      calendarConnection,
     ];
     const firstError = results.find((result) => result.error)?.error;
     if (firstError) throw firstError;
@@ -99,9 +196,11 @@ export const exportMyNantiData = createServerFn({ method: "GET" })
 export const deleteMyNantiAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
-    z.object({
-      confirmation: z.literal("DELETE MY ACCOUNT"),
-    }).parse(data),
+    z
+      .object({
+        confirmation: z.literal("DELETE MY ACCOUNT"),
+      })
+      .parse(data),
   )
   .handler(async ({ context }) => {
     const { userId } = context;
