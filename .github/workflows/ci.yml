@@ -16,6 +16,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --legacy-peer-deps --no-audit --no-fund
+      - run: npm audit --omit=dev --audit-level=high
       - run: npm run test:quality
       - run: npm run test:ai-transport
       - run: npm run test:account-export
