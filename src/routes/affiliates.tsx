@@ -34,7 +34,7 @@ function AffiliatesPage() {
           <div className="rounded-2xl border border-border bg-background p-6">
             <h3 className="text-[16px] font-semibold text-foreground">Who can join</h3>
             <p className="mt-2">
-              Anyone with an audience that could benefit from NANTI — content creators, consultants,
+              Anyone with an audience that could benefit from NANTI: content creators, consultants,
               business coaches, or simply happy users.
             </p>
           </div>

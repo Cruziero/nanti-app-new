@@ -102,7 +102,7 @@ export function waitingDays(item: Item) {
 
 export function formatDate(iso?: string, locale = "id-ID") {
   const day = normalizeDay(iso);
-  if (!day) return "—";
+  if (!day) return "None";
   return new Date(`${day}T00:00:00Z`).toLocaleDateString(locale, {
     day: "numeric",
     month: "long",

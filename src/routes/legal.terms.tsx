@@ -36,10 +36,9 @@ function TermsPage() {
               2. Description of Service
             </h2>
             <p>
-              NANTI is an AI-powered workspace that helps you track commitments, deadlines, and
-              follow-ups extracted from WhatsApp conversations you choose to forward or paste. NANTI
-              does not automatically read your WhatsApp — it only processes content you explicitly
-              share.
+              NANTI is a workspace that helps you track commitments, deadlines, and follow-ups
+              extracted from WhatsApp conversations you choose to forward or paste. NANTI does not
+              automatically read your WhatsApp. It only processes content you explicitly share.
             </p>
           </section>
 

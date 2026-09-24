@@ -11,8 +11,8 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/welcome")({
   head: () => ({
     meta: [
-      { title: "Get started with NANTI" },
-      { name: "description", content: "Your AI memory for WhatsApp conversations." },
+      { title: "Welcome to NANTI" },
+      { name: "description", content: "Memory for your WhatsApp conversations." },
     ],
   }),
   component: Welcome,

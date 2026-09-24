@@ -34,12 +34,6 @@ export interface SiteConfig {
       subheadline: string;
       steps: Array<{ label: string; desc: string }>;
     };
-    testimonial: {
-      quote: string;
-      authorInitial: string;
-      authorName: string;
-      authorTitle: string;
-    };
     integrations: {
       label: string;
       subheadline: string;
@@ -131,12 +125,12 @@ export interface SiteConfig {
 export const defaultConfig: SiteConfig = {
   homepage: {
     meta: {
-      title: "NANTI — You talk. NANTI remembers.",
+      title: "NANTI: You talk. NANTI remembers.",
       description:
-        "NANTI turns everyday WhatsApp conversations into commitments, reminders and follow-ups — so you can stop carrying everything in your head.",
+        "NANTI turns everyday WhatsApp conversations into commitments, reminders and follow-ups, so you can stop carrying everything in your head.",
     },
     hero: {
-      badge: "AI Memory for WhatsApp",
+      badge: "Remembers your WhatsApp commitments",
       headline: "You talk.",
       highlight: "NANTI",
       subheadline: "remembers.",
@@ -180,12 +174,6 @@ export const defaultConfig: SiteConfig = {
         { label: "FOLLOW UP", desc: "When the time comes, NANTI brings it back to you." },
       ],
     },
-    testimonial: {
-      quote: "NANTI helped me stop losing promises in WhatsApp.",
-      authorInitial: "T",
-      authorName: "Tom",
-      authorTitle: "Owner, PT Maju Jaya",
-    },
     integrations: {
       label: "Integrations",
       subheadline: "Works with the tools you already use.",
@@ -199,9 +187,9 @@ export const defaultConfig: SiteConfig = {
       label: "Privacy & Security",
       headline: "Your conversations are safe with us.",
       items: [
-        { title: "End-to-end encrypted", desc: "Your messages are encrypted in transit and at rest. We never store raw conversation data." },
-        { title: "You control your data", desc: "Delete your data anytime. We never sell or share your information with third parties." },
-        { title: "AI reads patterns, not people", desc: "NANTI extracts commitments and deadlines. It never reads your messages for advertising or profiling." },
+        { title: "Encrypted in transit and at rest", desc: "Your data travels over HTTPS and is stored encrypted." },
+        { title: "You control your data", desc: "Delete your data anytime from Settings. We never sell or share your information with third parties." },
+        { title: "We only extract what matters", desc: "NANTI extracts commitments and deadlines from the messages you share. It never reads them for advertising or profiling." },
       ],
     },
     finalCta: {
@@ -228,9 +216,9 @@ export const defaultConfig: SiteConfig = {
     ],
     context: {
       label: "Context",
-      headline: "It's not just a reminder.",
-      subheadline: "NANTI understands why.",
-      description: "That's the difference between a reminder and memory.",
+      headline: "A reminder tells you when.",
+      subheadline: "NANTI remembers why.",
+      description: "That is the difference between a reminder and a memory.",
       conversation: "Pak Tom, nanti saya kirim invoice tanggal 28 ya.",
       extractions: [
         { label: "WHO", value: "Pak Tom" },
@@ -251,7 +239,7 @@ export const defaultConfig: SiteConfig = {
     cta: {
       headline: "Ready to try it?",
       subheadline: "Paste your first conversation. See what NANTI catches.",
-      button: "Get started",
+      button: "Try NANTI for free",
     },
   },
   business: {
@@ -261,7 +249,7 @@ export const defaultConfig: SiteConfig = {
     },
     headline: "Your business runs through WhatsApp.",
     description:
-      "NANTI keeps every promise moving — the quotation you owe a client, the sample a supplier promised, the approval you're still waiting on.",
+      "NANTI tracks the quotation you owe a client, the sample a supplier promised, and the approval you are still waiting on.",
     features: [
       {
         title: "Sales & client management",
@@ -269,10 +257,10 @@ export const defaultConfig: SiteConfig = {
       },
       {
         title: "Operations & projects",
-        desc: "Production schedules, supplier follow-ups, team commitments — all visible in one place, pulled straight from the conversations where they actually happened.",
+        desc: "Production schedules, supplier follow-ups, and team commitments, all pulled straight from the conversations where they happened.",
       },
     ],
-    cta: "Get started",
+    cta: "Try NANTI for free",
   },
   personal: {
     meta: {
@@ -282,7 +270,7 @@ export const defaultConfig: SiteConfig = {
     },
     headline: "Work isn't the only place you make promises.",
     description:
-      "NANTI isn't just for work. The birthday you almost forgot, the thing you promised your kid, the appointment your mom mentioned once — if it's in a conversation, NANTI remembers it.",
+      "NANTI also remembers the birthday you almost forgot, the thing you promised your kid, and the appointment your mom mentioned once. If it is in a conversation, NANTI remembers it.",
     features: [
       {
         title: "Family commitments",
@@ -293,16 +281,16 @@ export const defaultConfig: SiteConfig = {
         desc: "That restaurant recommendation, that book someone mentioned, that appointment you need to book.",
       },
     ],
-    cta: "Get started",
+    cta: "Try NANTI for free",
   },
   pricing: {
     meta: {
       title: "Pricing · NANTI",
-      description: "Simple pricing for NANTI — your AI memory for WhatsApp.",
+      description: "Simple pricing for NANTI, your memory for WhatsApp.",
     },
     label: "Pricing",
     headline: "Simple pricing for every kind of work.",
-    subtitle: "Start free. Upgrade when NANTI becomes indispensable.",
+    subtitle: "Start free. Upgrade when you need more.",
     plans: [
       {
         name: "Free",
@@ -310,7 +298,7 @@ export const defaultConfig: SiteConfig = {
         period: "forever",
         desc: "For trying NANTI with the conversations that matter most.",
         features: ["Up to 50 tracked items", "AI conversation import", "Daily briefing", "1 workspace"],
-        cta: "Get started",
+        cta: "Create a free account",
         highlight: false,
       },
       {
@@ -326,7 +314,7 @@ export const defaultConfig: SiteConfig = {
           "People & project memory",
           "Priority AI processing",
         ],
-        cta: "Get started",
+        cta: "Create a free account",
         highlight: true,
       },
       {
@@ -342,13 +330,13 @@ export const defaultConfig: SiteConfig = {
           "Custom AI training",
           "Dedicated support",
         ],
-        cta: "Contact us",
+        cta: "Talk to us",
         highlight: false,
       },
     ],
   },
   footer: {
-    tagline: "AI memory for the conversations that matter.",
+    tagline: "Memory for the conversations that matter.",
     product: [
       { label: "How it works", href: "/how-it-works" },
       { label: "Pricing", href: "/pricing" },

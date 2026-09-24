@@ -415,7 +415,7 @@ function SettingsPage() {
     }
   };
 
-  const shortSha = (sha?: string | null) => sha?.slice(0, 7) || "—";
+  const shortSha = (sha?: string | null) => sha?.slice(0, 7) || "None";
 
   const formatQualityTime = (value: string) =>
     new Intl.DateTimeFormat("en", {

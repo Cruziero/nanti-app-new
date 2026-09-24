@@ -458,15 +458,6 @@ function HomepageEditor({
         />
       </Section>
 
-      <Section title="Testimonial" emoji="⭐" expanded={!!expanded["h-testimonial"]} onToggle={() => toggle("h-testimonial")}>
-        <Field label="Author Initial" value={h.testimonial.authorInitial} onChange={(v) => update("homepage.testimonial.authorInitial", v)} />
-        <Field label="Quote" value={h.testimonial.quote} onChange={(v) => update("homepage.testimonial.quote", v)} multiline />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Author Name" value={h.testimonial.authorName} onChange={(v) => update("homepage.testimonial.authorName", v)} />
-          <Field label="Author Title" value={h.testimonial.authorTitle} onChange={(v) => update("homepage.testimonial.authorTitle", v)} />
-        </div>
-      </Section>
-
       <Section title="Integrations" emoji="🔗" expanded={!!expanded["h-integrations"]} onToggle={() => toggle("h-integrations")}>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Label" value={h.integrations.label} onChange={(v) => update("homepage.integrations.label", v)} />

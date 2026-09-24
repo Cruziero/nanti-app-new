@@ -35,7 +35,7 @@ function PrivacyPage() {
               2. How We Use Your Data
             </h2>
             <p>
-              Your data is used solely to provide the Service — extracting commitments, setting
+              Your data is used solely to provide the Service: extracting commitments, setting
               reminders, and generating follow-up suggestions. We do not use your data to train AI
               models, sell to advertisers, or share with third parties for their own purposes.
             </p>
@@ -57,16 +57,16 @@ function PrivacyPage() {
             <p>We use the following third-party services to operate NANTI:</p>
             <ul className="mt-2 list-inside list-disc space-y-1">
               <li>
-                <strong>Supabase</strong> — database hosting and authentication
+                <strong>Supabase</strong>: database hosting and authentication
               </li>
               <li>
-                <strong>Google Gemini</strong> — AI processing of shared conversations
+                <strong>Google Gemini</strong>: AI processing of shared conversations
               </li>
               <li>
-                <strong>Google Calendar API</strong> — calendar integration (optional)
+                <strong>Google Calendar API</strong>: calendar integration (optional)
               </li>
               <li>
-                <strong>Vercel</strong> — application hosting
+                <strong>Vercel</strong>: application hosting
               </li>
             </ul>
             <p className="mt-2">

@@ -57,7 +57,7 @@ function Workflow() {
       <div className="mx-auto max-w-[800px] px-5 sm:px-8">
         <Reveal>
           <div className="mb-10">
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#075E54]">
+            <p className="text-[11px] font-semibold tracking-[0.02em] text-[#075E54]">
               The process
             </p>
             <h2 className="mt-3 text-[24px] font-bold tracking-tight text-[#171c24]">
@@ -66,55 +66,49 @@ function Workflow() {
           </div>
         </Reveal>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           <Reveal delay={100}>
-            <div className="flex gap-4">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#128C7E] text-[13px] font-bold text-white">
-                1
-              </div>
-              <div>
-                <h3 className="text-[16px] font-semibold text-[#171c24]">
-                  Forward, paste, or upload
-                </h3>
-                <p className="mt-1 text-[14px] text-[#45474a]">
-                  Forward a WhatsApp message to NANTI. Paste a conversation. Upload a screenshot of
-                  a chat. NANTI accepts all of them.
-                </p>
-              </div>
+            <div className="rounded-xl border border-[#E7E9E7] bg-white p-5">
+              <p className="text-[11px] font-semibold tracking-[0.02em] text-[#075E54]">
+                You bring it in
+              </p>
+              <h3 className="mt-2 text-[16px] font-semibold text-[#171c24]">
+                Forward, paste, or upload
+              </h3>
+              <p className="mt-1 text-[14px] text-[#45474a]">
+                Forward a WhatsApp message to NANTI. Paste a conversation. Upload a screenshot of a
+                chat. NANTI accepts all of them.
+              </p>
             </div>
           </Reveal>
 
           <Reveal delay={200}>
-            <div className="flex gap-4">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#128C7E] text-[13px] font-bold text-white">
-                2
-              </div>
-              <div>
-                <h3 className="text-[16px] font-semibold text-[#171c24]">
-                  NANTI finds what matters
-                </h3>
-                <p className="mt-1 text-[14px] text-[#45474a]">
-                  NANTI reads the conversation and pulls out the commitments, who made them, and
-                  when they are due. It does not read your messages for any other purpose.
-                </p>
-              </div>
+            <div className="rounded-xl border border-[#E7E9E7] bg-white p-5">
+              <p className="text-[11px] font-semibold tracking-[0.02em] text-[#075E54]">
+                NANTI reads it
+              </p>
+              <h3 className="mt-2 text-[16px] font-semibold text-[#171c24]">
+                NANTI finds what matters
+              </h3>
+              <p className="mt-1 text-[14px] text-[#45474a]">
+                NANTI reads the conversation and pulls out the commitments, who made them, and when
+                they are due. It does not read your messages for any other purpose.
+              </p>
             </div>
           </Reveal>
 
           <Reveal delay={300}>
-            <div className="flex gap-4">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#128C7E] text-[13px] font-bold text-white">
-                3
-              </div>
-              <div>
-                <h3 className="text-[16px] font-semibold text-[#171c24]">
-                  NANTI reminds you when it matters
-                </h3>
-                <p className="mt-1 text-[14px] text-[#45474a]">
-                  When a deadline approaches, NANTI sends a reminder. You do not have to remember
-                  anything. NANTI does it for you.
-                </p>
-              </div>
+            <div className="rounded-xl border border-[#E7E9E7] bg-white p-5">
+              <p className="text-[11px] font-semibold tracking-[0.02em] text-[#075E54]">
+                NANTI follows up
+              </p>
+              <h3 className="mt-2 text-[16px] font-semibold text-[#171c24]">
+                NANTI reminds you when it matters
+              </h3>
+              <p className="mt-1 text-[14px] text-[#45474a]">
+                When a deadline approaches, NANTI sends a reminder. You do not have to remember
+                anything. NANTI does it for you.
+              </p>
             </div>
           </Reveal>
         </div>

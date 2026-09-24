@@ -6,13 +6,13 @@ import { OG_IMAGE_URL, SITE_URL } from "@/lib/site";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "NANTI — You talk. NANTI remembers." },
+      { title: "NANTI: You talk. NANTI remembers." },
       {
         name: "description",
         content:
           "NANTI turns everyday WhatsApp conversations into commitments, reminders and follow-ups so you stop carrying everything in your head.",
       },
-      { property: "og:title", content: "NANTI — You talk. NANTI remembers." },
+      { property: "og:title", content: "NANTI: You talk. NANTI remembers." },
       {
         property: "og:description",
         content:
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/")({
       { property: "og:url", content: SITE_URL },
       { property: "og:image", content: OG_IMAGE_URL },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "NANTI — You talk. NANTI remembers." },
+      { name: "twitter:title", content: "NANTI: You talk. NANTI remembers." },
       {
         name: "twitter:description",
         content:
@@ -86,13 +86,9 @@ function Hero() {
       <div className="mx-auto max-w-[1240px] px-6">
         <div className="mx-auto mb-16 max-w-4xl text-center">
           <Reveal>
-            <div className="mb-6 inline-flex items-center gap-2.5 rounded-full border border-[#128C7E]/25 bg-[#e7f7ef] px-4 py-1.5 text-[#075E54] shadow-sm">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#25D366] opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#128C7E]" />
-              </span>
-              <span className="text-[13px] font-medium tracking-wide">AI Memory for WhatsApp</span>
-            </div>
+            <p className="mb-6 text-[13px] font-semibold tracking-[0.02em] text-[#075E54]">
+              Remembers your WhatsApp commitments
+            </p>
           </Reveal>
 
           <Reveal delay={50}>
@@ -323,7 +319,7 @@ function ProblemSection() {
       <div className="mx-auto max-w-[1240px] px-6">
         <div className="mb-14 max-w-2xl text-left">
           <Reveal>
-            <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.18em] text-[#075E54]">
+            <span className="mb-2 block text-[11px] font-semibold tracking-[0.02em] text-[#075E54]">
               The problem
             </span>
           </Reveal>
@@ -382,12 +378,12 @@ function HowItWorks() {
       label: "TALK",
       title: "Converse naturally",
       desc: "Your conversations already hold what needs to get done. Just forward a message to NANTI.",
-      footer: "Forward or tag",
+      footer: "Forward or paste",
       icon: "&#128172;",
       inspector: {
         badge: "Step 1 Preview",
-        title: "Forwarding into WhatsApp Bot",
-        desc: "Swipe right on any message with a promise and forward to NANTI contact.",
+        title: "Forward the message to NANTI",
+        desc: "Swipe right on any message with a promise and forward it to the NANTI contact.",
         icon: "&#128172;",
       },
     },
@@ -396,12 +392,12 @@ function HowItWorks() {
       label: "UNDERSTAND",
       title: "Extract intent",
       desc: "NANTI finds commitments, who said what, and when it is due.",
-      footer: "Pattern synthesis",
+      footer: "Finds people and dates",
       icon: "&#10024;",
       inspector: {
         badge: "Step 2 Preview",
-        title: "Natural Language Entity Extraction",
-        desc: "Our model finds the person (Pak Tom), the action (Send invoice), and the deadline (28 August 10:00 AM).",
+        title: "NANTI reads the message",
+        desc: "NANTI finds the person (Pak Tom), the action (Send invoice), and the deadline (28 August 10:00 AM).",
         icon: "&#10024;",
       },
     },
@@ -410,12 +406,12 @@ function HowItWorks() {
       label: "REMEMBER",
       title: "Maintain ledger",
       desc: "Track what you promised and what you are waiting for from others.",
-      footer: "Silent preservation",
+      footer: "Recorded quietly",
       icon: "&#128220;",
       inspector: {
         badge: "Step 3 Preview",
-        title: "Encrypted Ledger Maintenance",
-        desc: "Recorded silently into your encrypted timeline. No boards, kanbans, or task lists to manage.",
+        title: "NANTI records the commitment",
+        desc: "Recorded into your timeline. No boards or task lists to manage.",
         icon: "&#128220;",
       },
     },
@@ -424,11 +420,11 @@ function HowItWorks() {
       label: "FOLLOW UP",
       title: "Gentle surfacing",
       desc: "When the time comes, NANTI sends a reminder back in WhatsApp.",
-      footer: "Contextual reminder",
+      footer: "Reminder with context",
       icon: "&#128276;",
       inspector: {
         badge: "Step 4 Preview",
-        title: "Proactive WhatsApp Ping",
+        title: "NANTI sends the reminder",
         desc: "Two hours before the deadline, NANTI sends a reminder: Invoice for Pak Tom is due at 10:00 AM today.",
         icon: "&#128276;",
       },
@@ -440,7 +436,7 @@ function HowItWorks() {
       <div className="mx-auto max-w-[1240px] px-6">
         <div className="mx-auto mb-14 max-w-2xl text-center">
           <Reveal>
-            <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.18em] text-[#075E54]">
+            <span className="mb-2 block text-[11px] font-semibold tracking-[0.02em] text-[#075E54]">
               How it works
             </span>
           </Reveal>
@@ -564,7 +560,7 @@ function IntegrationsSection() {
     <section className="w-full bg-[#eaedfa] py-16">
       <div className="mx-auto max-w-[1240px] px-6 text-center">
         <Reveal>
-          <span className="mb-3 block text-[11px] font-bold uppercase tracking-[0.18em] text-[#075E54]">
+          <span className="mb-3 block text-[11px] font-semibold tracking-[0.02em] text-[#075E54]">
               Integrations
           </span>
           <h3 className="font-serif text-[22px] leading-[28px] text-[#171c24] mb-8">
@@ -602,15 +598,15 @@ function PrivacySection() {
   const items = [
     {
       icon: "&#128274;",
-      title: "End-to-end encrypted",
-      desc: "Your messages are encrypted in transit and at rest. We never store raw conversation history.",
-      footer: "No transcript retention",
+      title: "Encrypted in transit and at rest",
+      desc: "Your data travels over HTTPS and is stored encrypted.",
+      footer: "No ads or profiling",
     },
     {
       icon: "&#128273;",
       title: "You control your data",
-      desc: "Delete your data anytime with one click. We never sell or share your information with third parties.",
-      footer: "Export and delete anytime",
+      desc: "Delete your data anytime from Settings. We never sell or share your information with third parties.",
+      footer: "Delete anytime",
     },
     {
       icon: "&#128065;",
@@ -625,7 +621,7 @@ function PrivacySection() {
       <div className="mx-auto max-w-[1240px] px-6">
         <div className="mb-16 max-w-2xl text-left">
           <Reveal>
-            <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.18em] text-[#075E54]">
+            <span className="mb-2 block text-[11px] font-semibold tracking-[0.02em] text-[#075E54]">
               Privacy
             </span>
           </Reveal>
@@ -674,9 +670,9 @@ function FinalCta() {
     <section className="w-full border-t border-[#128C7E]/15 bg-[#eef7f3] py-24 lg:py-32">
       <div className="mx-auto max-w-[800px] px-6 text-center">
         <Reveal>
-          <span className="mb-4 block text-[11px] font-bold uppercase tracking-[0.18em] text-[#075E54]">
-              Get started
-          </span>
+          <span className="mb-4 block text-[11px] font-semibold tracking-[0.02em] text-[#075E54]">
+              Start here
+            </span>
         </Reveal>
         <Reveal delay={50}>
           <h2 className="font-serif text-[56px] leading-[1.12] tracking-[-0.03em] text-[#171c24] max-sm:text-[38px] max-sm:leading-[44px]">
@@ -690,7 +686,7 @@ function FinalCta() {
         </Reveal>
         <Reveal delay={100}>
           <p className="mx-auto mt-6 max-w-lg text-[16px] text-[#45474a]">
-            Reclaim peace of mind during negotiation, planning, and day-to-day conversation.
+            So you can stop holding it all in your head.
           </p>
         </Reveal>
         <Reveal delay={200}>

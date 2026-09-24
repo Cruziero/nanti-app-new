@@ -25,17 +25,17 @@ By the end of the day, you'll forget at least half of them.
 
 ## Why It Happens
 
-WhatsApp is where work and life happen. But it's not designed to track commitments. Messages scroll away. Conversations get buried. And the promises you made — or the ones others made to you — disappear into the noise.
+WhatsApp is where work and life happen. But it's not designed to track commitments. Messages scroll away. Conversations get buried. And the promises you made, or the ones others made to you, disappear into the noise.
 
 ## The Solution
 
-Instead of trying to remember everything, let AI do it for you:
+Instead of trying to remember everything, let NANTI do it for you:
 
 1. **Forward the conversation** to NANTI
 2. **AI extracts** the commitments, people, and deadlines
 3. **Get reminded** when the time comes
 
-No more lost promises. No more missed follow-ups.
+Forward a conversation and NANTI keeps track of what was promised.
 
 ## Try It
 
@@ -56,7 +56,7 @@ Keep conversations organized. When you know which thread belongs to which client
 
 ## 2. Use Voice Messages for Quick Follow-Ups
 
-Sometimes typing takes too long. Voice messages capture context faster — and AI can extract commitments from them too.
+Sometimes typing takes too long. Voice messages capture context faster, and NANTI can extract commitments from them too.
 
 ## 3. Forward Key Conversations to Your Memory Tool
 
@@ -70,22 +70,22 @@ Every time someone promises something, set a reminder. Better yet, let AI do it 
 
 At the end of each week, review what you promised and what's still pending. This prevents things from falling through the cracks.
 
-## The Bottom Line
+## Why It Matters
 
-WhatsApp is powerful, but it's not a task manager. Bridge the gap with smart extraction and reminders.
+WhatsApp is powerful, but it is not a task manager. Bridge the gap by extracting commitments and setting reminders.
     `,
   },
   {
     slug: "ai-memory-daily-life",
-    title: "Using AI Memory to Remember What Matters in Daily Life",
+    title: "Remembering What Matters in Daily Life",
     excerpt: "From birthdays to dinner plans, AI can help you remember the small promises that keep relationships strong.",
     category: "Personal",
     date: "2026-08-22",
     readTime: "3 min",
     content: `
-## It's Not Just About Work
+## Promises Outside Work
 
-We make promises every day — to our partners, kids, friends, and family. "I'll pick up the kids." "Let's have dinner this weekend." "I'll call you tomorrow."
+We make promises every day to our partners, kids, friends, and family. "I'll pick up the kids." "Let's have dinner this weekend." "I'll call you tomorrow."
 
 These small commitments matter. They keep relationships strong.
 
@@ -109,14 +109,14 @@ Forward one conversation to NANTI. See what it catches. You might be surprised h
   {
     slug: "getting-started-nanti",
     title: "Getting Started with NANTI: A Step-by-Step Guide",
-    excerpt: "Set up your AI memory in 2 minutes. Here's how to start tracking commitments from your WhatsApp conversations.",
+    excerpt: "Set up NANTI in 2 minutes. Here's how to start tracking commitments from your WhatsApp conversations.",
     category: "Tutorial",
     date: "2026-08-19",
     readTime: "4 min",
     content: `
 ## Step 1: Sign Up
 
-Create your free account at nanti-aja.vercel.app. No credit card required.
+Create your free account. No credit card required.
 
 ## Step 2: Connect WhatsApp
 
@@ -141,7 +141,7 @@ When the deadline arrives, NANTI will remind you. You can also:
 - View all tracked items
 - Ask the AI assistant about your commitments
 
-## That's It
+## Start Here
 
 You're now tracking commitments without any extra work. Just forward conversations and let NANTI do the rest.
     `,
@@ -158,38 +158,35 @@ You're now tracking commitments without any extra work. Just forward conversatio
 
 When you forward a conversation to NANTI, privacy is built in from the start.
 
-## What We Extract
+## What NANTI Extracts
 
-NANTI only extracts:
+NANTI turns a conversation into structured items:
 - Names (who's involved)
 - Commitments (what was promised)
 - Deadlines (when it's due)
 - Context (why it matters)
 
-## What We Don't Store
+## What Happens to the Conversation
 
-- Raw conversation text (deleted after extraction)
-- Message metadata
-- Contact information
-- Chat histories
+Conversations you share are retained while your account is active so you can review what NANTI found. You can delete any of it at any time.
 
 ## How It Works
 
 1. You forward a conversation
-2. AI extracts commitments in real-time
-3. Raw text is immediately deleted
-4. Only structured commitment data remains
+2. NANTI extracts the commitments in real time
+3. The result is saved as a structured item
+4. You can edit or delete it at any time
 
 ## You're in Control
 
 - Delete your data anytime
 - No data is sold or shared
-- End-to-end encryption in transit
-- AI reads patterns, not people
+- Encrypted in transit and at rest
+- Used only to extract commitments
 
-## Try It
+## See It in Practice
 
-See for yourself. Forward a conversation and watch how NANTI protects your privacy while helping you remember what matters.
+Forward a conversation and watch how NANTI protects your privacy while helping you remember what matters.
     `,
   },
 ];

@@ -6,7 +6,7 @@ export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
       { title: "About · NANTI" },
-      { name: "description", content: "About NANTI — your AI memory for WhatsApp." },
+      { name: "description", content: "About NANTI, your memory for WhatsApp." },
     ],
   }),
   component: AboutPage,

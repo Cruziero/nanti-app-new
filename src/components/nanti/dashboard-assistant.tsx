@@ -128,7 +128,7 @@ function deterministicMemoryAnswer(
           item.personName ||
           "pihak terkait";
         const age = item.since ? ` · menunggu ${waitingDays(item)} hari` : "";
-        return `${index + 1}. ${person} — ${item.title}${age}`;
+        return `${index + 1}. ${person}: ${item.title}${age}`;
       }),
     ].join("\n");
   }
@@ -160,7 +160,7 @@ function deterministicMemoryAnswer(
       people.find((candidate) => candidate.id === first.personId)?.name ||
       first.personName ||
       "pihak terkait";
-    lines.push(`Follow-up: ${person} — ${first.title}`);
+    lines.push(`Follow-up: ${person}: ${first.title}`);
   }
   if (inbox.length) lines.push(`Clarify: ${inbox.length} item di Inbox masih belum lengkap.`);
   return ["Yang mungkin kamu lupa:", ...lines].join("\n");

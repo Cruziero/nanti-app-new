@@ -36,7 +36,7 @@ export function SiteFooter() {
           <div className="md:col-span-2">
             <Logo />
             <p className="mt-4 max-w-[240px] text-[14px] leading-relaxed text-[#5F6368]">
-              Your AI memory for the conversations that matter.
+              Memory for the conversations that matter.
             </p>
           </div>
           {columns.map((col) => (

@@ -104,7 +104,7 @@ export function generateFollowUpMessage(
     case "warm":
       return `${name}, just a gentle reminder about "${what}". No rush, just want to make sure it's on your radar. 🤍`;
     case "direct":
-      return `${name} — "${what}" follow up needed. Status?`;
+      return `${name}: "${what}" follow up needed. Status?`;
     default:
       return `Halo ${name}, follow up soal "${what}".`;
   }

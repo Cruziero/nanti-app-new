@@ -68,7 +68,7 @@ const ARTICLE_TOPICS = [
   {
     title: "The Minimalist's Guide to Digital Commitment Tracking",
     category: "Productivity",
-    angle: "Less is more — how to track only what matters without app fatigue",
+    angle: "Less is more: how to track only what matters without app fatigue",
   },
   {
     title: "How to Follow Up Without Being Annoying",
@@ -86,14 +86,14 @@ const ARTICLE_TOPICS = [
     angle: "Context loss in to-do lists, why conversational extraction is superior",
   },
   {
-    title: "How Small Teams Stay Accountable with AI Memory",
+    title: "How Small Teams Stay Accountable with Shared Memory",
     category: "Business",
     angle: "Team coordination, shared commitments, accountability without micromanagement",
   },
   {
     title: "The Future of Conversational Intelligence",
     category: "Technology",
-    angle: "Where AI-powered conversation analysis is heading, emerging capabilities",
+    angle: "Where conversation analysis is heading, emerging capabilities",
   },
   {
     title: "Turning WhatsApp Group Chats into Action Items",
@@ -103,7 +103,7 @@ const ARTICLE_TOPICS = [
   {
     title: "Real Stories: How NANTI Users Never Miss a Deadline",
     category: "Case Study",
-    angle: "User stories, before/after scenarios, practical benefits of AI memory",
+    angle: "User stories, before/after scenarios, practical benefits of memory",
   },
 ];
 

@@ -7,7 +7,7 @@ export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
       { title: "Pricing · NANTI" },
-      { name: "description", content: "Simple pricing for NANTI — your AI memory for WhatsApp." },
+      { name: "description", content: "Simple pricing for NANTI, your memory for WhatsApp." },
     ],
   }),
   component: PricingPage,

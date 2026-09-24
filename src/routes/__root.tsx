@@ -82,27 +82,26 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "NANTI · AI memory for WhatsApp" },
+      { title: "NANTI · Memory for WhatsApp" },
       {
         name: "description",
         content:
-          "Forward or paste your WhatsApp conversations into NANTI. AI turns them into tracked commitments, reminders and follow-ups.",
+          "Forward or paste your WhatsApp conversations into NANTI. NANTI turns them into tracked commitments, reminders and follow-ups.",
       },
       { name: "author", content: "NANTI" },
-      { property: "og:title", content: "NANTI · AI memory for WhatsApp" },
+      { property: "og:title", content: "NANTI · Memory for WhatsApp" },
       {
         property: "og:description",
         content:
-          "Forward or paste your WhatsApp conversations into NANTI. AI turns them into tracked commitments, reminders and follow-ups.",
+          "Forward or paste your WhatsApp conversations into NANTI. NANTI turns them into tracked commitments, reminders and follow-ups.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "NANTI · AI memory for WhatsApp" },
+      { name: "twitter:title", content: "NANTI · Memory for WhatsApp" },
       {
         name: "twitter:description",
         content:
-          "Forward or paste your WhatsApp conversations into NANTI. AI turns them into tracked commitments, reminders and follow-ups.",
+          "Forward or paste your WhatsApp conversations into NANTI. NANTI turns them into tracked commitments, reminders and follow-ups.",
       },
       { property: "og:image", content: OG_IMAGE_URL },
       { name: "twitter:image", content: OG_IMAGE_URL },

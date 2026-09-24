@@ -27,14 +27,14 @@ export function generateDailyBriefing(
   const potentiallyForgotten: string[] = [];
   for (const item of overdue) {
     if (item.priority === "high" || item.priority === "critical") {
-      potentiallyForgotten.push(`${item.title}${item.personName ? ` — ${item.personName}` : ""}`);
+      potentiallyForgotten.push(`${item.title}${item.personName ? `: ${item.personName}` : ""}`);
     }
   }
   for (const item of waiting) {
     const days = waitingDays(item);
     if (days >= 3) {
       potentiallyForgotten.push(
-        `${item.title}${item.personName ? ` — ${item.personName}` : ""} (${days} hari menunggu)`,
+        `${item.title}${item.personName ? `: ${item.personName}` : ""} (${days} hari menunggu)`,
       );
     }
   }

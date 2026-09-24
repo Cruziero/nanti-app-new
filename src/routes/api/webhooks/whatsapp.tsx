@@ -259,7 +259,7 @@ async function handleMessage(message: IncomingMessage) {
     });
     await sendText(
       message.from,
-      "NANTI sudah terhubung. Mulai sekarang kirim atau forward hal penting ke sini — saya akan bantu mengingatnya.",
+      "NANTI sudah terhubung. Mulai sekarang kirim atau forward hal penting ke sini. Saya akan bantu mengingatnya.",
     );
     return;
   }

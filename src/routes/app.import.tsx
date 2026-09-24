@@ -332,7 +332,7 @@ function ImportPage() {
                       </div>
                       <p className="mt-1 text-[12.5px] text-muted-foreground">
                         {clarified.person || d.person
-                          ? `${clarified.person || d.person}${clarified.org || d.org ? ` — ${clarified.org || d.org}` : ""}`
+                          ? `${clarified.person || d.person}${clarified.org || d.org ? `, ${clarified.org || d.org}` : ""}`
                           : "No person"}
                         {clarified.project || d.project ? ` · ${clarified.project || d.project}` : ""}
                         {clarified.dueOffsetDays != null
@@ -413,7 +413,7 @@ function ImportPage() {
                           className="mt-2 flex items-center gap-1 text-[11.5px] font-medium text-amber-600 hover:text-amber-800"
                         >
                           <AlertCircle className="size-3" />
-                          Missing info — add details
+                          Missing info: add details
                         </button>
                       )}
                     </div>

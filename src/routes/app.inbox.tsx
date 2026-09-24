@@ -35,14 +35,14 @@ function ConfidenceBadge({ value }: { value: number }) {
     return (
       <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-600">
         <AlertCircle className="size-3" />
-        {pct}% — review
+        {pct}% review
       </span>
     );
   }
   return (
     <span className="flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-600">
       <HelpCircle className="size-3" />
-      {pct}% — needs info
+      {pct}% needs info
     </span>
   );
 }
@@ -232,7 +232,7 @@ function InboxPage() {
     <div>
       <PageHeader
         title="Inbox"
-        subtitle="Review what NANTI found — confirm, skip, or clarify"
+        subtitle="Review what NANTI found. Confirm, skip, or clarify."
       />
 
       {list.length === 0 ? (

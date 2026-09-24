@@ -56,7 +56,7 @@ function BlogPage() {
               Stories & updates
             </h1>
             <p className="mt-3 text-[15px] text-[#5F6368]">
-              Tips, product updates, and stories about remembering what matters.
+              Tips and product updates about tracking commitments from WhatsApp.
             </p>
           </Reveal>
         </div>

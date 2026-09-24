@@ -72,16 +72,16 @@ function directWorkspaceAnswer(
     /what.*forget|forgetting|\b(lupa|kelupaan)\b|apa.*terlewat/.test(q)
   ) {
     const lines = [
-      ...overdue.slice(0, 3).map((item) => `Overdue — ${item.title}`),
-      ...today.slice(0, 3).map((item) => `Today — ${item.title}`),
+      ...overdue.slice(0, 3).map((item) => `Overdue: ${item.title}`),
+      ...today.slice(0, 3).map((item) => `Today: ${item.title}`),
       ...waiting.slice(0, 2).map(
-        (item) => `Follow up — ${personName(item)}: ${item.title}`,
+        (item) => `Follow up with ${personName(item)}: ${item.title}`,
       ),
       ...(inbox.length ? [`${inbox.length} item still needs clarification`] : []),
     ];
     return lines.length
       ? ["Here’s what needs your attention:", ...lines].join("\n")
-      : "You’re clear right now — no overdue tasks, nothing due today, and no unresolved follow-up.";
+      : "You’re clear right now: no overdue tasks, nothing due today, and no unresolved follow-up.";
   }
 
   if (
@@ -107,7 +107,7 @@ function directWorkspaceAnswer(
           "Follow up with:",
           ...waiting.slice(0, 6).map(
             (item, index) =>
-              `${index + 1}. ${personName(item)} — ${item.title} · ${waitingDays(item)}d`,
+              `${index + 1}. ${personName(item)}: ${item.title} · ${waitingDays(item)}d`,
           ),
         ].join("\n")
       : "There’s nobody in your active Waiting list right now.";
@@ -260,7 +260,7 @@ export function SimpleAssistant() {
         return true;
       }
       setPending(null);
-      await appendTurn(answer, `Got it — ${answer.trim()}.`, [item.title], {
+      await appendTurn(answer, `Got it: ${answer.trim()}.`, [item.title], {
         clarification_resolved: true,
         item_id: promoted,
       });
@@ -283,7 +283,7 @@ export function SimpleAssistant() {
     setPending(null);
     await appendTurn(
       answer,
-      `Got it${parsed.date ? ` — ${parsed.date}` : ""}${parsed.time ? ` at ${parsed.time}` : ""}.`,
+      `Got it${parsed.date ? `: ${parsed.date}` : ""}${parsed.time ? ` at ${parsed.time}` : ""}.`,
       [item.title],
       { clarification_resolved: true, item_id: promoted },
     );
@@ -712,9 +712,7 @@ export function SimpleAssistant() {
         console.error("Ask NANTI deterministic fallback failed:", fallbackError);
       }
 
-      setError(
-        "NANTI couldn’t process that. Your message is still here — try again.",
-      );
+      setError("NANTI couldn’t process that. Your message is still here. Try again.");
     } finally {
       lock.current = false;
       setBusy(false);

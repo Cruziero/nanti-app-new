@@ -75,9 +75,9 @@ export function ItemDetailProvider({ children }: { children: ReactNode }) {
 
               <div className="px-6 py-4">
                 <Field label="Orang">
-                  {person ? `${person.name} — ${person.org}` : (item.personName ?? "—")}
+                  {person ? `${person.name}, ${person.org}` : (item.personName ?? "None")}
                 </Field>
-                <Field label="Proyek">{project?.name ?? item.projectName ?? "—"}</Field>
+                <Field label="Proyek">{project?.name ?? item.projectName ?? "None"}</Field>
                 <Field label="Tenggat">
                   {item.kind === "waiting"
                     ? `Sejak ${formatDate(item.since)}`
@@ -87,7 +87,7 @@ export function ItemDetailProvider({ children }: { children: ReactNode }) {
                 <Field label="Status">{dueLabel(item)}</Field>
                 <Field label="Terdeteksi dari">{item.source}</Field>
                 <Field label="Cara impor">
-                  {sourceTypeLabel[item.sourceType ?? "manual"] ?? "—"}
+                  {sourceTypeLabel[item.sourceType ?? "manual"] ?? "None"}
                 </Field>
                 <Field label="Dibuat oleh">{item.createdBy === "ai" ? "NANTI (AI)" : "Anda"}</Field>
                 <Field label="Keyakinan AI">{Math.round(item.confidence * 100)}%</Field>
@@ -102,15 +102,15 @@ export function ItemDetailProvider({ children }: { children: ReactNode }) {
                       <Field label="Who">
                         {item.semanticContext.who === "user"
                           ? [ "Anda", person?.name || item.personName ].filter(Boolean).join(" → ")
-                          : item.semanticContext.who || person?.name || item.personName || "—"}
+                          : item.semanticContext.who || person?.name || item.personName || "None"}
                       </Field>
                       <Field label="When">
                         {item.semanticContext.when ||
                           [item.due ? formatDate(item.due) : "", item.time].filter(Boolean).join(" · ") ||
-                          "—"}
+                          "None"}
                       </Field>
-                      <Field label="Where">{item.semanticContext.where || "—"}</Field>
-                      <Field label="How">{item.semanticContext.how || "—"}</Field>
+                      <Field label="Where">{item.semanticContext.where || "None"}</Field>
+                      <Field label="How">{item.semanticContext.how || "None"}</Field>
                       {item.semanticContext.reminder?.shouldRemind && (
                         <Field label="Reminder">
                           {[
