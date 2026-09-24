@@ -270,8 +270,21 @@ export async function loadEntityRoutinePrompt(
   supabase: any,
   userId: string,
 ) {
-  const [peopleResult, projectsResult, aliasesResult, routinesResult, activityResult] =
-    await Promise.all([
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+
+  const [
+    peopleResult,
+    projectsResult,
+    aliasesResult,
+    routinesResult,
+    activityResult,
+    calendarResult,
+  ] = await Promise.all([
       supabase
         .from("people")
         .select("id,name,company,role,last_conversation_at")
@@ -309,6 +322,13 @@ export async function loadEntityRoutinePrompt(
         .eq("user_id", userId)
         .order("occurred_at", { ascending: false })
         .limit(80),
+      supabase
+        .from("calendar_events")
+        .select("title,start_date,end_date,location,attendees")
+        .eq("user_id", userId)
+        .gte("start_date", today)
+        .order("start_date", { ascending: true })
+        .limit(30),
     ]);
 
   const errors = [
@@ -317,6 +337,7 @@ export async function loadEntityRoutinePrompt(
     aliasesResult.error,
     routinesResult.error,
     activityResult.error,
+    calendarResult.error,
   ].filter(Boolean);
   if (errors.length) {
     console.error("Failed to load some entity/routine memory:", errors);
@@ -327,8 +348,17 @@ export async function loadEntityRoutinePrompt(
   const aliases = aliasesResult.data || [];
   const routines = routinesResult.data || [];
   const activity = activityResult.data || [];
+  const calendarEvents = calendarResult.data || [];
 
-  if (!people.length && !projects.length && !aliases.length && !routines.length) return "";
+  if (
+    !people.length &&
+    !projects.length &&
+    !aliases.length &&
+    !routines.length &&
+    !calendarEvents.length
+  ) {
+    return "";
+  }
 
   const personAliases = new Map<string, string[]>();
   const projectAliases = new Map<string, string[]>();
@@ -401,6 +431,26 @@ export async function loadEntityRoutinePrompt(
   if (locations.length) {
     lines.push("KNOWN LOCATIONS:");
     for (const location of [...new Set(locations)].slice(0, 30)) lines.push(`- ${location}`);
+  }
+
+  if (calendarEvents.length) {
+    lines.push("UPCOMING GOOGLE CALENDAR:");
+    lines.push(
+      "Calendar events are schedule facts, not tasks. Use them to answer schedule questions and avoid inventing free time.",
+    );
+    for (const event of calendarEvents) {
+      const details = [
+        event.start_date ? `start=${event.start_date}` : "",
+        event.end_date ? `end=${event.end_date}` : "",
+        event.location ? `location=${event.location}` : "",
+        Array.isArray(event.attendees) && event.attendees.length
+          ? `attendees=${event.attendees.slice(0, 8).join(", ")}`
+          : "",
+      ].filter(Boolean);
+      lines.push(
+        `- ${event.title || "Untitled event"}${details.length ? ` · ${details.join(" · ")}` : ""}`,
+      );
+    }
   }
 
   if (routines.length) {
