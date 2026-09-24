@@ -33,6 +33,7 @@ import { Route as AppRemindersRouteImport } from './routes/app.reminders'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppTodayRouteImport } from './routes/app.today'
 import { Route as AppWaitingRouteImport } from './routes/app.waiting'
+import { Route as AuthCheckEmailRouteImport } from './routes/auth.check-email'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
@@ -41,11 +42,13 @@ import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as LegalPrivacyRouteImport } from './routes/legal.privacy'
 import { Route as LegalTermsRouteImport } from './routes/legal.terms'
 import { Route as ApiAuthGoogleRouteImport } from './routes/api/auth/google'
+import { Route as ApiCronAssistantEvalRouteImport } from './routes/api/cron/assistant-eval'
 import { Route as ApiCronCheckRemindersRouteImport } from './routes/api/cron/check-reminders'
 import { Route as ApiCronGenerateArticleRouteImport } from './routes/api/cron/generate-article'
 import { Route as ApiCronSyncCalendarRouteImport } from './routes/api/cron/sync-calendar'
 import { Route as ApiDebugServerInfoRouteImport } from './routes/api/debug/server-info'
 import { Route as ApiInvoicesPdfRouteImport } from './routes/api/invoices/pdf'
+import { Route as ApiPushConfigRouteImport } from './routes/api/push/config'
 import { Route as ApiPushSubscribeRouteImport } from './routes/api/push/subscribe'
 import { Route as ApiPushUnsubscribeRouteImport } from './routes/api/push/unsubscribe'
 import { Route as ApiRemindersCompleteRouteImport } from './routes/api/reminders/complete'
@@ -175,6 +178,11 @@ const AppWaitingRoute = AppWaitingRouteImport.update({
   path: '/waiting',
   getParentRoute: () => AppRoute,
 } as any)
+const AuthCheckEmailRoute = AuthCheckEmailRouteImport.update({
+  id: '/check-email',
+  path: '/check-email',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
@@ -215,6 +223,11 @@ const ApiAuthGoogleRoute = ApiAuthGoogleRouteImport.update({
   path: '/api/auth/google',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronAssistantEvalRoute = ApiCronAssistantEvalRouteImport.update({
+  id: '/api/cron/assistant-eval',
+  path: '/api/cron/assistant-eval',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCronCheckRemindersRoute = ApiCronCheckRemindersRouteImport.update({
   id: '/api/cron/check-reminders',
   path: '/api/cron/check-reminders',
@@ -238,6 +251,11 @@ const ApiDebugServerInfoRoute = ApiDebugServerInfoRouteImport.update({
 const ApiInvoicesPdfRoute = ApiInvoicesPdfRouteImport.update({
   id: '/api/invoices/pdf',
   path: '/api/invoices/pdf',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPushConfigRoute = ApiPushConfigRouteImport.update({
+  id: '/api/push/config',
+  path: '/api/push/config',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPushSubscribeRoute = ApiPushSubscribeRouteImport.update({
@@ -305,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/app/settings': typeof AppSettingsRoute
   '/app/today': typeof AppTodayRoute
   '/app/waiting': typeof AppWaitingRoute
+  '/auth/check-email': typeof AuthCheckEmailRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -314,11 +333,13 @@ export interface FileRoutesByFullPath {
   '/legal/terms': typeof LegalTermsRoute
   '/app/': typeof AppIndexRoute
   '/api/auth/google': typeof ApiAuthGoogleRoute
+  '/api/cron/assistant-eval': typeof ApiCronAssistantEvalRoute
   '/api/cron/check-reminders': typeof ApiCronCheckRemindersRoute
   '/api/cron/generate-article': typeof ApiCronGenerateArticleRoute
   '/api/cron/sync-calendar': typeof ApiCronSyncCalendarRoute
   '/api/debug/server-info': typeof ApiDebugServerInfoRoute
   '/api/invoices/pdf': typeof ApiInvoicesPdfRoute
+  '/api/push/config': typeof ApiPushConfigRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
   '/api/push/unsubscribe': typeof ApiPushUnsubscribeRoute
   '/api/reminders/complete': typeof ApiRemindersCompleteRoute
@@ -351,6 +372,7 @@ export interface FileRoutesByTo {
   '/app/settings': typeof AppSettingsRoute
   '/app/today': typeof AppTodayRoute
   '/app/waiting': typeof AppWaitingRoute
+  '/auth/check-email': typeof AuthCheckEmailRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -360,11 +382,13 @@ export interface FileRoutesByTo {
   '/legal/terms': typeof LegalTermsRoute
   '/app': typeof AppIndexRoute
   '/api/auth/google': typeof ApiAuthGoogleRoute
+  '/api/cron/assistant-eval': typeof ApiCronAssistantEvalRoute
   '/api/cron/check-reminders': typeof ApiCronCheckRemindersRoute
   '/api/cron/generate-article': typeof ApiCronGenerateArticleRoute
   '/api/cron/sync-calendar': typeof ApiCronSyncCalendarRoute
   '/api/debug/server-info': typeof ApiDebugServerInfoRoute
   '/api/invoices/pdf': typeof ApiInvoicesPdfRoute
+  '/api/push/config': typeof ApiPushConfigRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
   '/api/push/unsubscribe': typeof ApiPushUnsubscribeRoute
   '/api/reminders/complete': typeof ApiRemindersCompleteRoute
@@ -399,6 +423,7 @@ export interface FileRoutesById {
   '/app/settings': typeof AppSettingsRoute
   '/app/today': typeof AppTodayRoute
   '/app/waiting': typeof AppWaitingRoute
+  '/auth/check-email': typeof AuthCheckEmailRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -408,11 +433,13 @@ export interface FileRoutesById {
   '/legal/terms': typeof LegalTermsRoute
   '/app/': typeof AppIndexRoute
   '/api/auth/google': typeof ApiAuthGoogleRoute
+  '/api/cron/assistant-eval': typeof ApiCronAssistantEvalRoute
   '/api/cron/check-reminders': typeof ApiCronCheckRemindersRoute
   '/api/cron/generate-article': typeof ApiCronGenerateArticleRoute
   '/api/cron/sync-calendar': typeof ApiCronSyncCalendarRoute
   '/api/debug/server-info': typeof ApiDebugServerInfoRoute
   '/api/invoices/pdf': typeof ApiInvoicesPdfRoute
+  '/api/push/config': typeof ApiPushConfigRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
   '/api/push/unsubscribe': typeof ApiPushUnsubscribeRoute
   '/api/reminders/complete': typeof ApiRemindersCompleteRoute
@@ -448,6 +475,7 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/today'
     | '/app/waiting'
+    | '/auth/check-email'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/reset-password'
@@ -457,11 +485,13 @@ export interface FileRouteTypes {
     | '/legal/terms'
     | '/app/'
     | '/api/auth/google'
+    | '/api/cron/assistant-eval'
     | '/api/cron/check-reminders'
     | '/api/cron/generate-article'
     | '/api/cron/sync-calendar'
     | '/api/debug/server-info'
     | '/api/invoices/pdf'
+    | '/api/push/config'
     | '/api/push/subscribe'
     | '/api/push/unsubscribe'
     | '/api/reminders/complete'
@@ -494,6 +524,7 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/today'
     | '/app/waiting'
+    | '/auth/check-email'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/reset-password'
@@ -503,11 +534,13 @@ export interface FileRouteTypes {
     | '/legal/terms'
     | '/app'
     | '/api/auth/google'
+    | '/api/cron/assistant-eval'
     | '/api/cron/check-reminders'
     | '/api/cron/generate-article'
     | '/api/cron/sync-calendar'
     | '/api/debug/server-info'
     | '/api/invoices/pdf'
+    | '/api/push/config'
     | '/api/push/subscribe'
     | '/api/push/unsubscribe'
     | '/api/reminders/complete'
@@ -541,6 +574,7 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/today'
     | '/app/waiting'
+    | '/auth/check-email'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/reset-password'
@@ -550,11 +584,13 @@ export interface FileRouteTypes {
     | '/legal/terms'
     | '/app/'
     | '/api/auth/google'
+    | '/api/cron/assistant-eval'
     | '/api/cron/check-reminders'
     | '/api/cron/generate-article'
     | '/api/cron/sync-calendar'
     | '/api/debug/server-info'
     | '/api/invoices/pdf'
+    | '/api/push/config'
     | '/api/push/subscribe'
     | '/api/push/unsubscribe'
     | '/api/reminders/complete'
@@ -583,11 +619,13 @@ export interface RootRouteChildren {
   LegalPrivacyRoute: typeof LegalPrivacyRoute
   LegalTermsRoute: typeof LegalTermsRoute
   ApiAuthGoogleRoute: typeof ApiAuthGoogleRoute
+  ApiCronAssistantEvalRoute: typeof ApiCronAssistantEvalRoute
   ApiCronCheckRemindersRoute: typeof ApiCronCheckRemindersRoute
   ApiCronGenerateArticleRoute: typeof ApiCronGenerateArticleRoute
   ApiCronSyncCalendarRoute: typeof ApiCronSyncCalendarRoute
   ApiDebugServerInfoRoute: typeof ApiDebugServerInfoRoute
   ApiInvoicesPdfRoute: typeof ApiInvoicesPdfRoute
+  ApiPushConfigRoute: typeof ApiPushConfigRoute
   ApiPushSubscribeRoute: typeof ApiPushSubscribeRoute
   ApiPushUnsubscribeRoute: typeof ApiPushUnsubscribeRoute
   ApiRemindersCompleteRoute: typeof ApiRemindersCompleteRoute
@@ -766,6 +804,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWaitingRouteImport
       parentRoute: typeof AppRoute
     }
+    '/auth/check-email': {
+      id: '/auth/check-email'
+      path: '/check-email'
+      fullPath: '/auth/check-email'
+      preLoaderRoute: typeof AuthCheckEmailRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/auth/forgot-password': {
       id: '/auth/forgot-password'
       path: '/forgot-password'
@@ -822,6 +867,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthGoogleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cron/assistant-eval': {
+      id: '/api/cron/assistant-eval'
+      path: '/api/cron/assistant-eval'
+      fullPath: '/api/cron/assistant-eval'
+      preLoaderRoute: typeof ApiCronAssistantEvalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/cron/check-reminders': {
       id: '/api/cron/check-reminders'
       path: '/api/cron/check-reminders'
@@ -855,6 +907,13 @@ declare module '@tanstack/react-router' {
       path: '/api/invoices/pdf'
       fullPath: '/api/invoices/pdf'
       preLoaderRoute: typeof ApiInvoicesPdfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/config': {
+      id: '/api/push/config'
+      path: '/api/push/config'
+      fullPath: '/api/push/config'
+      preLoaderRoute: typeof ApiPushConfigRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/push/subscribe': {
@@ -949,6 +1008,7 @@ const AppRouteChildren: AppRouteChildren = {
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface AuthRouteChildren {
+  AuthCheckEmailRoute: typeof AuthCheckEmailRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
@@ -956,6 +1016,7 @@ interface AuthRouteChildren {
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
+  AuthCheckEmailRoute: AuthCheckEmailRoute,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
@@ -992,11 +1053,13 @@ const rootRouteChildren: RootRouteChildren = {
   LegalPrivacyRoute: LegalPrivacyRoute,
   LegalTermsRoute: LegalTermsRoute,
   ApiAuthGoogleRoute: ApiAuthGoogleRoute,
+  ApiCronAssistantEvalRoute: ApiCronAssistantEvalRoute,
   ApiCronCheckRemindersRoute: ApiCronCheckRemindersRoute,
   ApiCronGenerateArticleRoute: ApiCronGenerateArticleRoute,
   ApiCronSyncCalendarRoute: ApiCronSyncCalendarRoute,
   ApiDebugServerInfoRoute: ApiDebugServerInfoRoute,
   ApiInvoicesPdfRoute: ApiInvoicesPdfRoute,
+  ApiPushConfigRoute: ApiPushConfigRoute,
   ApiPushSubscribeRoute: ApiPushSubscribeRoute,
   ApiPushUnsubscribeRoute: ApiPushUnsubscribeRoute,
   ApiRemindersCompleteRoute: ApiRemindersCompleteRoute,

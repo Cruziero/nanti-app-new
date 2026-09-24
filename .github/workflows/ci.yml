@@ -15,6 +15,20 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm install --legacy-peer-deps --no-audit --no-fund
+      - run: npm ci --legacy-peer-deps --no-audit --no-fund
       - run: npm run test:quality
+      - run: npm run test:ai-transport
+      - run: npm run test:account-export
       - run: npm run build
+
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --legacy-peer-deps --no-audit --no-fund
+      - run: npm run typecheck

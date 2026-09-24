@@ -2,14 +2,15 @@ const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models"
 const GEMINI_MODEL = process.env["GEMINI_MODEL"] || "gemini-3.5-flash";
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 const OPENAI_TEXT_MODEL = process.env["OPENAI_MODEL"] || "gpt-4o-mini";
+const AI_REQUEST_TIMEOUT_MS = 20_000;
 
 type Content = string | Array<Record<string, unknown>>;
 
 function geminiParts(content: Content) {
   if (typeof content === "string") return [{ text: content }];
   return content.map((part) => {
-    if (part.type === "image_url") {
-      const url = (part.image_url as { url?: string })?.url ?? "";
+    if (part["type"] === "image_url") {
+      const url = (part["image_url"] as { url?: string })?.url ?? "";
       const match = url.match(/^data:([^;]+);base64,(.+)$/);
       return {
         inlineData: {
@@ -61,30 +62,39 @@ async function chatGemini(
   };
 
   const response = await fetch(
-    `${GEMINI_API_URL}/${model}:generateContent?key=${key}`,
+    `${GEMINI_API_URL}/${encodeURIComponent(model)}:generateContent`,
     {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", "x-goog-api-key": key },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS),
     },
   );
 
   if (!response.ok) {
-    const detail = await response.text().catch(() => "");
     const error = new Error(`Gemini API error ${response.status}`);
-    console.error("Gemini API error", response.status, detail.slice(0, 500));
+    console.error("Gemini API error", response.status);
     throw error;
   }
 
   const data = (await response.json()) as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+    candidates?: Array<{
+      finishReason?: string;
+      content?: { parts?: Array<{ text?: string; thought?: boolean }> };
+    }>;
   };
-  return (
-    data.candidates?.[0]?.content?.parts
-      ?.map((part) => part.text || "")
-      .join("")
-      .trim() || ""
-  );
+  const candidate = data.candidates?.[0];
+  if (candidate?.finishReason !== "STOP") {
+    throw new Error("Gemini response did not complete.");
+  }
+  const text = candidate.content?.parts
+    ?.filter((part) => !part.thought)
+    .map((part) => part.text || "")
+    .join("")
+    .trim();
+  if (!text) throw new Error("Gemini returned no text.");
+  if (opts.json) JSON.parse(text);
+  return text;
 }
 
 async function chatOpenAI(
@@ -108,10 +118,10 @@ async function chatOpenAI(
     return {
       role,
       content: message.content.map((part) => {
-        if (part.type === "image_url") {
+        if (part["type"] === "image_url") {
           return {
             type: "image_url",
-            image_url: { url: (part.image_url as { url?: string })?.url ?? "" },
+            image_url: { url: (part["image_url"] as { url?: string })?.url ?? "" },
           };
         }
         return {
@@ -135,18 +145,25 @@ async function chatOpenAI(
       max_tokens: 8192,
       ...(opts.json ? { response_format: { type: "json_object" } } : {}),
     }),
+    signal: AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS),
   });
 
   if (!response.ok) {
-    const detail = await response.text().catch(() => "");
-    console.error("OpenAI API error", response.status, detail.slice(0, 500));
+    console.error("OpenAI API error", response.status);
     throw new Error(`OpenAI API error ${response.status}`);
   }
 
   const data = (await response.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
+    choices?: Array<{ finish_reason?: string; message?: { content?: string } }>;
   };
-  return data.choices?.[0]?.message?.content?.trim() || "";
+  const choice = data.choices?.[0];
+  if (choice?.finish_reason !== "stop") {
+    throw new Error("OpenAI response did not complete.");
+  }
+  const text = choice.message?.content?.trim();
+  if (!text) throw new Error("OpenAI returned no text.");
+  if (opts.json) JSON.parse(text);
+  return text;
 }
 
 async function chat(
