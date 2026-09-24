@@ -46,10 +46,19 @@ export function Welcome() {
       navigate({ to: "/auth/login" });
       return;
     }
+    if (!name) {
+      const metadataName =
+        typeof user.user_metadata?.display_name === "string"
+          ? user.user_metadata.display_name.trim()
+          : typeof user.user_metadata?.full_name === "string"
+            ? user.user_metadata.full_name.trim()
+            : "";
+      if (metadataName) setName(metadataName);
+    }
     if (hydrated && settings.onboarded) {
       navigate({ to: "/app/today" });
     }
-  }, [user, loading, hydrated, settings.onboarded, navigate]);
+  }, [user, loading, hydrated, settings.onboarded, navigate, name]);
 
   useEffect(() => {
     if (step === 1) {
@@ -87,7 +96,7 @@ export function Welcome() {
               NANTI remembers.
             </h1>
             <p className="mt-4 text-[15px] text-muted-foreground">
-              Never lose a commitment in WhatsApp again.
+              Never lose a commitment from your conversations again.
             </p>
             <button
               onClick={() => setStep(1)}
