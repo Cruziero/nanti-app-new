@@ -98,6 +98,19 @@ for (const fixture of fixtures.dateTime) {
     if (fixture.time) {
       assert.equal(result.time, fixture.time, "time mismatch");
     }
+    if (fixture.dateValid) {
+      assert.ok(result.date, "expected a date");
+      assert.match(result.date, /^\d{4}-\d{2}-\d{2}$/, "date must be ISO YYYY-MM-DD");
+      const [y, mo, d] = result.date.split("-").map(Number);
+      const round = new Date(Date.UTC(y, mo - 1, d));
+      assert.equal(round.getUTCFullYear(), y, "invalid calendar year");
+      assert.equal(round.getUTCMonth() + 1, mo, "invalid calendar month");
+      assert.equal(round.getUTCDate(), d, "invalid calendar day");
+    }
+    if (fixture.futureDate) {
+      assert.ok(result.date, "expected a date");
+      assert.ok(result.date > utils.todayISO(), "date must be in the future");
+    }
   });
 }
 

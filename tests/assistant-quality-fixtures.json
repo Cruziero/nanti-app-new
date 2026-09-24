@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "total": 96,
+  "total": 125,
   "normalize": [
     {
       "id": "norm-01",
@@ -121,6 +121,31 @@
       "id": "norm-24",
       "input": "Whatt am I forgeting?",
       "expected": "What am I forgetting?"
+    },
+    {
+      "id": "norm-25",
+      "input": "jam setengah 3",
+      "expected": "jam setengah 3"
+    },
+    {
+      "id": "norm-26",
+      "input": "rumah sebelah",
+      "expected": "rumah sebelah"
+    },
+    {
+      "id": "norm-27",
+      "input": "susah bgt",
+      "expected": "susah banget"
+    },
+    {
+      "id": "norm-28",
+      "input": "meski sibuk",
+      "expected": "meski sibuk"
+    },
+    {
+      "id": "norm-29",
+      "input": "malas bgt",
+      "expected": "malas banget"
     }
   ],
   "dateTime": [
@@ -243,6 +268,76 @@
       "input": "besok 18.30",
       "dateOffset": 1,
       "time": "18:30"
+    },
+    {
+      "id": "date-21",
+      "input": "nanti malam",
+      "dateOffset": 0,
+      "time": "20:00"
+    },
+    {
+      "id": "date-22",
+      "input": "nanti pagi",
+      "dateOffset": 0,
+      "time": "08:00"
+    },
+    {
+      "id": "date-23",
+      "input": "nanti siang",
+      "dateOffset": 0,
+      "time": "12:00"
+    },
+    {
+      "id": "date-24",
+      "input": "sore ini",
+      "dateOffset": 0,
+      "time": "17:00"
+    },
+    {
+      "id": "date-25",
+      "input": "malam ini",
+      "dateOffset": 0,
+      "time": "20:00"
+    },
+    {
+      "id": "date-26",
+      "input": "pagi ini",
+      "dateOffset": 0,
+      "time": "08:00"
+    },
+    {
+      "id": "date-27",
+      "input": "jam 12 malam",
+      "time": "00:00"
+    },
+    {
+      "id": "date-28",
+      "input": "jam setengah 3 sore",
+      "time": "14:30"
+    },
+    {
+      "id": "date-29",
+      "input": "setengah 3",
+      "time": "02:30"
+    },
+    {
+      "id": "date-30",
+      "input": "tgl 31",
+      "hasDate": true,
+      "dateValid": true
+    },
+    {
+      "id": "date-31",
+      "input": "bulan depan",
+      "hasDate": true,
+      "dateValid": true,
+      "futureDate": true
+    },
+    {
+      "id": "date-32",
+      "input": "tanggal 10",
+      "hasDate": true,
+      "dateValid": true
     }
   ],
   "fallbackTask": [
@@ -423,6 +518,56 @@
       "where": "bandara",
       "reminderOffset": 60,
       "hasDue": true
+    },
+    {
+      "id": "task-21",
+      "input": "saya harus kirimin laporan besok",
+      "titleIncludes": "kirim laporan",
+      "hasDue": true
+    },
+    {
+      "id": "task-22",
+      "input": "saya harus bayarin invoice besok",
+      "titleIncludes": "bayar invoice",
+      "hasDue": true
+    },
+    {
+      "id": "task-23",
+      "input": "saya harus jemputin pak dodi besok",
+      "titleIncludes": "jemput",
+      "person": "pak dodi",
+      "hasDue": true
+    },
+    {
+      "id": "task-24",
+      "input": "saya harus kerjain PR besok",
+      "titleIncludes": "kerjakan",
+      "hasDue": true
+    },
+    {
+      "id": "task-25",
+      "input": "saya harus hubungin vendor besok",
+      "titleIncludes": "hubungi",
+      "hasDue": true
+    },
+    {
+      "id": "task-26",
+      "input": "saya harus tungguin pak dodi besok",
+      "titleIncludes": "tunggu",
+      "person": "pak dodi",
+      "hasDue": true
+    },
+    {
+      "id": "task-27",
+      "input": "saya harus ngirim laporan besok",
+      "titleIncludes": "kirim",
+      "hasDue": true
+    },
+    {
+      "id": "task-28",
+      "input": "saya harus konfirm ke vendor besok",
+      "titleIncludes": "konfirmasi",
+      "hasDue": true
     }
   ],
   "rejectTask": [
@@ -489,6 +634,22 @@
     {
       "id": "reject-16",
       "input": "jumat aja"
+    },
+    {
+      "id": "reject-17",
+      "input": "rumah sebelah kosong"
+    },
+    {
+      "id": "reject-18",
+      "input": "saya malas hari ini"
+    },
+    {
+      "id": "reject-19",
+      "input": "meski sibuk saya tetap datang"
+    },
+    {
+      "id": "reject-20",
+      "input": "saya susah tidur"
     }
   ],
   "teaching": [

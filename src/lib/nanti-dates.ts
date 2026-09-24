@@ -59,6 +59,27 @@ function getNextWeekday(targetDay: number): string {
   return addDays(today, diff);
 }
 
+function daysInMonth(year: number, month: number): number {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+
+function addMonths(dateStr: string, months: number): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const total = y! * 12 + (m! - 1) + months;
+  const year = Math.floor(total / 12);
+  const month = (total % 12) + 1;
+  const day = Math.min(d!, daysInMonth(year, month));
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+const PERIOD_DEFAULT_TIME: Record<string, string> = {
+  pagi: "08:00",
+  subuh: "05:00",
+  siang: "12:00",
+  sore: "17:00",
+  malam: "20:00",
+};
+
 function parseTime(text: string): string | null {
   const normalize = (hourValue: string, minuteValue?: string, periodValue?: string) => {
     let hour = parseInt(hourValue, 10);
@@ -67,6 +88,7 @@ function parseTime(text: string): string | null {
 
     if (period === "sore" || period === "pm" || period === "siang" || period === "malam") {
       if (hour < 12) hour += 12;
+      else if (period === "malam" && hour === 12) hour = 0;
     } else if (period === "pagi" || period === "am") {
       if (hour === 12) hour = 0;
     }
@@ -80,6 +102,12 @@ function parseTime(text: string): string | null {
       text,
     );
   if (labelled) return normalize(labelled[1]!, labelled[2], labelled[3]);
+
+  // Indonesian "setengah tiga" = half to three = 02:30
+  const setengah = /\bsetengah\s+(\d{1,2})(?:\s*(pagi|siang|sore|malam|am|pm))?\b/i.exec(text);
+  if (setengah) {
+    return normalize(String(parseInt(setengah[1]!, 10) - 1), "30", setengah[2]);
+  }
 
   const clock =
     /\b(\d{1,2})[.:](\d{2})(?:\s*(am|pm))?\b/i.exec(text);
@@ -143,8 +171,25 @@ export function parseIndonesianDate(text: string): DateParseResult {
   }
 
   // "nanti sore", "nanti malam", "nanti pagi" = today
-  if (/\bnanti\s+(sore|malam|pagi)\b/.test(lower)) {
-    return { date: today, time: time || "17:00", confidence: 0.9, raw: normalizedText };
+  const nantiPeriod = /\bnanti\s+(pagi|siang|sore|malam)\b/.exec(lower);
+  if (nantiPeriod) {
+    return {
+      date: today,
+      time: time || PERIOD_DEFAULT_TIME[nantiPeriod[1]!] || null,
+      confidence: 0.9,
+      raw: normalizedText,
+    };
+  }
+
+  // "sore ini", "malam ini", "pagi ini" = today
+  const iniPeriod = /\b(pagi|siang|sore|malam)\s+ini\b/.exec(lower);
+  if (iniPeriod) {
+    return {
+      date: today,
+      time: time || PERIOD_DEFAULT_TIME[iniPeriod[1]!] || null,
+      confidence: 0.9,
+      raw: normalizedText,
+    };
   }
 
   // "3 hari lagi", "5 hari lagi"
@@ -157,6 +202,11 @@ export function parseIndonesianDate(text: string): DateParseResult {
   // "minggu depan" = next week same day
   if (/minggu\s+depan/.test(lower)) {
     return { date: addDays(today, 7), time, confidence: 0.85, raw: normalizedText };
+  }
+
+  // "bulan depan" = same day next month
+  if (/bulan\s+depan/.test(lower)) {
+    return { date: addMonths(today, 1), time, confidence: 0.8, raw: normalizedText };
   }
 
   // "akhir bulan" = last day of current month
@@ -172,6 +222,44 @@ export function parseIndonesianDate(text: string): DateParseResult {
     const now = new Date();
     const firstDay = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
     return { date: firstDay, time, confidence: 0.85, raw: normalizedText };
+  }
+
+  // "tanggal 28", "28 agustus", "28 agustus 2026" — explicit dates win over weekday names
+  const monthDay = parseMonthDay(lower);
+  if (monthDay) {
+    const impliedMonth = monthDay.month === -1;
+    let m = impliedMonth ? new Date().getMonth() + 1 : monthDay.month;
+    let y = year;
+    const day = monthDay.day;
+    const build = () =>
+      `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    let dateStr = build();
+
+    // Day already passed: roll to next month (implied) or next year (explicit month)
+    if (dateStr < today) {
+      if (impliedMonth) {
+        m += 1;
+        if (m > 12) {
+          m = 1;
+          y += 1;
+        }
+      } else {
+        y += 1;
+      }
+      dateStr = build();
+    }
+
+    // Day does not exist in that month (e.g. "31" in September): roll forward
+    while (day > daysInMonth(y, m)) {
+      m += 1;
+      if (m > 12) {
+        m = 1;
+        y += 1;
+      }
+      dateStr = build();
+    }
+
+    return { date: dateStr, time, confidence: impliedMonth ? 0.9 : 0.95, raw: normalizedText };
   }
 
   // Day name: "jumat", "senin depan", "jumat ini"
@@ -197,27 +285,6 @@ export function parseIndonesianDate(text: string): DateParseResult {
       const targetDate = getNextWeekday(i);
       return { date: targetDate, time, confidence: 0.85, raw: normalizedText };
     }
-  }
-
-  // "tanggal 28", "28 agustus", "28 agustus 2026"
-  const monthDay = parseMonthDay(lower);
-  if (monthDay) {
-    let m = monthDay.month;
-    if (m === -1) {
-      m = new Date().getMonth() + 1; // current month
-    }
-    const y = year;
-    const dateStr = `${y}-${String(m).padStart(2, "0")}-${String(monthDay.day).padStart(2, "0")}`;
-    // If date is in the past, assume next year
-    if (dateStr < today) {
-      return {
-        date: `${y + 1}-${String(m).padStart(2, "0")}-${String(monthDay.day).padStart(2, "0")}`,
-        time,
-        confidence: 0.9,
-        raw: normalizedText,
-      };
-    }
-    return { date: dateStr, time, confidence: 0.95, raw: normalizedText };
   }
 
   // ISO date pattern

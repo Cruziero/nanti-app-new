@@ -136,6 +136,29 @@ const EXPANSIONS: Record<string, string> = {
   konfirmasi: "konfirmasi",
 };
 
+// Valid everyday words that sit one or two edits away from a keyword and must
+// never be "corrected" (e.g. "setengah" is not a typo of "setelah"). Checked
+// before fuzzy matching.
+const KNOWN_WORDS = new Set([
+  "sebelah",
+  "setengah",
+  "ingatan",
+  "kabur",
+  "kobar",
+  "harum",
+  "meski",
+  "susah",
+  "belut",
+  "karim",
+  "bakar",
+  "malas",
+  "malah",
+  "malan",
+  "rawat",
+  "tenggat",
+  "tenggak",
+]);
+
 const FUZZY_KEYWORDS = [
   "besok",
   "berangkat",
@@ -219,6 +242,7 @@ function normalizeWord(word: string) {
   if (expanded) return preserveCase(word, expanded);
 
   if (lower.length < 5 || !/^[a-z]+$/.test(lower)) return word;
+  if (KNOWN_WORDS.has(lower)) return word;
 
   let best: string | null = null;
   let bestDistance = Number.POSITIVE_INFINITY;
