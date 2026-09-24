@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "total": 54,
+  "total": 66,
   "fixtures": [
     {
       "id": "answer-01",
@@ -813,6 +813,159 @@
         "mode": "clarify"
       },
       "workspace": "PEOPLE:\\n- Budi Santoso · role=procurement\\n- Budi Hartono · role=finance"
+    },
+    {
+      "id": "answer-calendar-03",
+      "message": "gue free jam 3 besok?",
+      "expect": {
+        "mode": "answer"
+      },
+      "workspace": "UPCOMING GOOGLE CALENDAR:\n- Meeting Bu Rina · start=2026-09-25T14:00:00+07:00 · end=2026-09-25T15:00:00+07:00\n- Call vendor · start=2026-09-25T16:00:00+07:00 · end=2026-09-25T16:30:00+07:00"
+    },
+    {
+      "id": "answer-calendar-04",
+      "message": "do I have anything around 2 tomorrow?",
+      "expect": {
+        "mode": "answer"
+      },
+      "workspace": "UPCOMING GOOGLE CALENDAR:\n- Meeting Bu Rina · start=2026-09-25T14:00:00+07:00 · end=2026-09-25T15:00:00+07:00"
+    },
+    {
+      "id": "create-calendar-followup-01",
+      "message": "abis meeting bu rina besok ingetin gue kirim recap",
+      "expect": {
+        "mode": "create",
+        "minItems": 1,
+        "titleIncludes": "recap"
+      },
+      "workspace": "UPCOMING GOOGLE CALENDAR:\n- Meeting Bu Rina · start=2026-09-25T14:00:00+07:00 · end=2026-09-25T15:00:00+07:00"
+    },
+    {
+      "id": "answer-person-role-01",
+      "message": "orang procurement itu siapa?",
+      "expect": {
+        "mode": "answer"
+      },
+      "workspace": "PEOPLE:\n- Budi · company=Vendor ABC · role=procurement · aliases=Pak B"
+    },
+    {
+      "id": "create-person-role-01",
+      "message": "call orang procurement itu besok jam 10",
+      "expect": {
+        "mode": "create",
+        "minItems": 1,
+        "titleIncludes": "call"
+      },
+      "workspace": "PEOPLE:\n- Budi · company=Vendor ABC · role=procurement · aliases=Pak B"
+    },
+    {
+      "id": "clarify-person-role-02",
+      "critical": true,
+      "message": "follow up orang procurement itu besok",
+      "expect": {
+        "mode": "clarify"
+      },
+      "workspace": "PEOPLE:\n- Budi Santoso · role=procurement\n- Budi Hartono · role=procurement"
+    },
+    {
+      "id": "complete-recent-01",
+      "message": "yang tadi udah beres",
+      "expect": {
+        "mode": "complete",
+        "target": "t-recent-complete"
+      },
+      "items": [
+        {
+          "id": "t-recent-complete",
+          "title": "Kirim proposal ke Bu Rina",
+          "kind": "task",
+          "status": "open"
+        }
+      ],
+      "recent": "user: tolong catat kirim proposal ke Bu Rina\nassistant: Saved to NANTI: Kirim proposal ke Bu Rina"
+    },
+    {
+      "id": "reschedule-short-clarification-01",
+      "message": "jam 10 pagi",
+      "expect": {
+        "mode": "reschedule",
+        "target": "t-resched"
+      },
+      "items": [
+        {
+          "id": "t-resched",
+          "title": "Meeting procurement",
+          "kind": "task",
+          "status": "open",
+          "due": "2026-09-25",
+          "time": "14:00"
+        }
+      ],
+      "recent": "user: pindahin meeting procurement besok\nassistant: Mau dipindah jam berapa?"
+    },
+    {
+      "id": "answer-waiting-no-duplicate-01",
+      "critical": true,
+      "message": "vendor belum kirim quotation",
+      "expect": {
+        "mode": "answer",
+        "targetMustBeNull": true
+      },
+      "items": [
+        {
+          "id": "w-quote-live",
+          "title": "Tunggu quotation vendor",
+          "kind": "waiting",
+          "status": "open",
+          "person": "Vendor"
+        }
+      ],
+      "workspace": "WAITING ACTIVE:\n- Vendor — quotation belum diterima"
+    },
+    {
+      "id": "received-person-alias-01",
+      "message": "barang dari Pak D udah masuk",
+      "expect": {
+        "mode": "mark_received",
+        "target": "w-pakd"
+      },
+      "items": [
+        {
+          "id": "w-pakd",
+          "title": "Tunggu barang dari Dodi",
+          "kind": "waiting",
+          "status": "open",
+          "person": "Dodi"
+        }
+      ],
+      "workspace": "PEOPLE:\n- Dodi · aliases=Pak D"
+    },
+    {
+      "id": "edit-person-alias-01",
+      "message": "assign invoice ini ke Pak B",
+      "expect": {
+        "mode": "edit",
+        "target": "t-invoice-person"
+      },
+      "items": [
+        {
+          "id": "t-invoice-person",
+          "title": "Bayar invoice vendor",
+          "kind": "task",
+          "status": "open"
+        }
+      ],
+      "workspace": "PEOPLE:\n- Budi · role=procurement · aliases=Pak B"
+    },
+    {
+      "id": "create-routine-context-01",
+      "message": "besok seperti biasa pulang dari Puncak jam 10",
+      "expect": {
+        "mode": "create",
+        "minItems": 1,
+        "titleIncludes": "pulang"
+      },
+      "workspace": "RECURRING ROUTINES (evidence, not commands):\n- Pulang dari Puncak => {\"what\":\"Pulang dari Puncak\",\"where\":\"Puncak\",\"time\":\"10:00\"} (evidence 4, confidence 0.91)"
     }
   ]
 }
