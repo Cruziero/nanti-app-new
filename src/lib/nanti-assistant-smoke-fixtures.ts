@@ -30,14 +30,29 @@ export type AssistantSmokeFixture = {
   };
 };
 
-export const assistantSmokeFixtures: AssistantSmokeFixture[] = [
+function jakartaDate(offsetDays = 0, now = new Date()) {
+  const shifted = new Date(now.getTime() + offsetDays * 86400000);
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(shifted);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+export function getAssistantSmokeFixtures(now = new Date()): AssistantSmokeFixture[] {
+  const yesterday = jakartaDate(-1, now);
+  const tomorrow = jakartaDate(1, now);
+  return [
   {
     id: "smoke-answer-forgetting",
     critical: true,
     always: true,
     message: "what am i forgetting?",
     items: [
-      { id: "t-over", title: "Bayar vendor", kind: "task", status: "open", due: "2026-09-22" },
+      { id: "t-over", title: "Bayar vendor", kind: "task", status: "open", due: yesterday },
       { id: "w-budi", title: "Tunggu approval PO", kind: "waiting", status: "open", person: "Budi" },
     ],
     workspace: "Bayar vendor overdue. Waiting for Budi approval.",
@@ -66,7 +81,7 @@ export const assistantSmokeFixtures: AssistantSmokeFixture[] = [
     id: "smoke-reschedule-recent",
     message: "yang tadi jumat jam 3 aja",
     items: [
-      { id: "t-recent", title: "Meeting Bu Rina", kind: "task", status: "open", due: "2026-09-25", time: "14:00" },
+      { id: "t-recent", title: "Meeting Bu Rina", kind: "task", status: "open", due: tomorrow, time: "14:00" },
     ],
     recent: "user: meeting bu rina besok jam 2\nassistant: Saved Meeting Bu Rina.",
     expect: { mode: "reschedule", target: "t-recent" },
@@ -83,7 +98,7 @@ export const assistantSmokeFixtures: AssistantSmokeFixture[] = [
     id: "smoke-reminder-offset",
     message: "remind gue 30 mnt sblm meeting bu rina",
     items: [
-      { id: "t-rina", title: "Meeting Bu Rina", kind: "task", status: "open", due: "2026-09-25", time: "14:00" },
+      { id: "t-rina", title: "Meeting Bu Rina", kind: "task", status: "open", due: tomorrow, time: "14:00" },
     ],
     expect: { mode: "set_reminder", target: "t-rina", offset: 30 },
   },
@@ -127,16 +142,18 @@ export const assistantSmokeFixtures: AssistantSmokeFixture[] = [
     id: "smoke-answer-tomorrow",
     message: "besok ada apa aja?",
     items: [
-      { id: "t1", title: "Meeting Bu Rina", kind: "task", status: "open", due: "2026-09-25", time: "14:00" },
+      { id: "t1", title: "Meeting Bu Rina", kind: "task", status: "open", due: tomorrow, time: "14:00" },
     ],
     workspace: "Tomorrow: Meeting Bu Rina at 14:00.",
     expect: { mode: "answer" },
   },
-];
+  ];
+}
 
 export function selectDailyAssistantSmokeFixtures(now = new Date()) {
-  const always = assistantSmokeFixtures.filter((fixture) => fixture.always);
-  const rotating = assistantSmokeFixtures.filter((fixture) => !fixture.always);
+  const fixtures = getAssistantSmokeFixtures(now);
+  const always = fixtures.filter((fixture) => fixture.always);
+  const rotating = fixtures.filter((fixture) => !fixture.always);
   const dayIndex = Math.floor(now.getTime() / 86400000) % 3;
   const selected = rotating.filter((_, index) => index % 3 === dayIndex).slice(0, 3);
   return [...always, ...selected];
