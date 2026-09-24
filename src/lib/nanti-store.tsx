@@ -85,7 +85,7 @@ interface State {
 }
 
 const defaultSettings: Settings = {
-  name: "Rizky",
+  name: "Friend",
   briefingTime: "08:00",
   endOfDayTime: "17:30",
   notifications: {
@@ -100,7 +100,7 @@ const defaultSettings: Settings = {
   language: "indonesian",
   tone: "professional",
   focusArea: "everything",
-  preferredName: "Rizky",
+  preferredName: "",
   emojiPreference: true,
   verbosity: "normal",
   quietHoursEnabled: true,
