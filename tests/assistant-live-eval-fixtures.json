@@ -1,0 +1,757 @@
+{
+  "version": 1,
+  "total": 48,
+  "fixtures": [
+    {
+      "id": "answer-01",
+      "critical": true,
+      "message": "what am i forgetting?",
+      "expect": {
+        "mode": "answer"
+      },
+      "items": [
+        {
+          "id": "t-over",
+          "title": "Bayar vendor",
+          "kind": "task",
+          "status": "open",
+          "due": "2026-09-22"
+        },
+        {
+          "id": "w-budi",
+          "title": "Tunggu approval PO",
+          "kind": "waiting",
+          "status": "open",
+          "person": "Budi"
+        }
+      ],
+      "workspace": "Bayar vendor overdue. Waiting for Budi approval."
+    },
+    {
+      "id": "answer-02",
+      "message": "apa yg harus gue kerjain hari ini?",
+      "expect": {
+        "mode": "answer"
+      },
+      "items": [
+        {
+          "id": "t1",
+          "title": "Kirim proposal",
+          "kind": "task",
+          "status": "open",
+          "due": "2026-09-24",
+          "time": "10:00"
+        }
+      ],
+      "workspace": "Kirim proposal due today at 10:00."
+    },
+    {
+      "id": "answer-03",
+      "message": "siapa yang harus gue follow up?",
+      "expect": {
+        "mode": "answer"
+      },
+      "items": [
+        {
+          "id": "w1",
+          "title": "Tunggu quotation",
+          "kind": "waiting",
+          "status": "open",
+          "person": "Pak Budi"
+        }
+      ],
+      "workspace": "Waiting: Pak Budi — quotation."
+    },
+    {
+      "id": "answer-04",
+      "message": "what's overdue?",
+      "expect": {
+        "mode": "answer"
+      },
+      "items": [
+        {
+          "id": "t1",
+          "title": "Bayar invoice",
+          "kind": "task",
+          "status": "open",
+          "due": "2026-09-20"
+        }
+      ],
+      "workspace": "Bayar invoice overdue."
+    },
+    {
+      "id": "answer-05",
+      "message": "besok ada apa aja?",
+      "expect": {
+        "mode": "answer"
+      },
+      "items": [
+        {
+          "id": "t1",
+          "title": "Meeting Bu Rina",
+          "kind": "task",
+          "status": "open",
+          "due": "2026-09-25",
+          "time": "14:00"
+        }
+      ],
+      "workspace": "Tomorrow: Meeting Bu Rina at 14:00."
+    },
+    {
+      "id": "answer-06",
+      "message": "pak b belum bales jadi gimana?",
+      "critical": true,
+      "expect": {
+        "mode": "answer",
+        "targetMustBeNull": true
+      },
+      "items": [
+        {
+          "id": "w1",
+          "title": "Tunggu jawaban kontrak",
+          "kind": "waiting",
+          "status": "open",
+          "person": "Budi",
+          "semantic": {
+            "who": "Budi"
+          }
+        }
+      ],
+      "workspace": "Budi aliases: Pak B. Waiting on Budi for contract response."
+    },
+    {
+      "id": "answer-07",
+      "message": "status proyek TPS gimana?",
+      "expect": {
+        "mode": "answer"
+      },
+      "items": [
+        {
+          "id": "t1",
+          "title": "Finalisasi sponsor deck",
+          "kind": "task",
+          "status": "open",
+          "project": "The Padel Side"
+        }
+      ],
+      "workspace": "Project The Padel Side aliases: TPS. Open: Finalisasi sponsor deck."
+    },
+    {
+      "id": "answer-08",
+      "message": "do i have anything before lunch?",
+      "expect": {
+        "mode": "answer"
+      },
+      "items": [
+        {
+          "id": "t1",
+          "title": "Call vendor",
+          "kind": "task",
+          "status": "open",
+          "due": "2026-09-24",
+          "time": "10:30"
+        }
+      ],
+      "workspace": "Today: Call vendor 10:30."
+    },
+    {
+      "id": "create-01",
+      "critical": true,
+      "message": "Saya beosok harus oulang dr puncak jam 10 pagi",
+      "normalized": "Saya besok harus pulang dari puncak jam 10 pagi",
+      "expect": {
+        "mode": "create",
+        "minItems": 1,
+        "titleIncludes": "pulang",
+        "kind": "task"
+      }
+    },
+    {
+      "id": "create-02",
+      "message": "gw bsk meeting sm bu rina jam 2 siang di scbd",
+      "expect": {
+        "mode": "create",
+        "minItems": 1,
+        "titleIncludes": "meeting",
+        "kind": "task"
+      }
+    },
+    {
+      "id": "create-03",
+      "message": "jgn lupa krm invoice ke pak dodi tgl 25",
+      "expect": {
+        "mode": "create",
+        "minItems": 1,
+        "titleIncludes": "invoice",
+        "kind": "task"
+      }
+    },
+    {
+      "id": "create-04",
+      "message": "saya harus call vendor besok jam 4 sore",
+      "expect": {
+        "mode": "create",
+        "minItems": 1,
+        "titleIncludes": "vendor",
+        "kind": "task"
+      }
+    },
+    {
+      "id": "create-05",
+      "message": "tolong ingetin bayar listrik besok pagi",
+      "expect": {
+        "mode": "create",
+        "minItems": 1,
+        "titleIncludes": "bayar",
+        "kind": "task"
+      }
+    },
+    {
+      "id": "create-06",
+      "message": "aku perlu berangkat ke bandara besok jam 6 pagi",
+      "expect": {
+        "mode": "create",
+        "minItems": 1,
+        "titleIncludes": "bandara",
+        "kind": "task"
+      }
+    },
+    {
+      "id": "create-07",
+      "message": "mas ari janji kirim revisi jumat, aku nunggu itu",
+      "expect": {
+        "mode": "create",
+        "minItems": 1,
+        "kind": "waiting"
+      }
+    },
+    {
+      "id": "create-08",
+      "message": "vendor bilang quotation dikirim besok, tolong catat gue nunggu",
+      "expect": {
+        "mode": "create",
+        "minItems": 1,
+        "kind": "waiting"
+      }
+    },
+    {
+      "id": "create-09",
+      "message": "need to send the TPS sponsor deck tonight",
+      "expect": {
+        "mode": "create",
+        "minItems": 1,
+        "titleIncludes": "sponsor",
+        "kind": "task"
+      }
+    },
+    {
+      "id": "create-10",
+      "message": "hari ini harus bayar dp venue jam 3 sore",
+      "expect": {
+        "mode": "create",
+        "minItems": 1,
+        "titleIncludes": "bayar",
+        "kind": "task"
+      }
+    },
+    {
+      "id": "reschedule-01",
+      "critical": true,
+      "message": "yang tadi jumat jam 3 aja",
+      "expect": {
+        "mode": "reschedule",
+        "target": "t-recent"
+      },
+      "items": [
+        {
+          "id": "t-recent",
+          "title": "Meeting Bu Rina",
+          "kind": "task",
+          "status": "open",
+          "due": "2026-09-25",
+          "time": "14:00"
+        }
+      ],
+      "recent": "user: meeting bu rina besok jam 2\nassistant: Saved Meeting Bu Rina."
+    },
+    {
+      "id": "reschedule-02",
+      "message": "meeting bu rina pindahin ke senin pagi",
+      "expect": {
+        "mode": "reschedule",
+        "target": "t-rina"
+      },
+      "items": [
+        {
+          "id": "t-rina",
+          "title": "Meeting Bu Rina",
+          "kind": "task",
+          "status": "open",
+          "due": "2026-09-25",
+          "time": "14:00"
+        }
+      ]
+    },
+    {
+      "id": "reschedule-03",
+      "message": "actually invoice itu tanggal 30 aja",
+      "expect": {
+        "mode": "reschedule",
+        "target": "t-inv"
+      },
+      "items": [
+        {
+          "id": "t-inv",
+          "title": "Bayar invoice",
+          "kind": "task",
+          "status": "open",
+          "due": "2026-09-25"
+        }
+      ]
+    },
+    {
+      "id": "reschedule-04",
+      "message": "geser call vendor jadi besok jam 11",
+      "expect": {
+        "mode": "reschedule",
+        "target": "t-call"
+      },
+      "items": [
+        {
+          "id": "t-call",
+          "title": "Call vendor",
+          "kind": "task",
+          "status": "open",
+          "due": "2026-09-24",
+          "time": "16:00"
+        }
+      ]
+    },
+    {
+      "id": "reschedule-05",
+      "message": "besok jam 10 aja",
+      "expect": {
+        "mode": "reschedule",
+        "target": "t-meet"
+      },
+      "items": [
+        {
+          "id": "t-meet",
+          "title": "Meeting procurement",
+          "kind": "task",
+          "status": "open",
+          "due": "2026-09-26",
+          "time": "13:00"
+        }
+      ],
+      "recent": "assistant: Meeting procurement sekarang Sabtu jam 1. Mau diubah kapan?\nuser: besok jam 10 aja"
+    },
+    {
+      "id": "complete-01",
+      "critical": true,
+      "message": "udah beres yg invoice",
+      "expect": {
+        "mode": "complete",
+        "target": "t-inv"
+      },
+      "items": [
+        {
+          "id": "t-inv",
+          "title": "Bayar invoice vendor",
+          "kind": "task",
+          "status": "open"
+        }
+      ]
+    },
+    {
+      "id": "complete-02",
+      "message": "meeting bu rina done",
+      "expect": {
+        "mode": "complete",
+        "target": "t-rina"
+      },
+      "items": [
+        {
+          "id": "t-rina",
+          "title": "Meeting Bu Rina",
+          "kind": "task",
+          "status": "open"
+        }
+      ]
+    },
+    {
+      "id": "complete-03",
+      "message": "yg call vendor sudah selesai",
+      "expect": {
+        "mode": "complete",
+        "target": "t-call"
+      },
+      "items": [
+        {
+          "id": "t-call",
+          "title": "Call vendor",
+          "kind": "task",
+          "status": "open"
+        }
+      ]
+    },
+    {
+      "id": "complete-04",
+      "message": "mark bayar listrik done",
+      "expect": {
+        "mode": "complete",
+        "target": "t-elec"
+      },
+      "items": [
+        {
+          "id": "t-elec",
+          "title": "Bayar listrik",
+          "kind": "task",
+          "status": "open"
+        }
+      ]
+    },
+    {
+      "id": "reminder-01",
+      "message": "remind gue 30 mnt sblm meeting bu rina",
+      "expect": {
+        "mode": "set_reminder",
+        "target": "t-rina",
+        "offset": 30
+      },
+      "items": [
+        {
+          "id": "t-rina",
+          "title": "Meeting Bu Rina",
+          "kind": "task",
+          "status": "open",
+          "due": "2026-09-25",
+          "time": "14:00"
+        }
+      ]
+    },
+    {
+      "id": "reminder-02",
+      "message": "ingetin bayar invoice 1 jam sebelumnya",
+      "expect": {
+        "mode": "set_reminder",
+        "target": "t-inv",
+        "offset": 60
+      },
+      "items": [
+        {
+          "id": "t-inv",
+          "title": "Bayar invoice",
+          "kind": "task",
+          "status": "open",
+          "due": "2026-09-25",
+          "time": "12:00"
+        }
+      ]
+    },
+    {
+      "id": "reminder-03",
+      "message": "kasih reminder buat call vendor besok jam 4",
+      "expect": {
+        "mode": "set_reminder",
+        "target": "t-call"
+      },
+      "items": [
+        {
+          "id": "t-call",
+          "title": "Call vendor",
+          "kind": "task",
+          "status": "open",
+          "due": "2026-09-25",
+          "time": "16:00"
+        }
+      ]
+    },
+    {
+      "id": "reminder-04",
+      "message": "yang meeting tadi ingetin 15 menit sebelum",
+      "expect": {
+        "mode": "set_reminder",
+        "target": "t-meet",
+        "offset": 15
+      },
+      "items": [
+        {
+          "id": "t-meet",
+          "title": "Meeting procurement",
+          "kind": "task",
+          "status": "open",
+          "due": "2026-09-25",
+          "time": "10:00"
+        }
+      ],
+      "recent": "assistant: Meeting procurement saved for tomorrow at 10:00."
+    },
+    {
+      "id": "edit-01",
+      "message": "ubah judul invoice jadi Bayar Invoice Vendor ABC",
+      "expect": {
+        "mode": "edit",
+        "target": "t-inv"
+      },
+      "items": [
+        {
+          "id": "t-inv",
+          "title": "Bayar invoice",
+          "kind": "task",
+          "status": "open"
+        }
+      ]
+    },
+    {
+      "id": "edit-02",
+      "message": "set meeting bu rina jadi high priority",
+      "expect": {
+        "mode": "edit",
+        "target": "t-rina"
+      },
+      "items": [
+        {
+          "id": "t-rina",
+          "title": "Meeting Bu Rina",
+          "kind": "task",
+          "status": "open"
+        }
+      ]
+    },
+    {
+      "id": "edit-03",
+      "message": "assign task sponsor deck ke Pak Dodi",
+      "expect": {
+        "mode": "edit",
+        "target": "t-deck"
+      },
+      "items": [
+        {
+          "id": "t-deck",
+          "title": "Sponsor deck",
+          "kind": "task",
+          "status": "open"
+        }
+      ]
+    },
+    {
+      "id": "edit-04",
+      "message": "masukin call vendor ke project TPS",
+      "expect": {
+        "mode": "edit",
+        "target": "t-call"
+      },
+      "items": [
+        {
+          "id": "t-call",
+          "title": "Call vendor",
+          "kind": "task",
+          "status": "open"
+        }
+      ],
+      "workspace": "TPS = The Padel Side."
+    },
+    {
+      "id": "dismiss-01",
+      "message": "hapus task bayar listrik",
+      "expect": {
+        "mode": "dismiss",
+        "target": "t-elec"
+      },
+      "items": [
+        {
+          "id": "t-elec",
+          "title": "Bayar listrik",
+          "kind": "task",
+          "status": "open"
+        }
+      ]
+    },
+    {
+      "id": "dismiss-02",
+      "message": "abaikan yg invoice ini",
+      "expect": {
+        "mode": "dismiss",
+        "target": "i-inv"
+      },
+      "items": [
+        {
+          "id": "i-inv",
+          "title": "Invoice mungkin perlu dicek",
+          "kind": "task",
+          "status": "inbox"
+        }
+      ]
+    },
+    {
+      "id": "follow-01",
+      "message": "gue udh follow up pak budi barusan",
+      "expect": {
+        "mode": "mark_followed_up",
+        "target": "w-budi"
+      },
+      "items": [
+        {
+          "id": "w-budi",
+          "title": "Tunggu quotation",
+          "kind": "waiting",
+          "status": "open",
+          "person": "Pak Budi"
+        }
+      ]
+    },
+    {
+      "id": "follow-02",
+      "message": "quotation udah gue kejar lagi tadi pagi",
+      "expect": {
+        "mode": "mark_followed_up",
+        "target": "w-quote"
+      },
+      "items": [
+        {
+          "id": "w-quote",
+          "title": "Tunggu quotation vendor",
+          "kind": "waiting",
+          "status": "open",
+          "person": "Vendor"
+        }
+      ]
+    },
+    {
+      "id": "received-01",
+      "message": "revisinya udah dikirim sama mbak lia",
+      "expect": {
+        "mode": "mark_received",
+        "target": "w-lia"
+      },
+      "items": [
+        {
+          "id": "w-lia",
+          "title": "Tunggu revisi",
+          "kind": "waiting",
+          "status": "open",
+          "person": "Mbak Lia"
+        }
+      ]
+    },
+    {
+      "id": "received-02",
+      "message": "quotation dari vendor udah masuk",
+      "expect": {
+        "mode": "mark_received",
+        "target": "w-quote"
+      },
+      "items": [
+        {
+          "id": "w-quote",
+          "title": "Tunggu quotation vendor",
+          "kind": "waiting",
+          "status": "open",
+          "person": "Vendor"
+        }
+      ]
+    },
+    {
+      "id": "teach-01",
+      "message": "kalau aku bilang OTW maksudnya on the way",
+      "expect": {
+        "mode": "teach_language",
+        "learningType": "phrase_alias"
+      }
+    },
+    {
+      "id": "teach-02",
+      "message": "Pak B itu Budi",
+      "expect": {
+        "mode": "teach_language",
+        "learningType": "entity_alias",
+        "entityType": "person"
+      }
+    },
+    {
+      "id": "teach-03",
+      "message": "proyek TPS maksudnya The Padel Side",
+      "expect": {
+        "mode": "teach_language",
+        "learningType": "entity_alias",
+        "entityType": "project"
+      }
+    },
+    {
+      "id": "teach-04",
+      "message": "kalau meeting ingetin saya 30 menit sebelum",
+      "expect": {
+        "mode": "teach_language",
+        "learningType": "reminder_preference",
+        "offset": 30
+      }
+    },
+    {
+      "id": "clarify-01",
+      "critical": true,
+      "message": "hapus task budi",
+      "expect": {
+        "mode": "clarify"
+      },
+      "items": [
+        {
+          "id": "t-b1",
+          "title": "Call Budi",
+          "kind": "task",
+          "status": "open",
+          "person": "Budi"
+        },
+        {
+          "id": "t-b2",
+          "title": "Kirim kontrak ke Budi",
+          "kind": "task",
+          "status": "open",
+          "person": "Budi"
+        }
+      ]
+    },
+    {
+      "id": "clarify-02",
+      "message": "pindahin meeting besok",
+      "expect": {
+        "mode": "clarify"
+      },
+      "items": [
+        {
+          "id": "t-m1",
+          "title": "Meeting Bu Rina",
+          "kind": "task",
+          "status": "open"
+        },
+        {
+          "id": "t-m2",
+          "title": "Meeting procurement",
+          "kind": "task",
+          "status": "open"
+        }
+      ]
+    },
+    {
+      "id": "clarify-03",
+      "message": "ingatkan nanti",
+      "expect": {
+        "mode": "clarify"
+      },
+      "items": [
+        {
+          "id": "t1",
+          "title": "Bayar invoice",
+          "kind": "task",
+          "status": "open"
+        },
+        {
+          "id": "t2",
+          "title": "Call vendor",
+          "kind": "task",
+          "status": "open"
+        }
+      ]
+    }
+  ]
+}
