@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "total": 48,
+  "total": 54,
   "fixtures": [
     {
       "id": "answer-01",
@@ -752,6 +752,67 @@
           "status": "open"
         }
       ]
+    },
+    {
+      "id": "answer-calendar-01",
+      "message": "besok gue ada meeting apa?",
+      "expect": {
+        "mode": "answer"
+      },
+      "workspace": "UPCOMING GOOGLE CALENDAR:\\n- Meeting Bu Rina · start=2026-09-25T14:00:00+07:00 · location=SCBD"
+    },
+    {
+      "id": "answer-calendar-02",
+      "message": "meeting bu rina dimana?",
+      "expect": {
+        "mode": "answer"
+      },
+      "workspace": "UPCOMING GOOGLE CALENDAR:\\n- Meeting Bu Rina · start=2026-09-25T14:00:00+07:00 · location=SCBD"
+    },
+    {
+      "id": "create-person-memory-01",
+      "message": "besok follow up Pak B soal kontrak",
+      "expect": {
+        "mode": "create",
+        "minItems": 1,
+        "titleIncludes": "follow"
+      },
+      "workspace": "PEOPLE:\\n- Budi · role=procurement · aliases=Pak B · recent=waiting on contract response"
+    },
+    {
+      "id": "complete-person-memory-01",
+      "message": "yang buat Pak B udah beres",
+      "expect": {
+        "mode": "complete",
+        "target": "t-budi"
+      },
+      "items": [
+        {
+          "id": "t-budi",
+          "title": "Follow up Budi soal kontrak",
+          "kind": "task",
+          "status": "open",
+          "person": "Budi"
+        }
+      ],
+      "workspace": "PEOPLE:\\n- Budi · aliases=Pak B"
+    },
+    {
+      "id": "answer-person-memory-01",
+      "message": "Pak B itu siapa ya?",
+      "expect": {
+        "mode": "answer"
+      },
+      "workspace": "PEOPLE:\\n- Budi · company=Vendor ABC · role=procurement · aliases=Pak B"
+    },
+    {
+      "id": "clarify-person-memory-01",
+      "critical": true,
+      "message": "follow up budi besok",
+      "expect": {
+        "mode": "clarify"
+      },
+      "workspace": "PEOPLE:\\n- Budi Santoso · role=procurement\\n- Budi Hartono · role=finance"
     }
   ]
 }

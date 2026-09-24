@@ -441,11 +441,16 @@ async function sendPushNotification(
   if (error) throw error;
   if (!subscriptions?.length) return 0;
 
+  const publicKey =
+    process.env.VAPID_PUBLIC_KEY || process.env.VITE_VAPID_PUBLIC_KEY || "";
+  const privateKey = process.env.VAPID_PRIVATE_KEY || "";
+  if (!publicKey || !privateKey) return 0;
+
   const webpush = await import("web-push");
   webpush.setVapidDetails(
     "mailto:noreply@nanti-app.com",
-    process.env.VAPID_PUBLIC_KEY || "",
-    process.env.VAPID_PRIVATE_KEY || "",
+    publicKey,
+    privateKey,
   );
 
   let sent = 0;

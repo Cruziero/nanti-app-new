@@ -2,8 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || "";
-
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -19,6 +17,23 @@ export function usePushSubscription() {
   const [subscription, setSubscription] = useState<PushSubscription | null>(null);
   const [permission, setPermission] = useState<NotificationPermission>("default");
   const [loading, setLoading] = useState(false);
+  const [configured, setConfigured] = useState(false);
+  const [vapidPublicKey, setVapidPublicKey] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/push/config")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((config) => {
+        if (cancelled || !config) return;
+        setConfigured(Boolean(config.configured && config.publicKey));
+        setVapidPublicKey(typeof config.publicKey === "string" ? config.publicKey : "");
+      })
+      .catch((error) => console.error("Push config load failed:", error));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
@@ -41,8 +56,8 @@ export function usePushSubscription() {
   }, []);
 
   const subscribe = useCallback(async () => {
-    if (!VAPID_PUBLIC_KEY) {
-      toast.error("Push notifications not configured");
+    if (!configured || !vapidPublicKey) {
+      toast.error("Push notifications are not configured on this deployment.");
       return;
     }
 
@@ -59,7 +74,7 @@ export function usePushSubscription() {
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
       });
 
       setSubscription(sub);
@@ -84,7 +99,7 @@ export function usePushSubscription() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [configured, vapidPublicKey]);
 
   const unsubscribe = useCallback(async () => {
     setLoading(true);
@@ -117,6 +132,7 @@ export function usePushSubscription() {
     permission,
     loading,
     isSubscribed: !!subscription,
+    configured,
     subscribe,
     unsubscribe,
   };
