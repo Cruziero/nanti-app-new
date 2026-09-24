@@ -12,7 +12,8 @@
     "format": "prettier --write .",
     "test:semantic": "node tests/semantic-understanding.cjs",
     "test:assistant-quality": "node tests/assistant-quality.cjs",
-    "test:quality": "npm run test:semantic && npm run test:assistant-quality"
+    "test:quality": "npm run test:semantic && npm run test:assistant-quality",
+    "eval:assistant-live": "node tests/assistant-live-eval.cjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
