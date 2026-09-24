@@ -66,11 +66,11 @@ function AuthLayout() {
             <span className="text-4xl font-bold text-white">NANTI</span>
           </Link>
           <h1 className="mt-8 text-3xl font-bold text-white">
-            Jangan pernah kehilangan komitmen di WhatsApp lagi.
+            Jangan pernah kehilangan komitmen dari percakapan lagi.
           </h1>
           <p className="mt-4 text-lg text-gray-400">
-            Forward atau paste percakapan WhatsApp Anda, dan AI akan mengekstrak tugas, deadline,
-            dan follow-up secara otomatis.
+            Tulis atau paste percakapan, dan NANTI membantu menangkap tugas, deadline,
+            orang, dan follow-up secara otomatis.
           </p>
         </div>
       </div>

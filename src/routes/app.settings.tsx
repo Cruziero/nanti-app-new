@@ -72,11 +72,12 @@ const toneOptions: { id: ConversationTone; label: string }[] = [
 ];
 
 const channelOpts: { id: ReminderChannel; label: string }[] = [
-  { id: "whatsapp", label: "WhatsApp" },
   { id: "push", label: "Push Notifications" },
   { id: "calendar", label: "Google Calendar" },
   { id: "in_app", label: "In-app" },
 ];
+
+const WHATSAPP_LAUNCH_ENABLED = false;
 
 type WhatsAppLinkState = {
   phone_number?: string | null;
@@ -99,7 +100,8 @@ function SettingsPage() {
   const [qualityRunning, setQualityRunning] = useState(false);
   const nantiWhatsAppNumber = String(import.meta.env.VITE_NANTI_WHATSAPP_NUMBER || "").replace(/\D/g, "");
   const whatsappConnected = Boolean(whatsAppLink?.verified_at && whatsAppLink?.phone_number);
-  const { signOut } = useSupabaseAuth();
+  const { user, signOut } = useSupabaseAuth();
+  const isAdmin = user?.app_metadata?.role === "admin";
   const navigate = useNavigate();
   const {
     isSubscribed,
@@ -110,6 +112,10 @@ function SettingsPage() {
   } = usePushSubscription();
 
   const refreshWhatsApp = useCallback(async () => {
+    if (!WHATSAPP_LAUNCH_ENABLED) {
+      setWhatsAppLoading(false);
+      return;
+    }
     try {
       const link = await fetchWhatsAppLink();
       setWhatsAppLink(link as WhatsAppLinkState | null);
@@ -159,6 +165,10 @@ function SettingsPage() {
   }, [refreshContextMemory]);
 
   const refreshAssistantQuality = useCallback(async () => {
+    if (!isAdmin) {
+      setQualityLoading(false);
+      return;
+    }
     try {
       const result = await fetchAssistantQuality();
       setQualityRuns(result.runs || []);
@@ -167,7 +177,7 @@ function SettingsPage() {
     } finally {
       setQualityLoading(false);
     }
-  }, []);
+  }, [isAdmin]);
 
   useEffect(() => {
     void refreshAssistantQuality();
@@ -382,6 +392,18 @@ function SettingsPage() {
 
       <section className="mb-10">
         <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+          Account
+        </h2>
+        <div className="rounded-lg border border-border p-4">
+          <p className="text-[13px] font-medium">{user?.email || "Signed-in account"}</p>
+          <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
+            Your tasks, People memory, projects, and preferences are private to this account.
+          </p>
+        </div>
+      </section>
+
+      <section className="mb-10">
+        <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground/70">
           Profile
         </h2>
         <div className="space-y-4">
@@ -419,6 +441,7 @@ function SettingsPage() {
         </div>
       </section>
 
+      {isAdmin ? (
       <section className="mb-10">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
@@ -560,6 +583,8 @@ function SettingsPage() {
           </div>
         )}
       </section>
+
+      ) : null}
 
       <section className="mb-10">
         <div className="mb-4 flex items-center gap-2">
@@ -828,7 +853,7 @@ function SettingsPage() {
           Integrations
         </h2>
         <div className="divide-y divide-border">
-          <div className="py-3">
+          <div className={WHATSAPP_LAUNCH_ENABLED ? "py-3" : "hidden"}>
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <MessageCircle className="size-4 text-primary" />

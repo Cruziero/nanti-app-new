@@ -8,6 +8,15 @@ import {
   type AssistantSmokeFixture,
 } from "./nanti-assistant-smoke-fixtures";
 
+function requireNantiAdmin(claims: unknown) {
+  const value = claims as {
+    app_metadata?: { role?: string };
+  } | null;
+  if (value?.app_metadata?.role !== "admin") {
+    throw new Error("Forbidden: internal NANTI diagnostics require admin access.");
+  }
+}
+
 export type AssistantEvalRun = {
   id: string;
   suite: string;
@@ -43,7 +52,8 @@ function adminClient() {
 
 export const fetchAssistantQuality = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async () => {
+  .handler(async ({ context }) => {
+    requireNantiAdmin(context.claims);
     const supabase = adminClient();
     const { data, error } = await supabase
       .from("assistant_eval_runs")
@@ -66,7 +76,8 @@ export const fetchAssistantQuality = createServerFn({ method: "GET" })
 
 export const runAssistantSmokeCheck = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async () => {
+  .handler(async ({ context }) => {
+    requireNantiAdmin(context.claims);
     const supabase = adminClient();
 
     const { data: latest, error: latestError } = await supabase
