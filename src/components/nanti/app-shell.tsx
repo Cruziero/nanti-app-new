@@ -4,6 +4,7 @@ import {
   CalendarDays,
   Inbox,
   Hourglass,
+  UsersRound,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -18,6 +19,7 @@ const destinations = [
   { to: "/app/today", label: "Today", icon: CalendarDays },
   { to: "/app/inbox", label: "Inbox", icon: Inbox },
   { to: "/app/waiting", label: "Waiting", icon: Hourglass },
+  { to: "/app/people", label: "People", icon: UsersRound },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
