@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 
+const WHATSAPP_LAUNCH_ENABLED = false;
+
 export const Route = createFileRoute("/api/cron/check-reminders")({
   server: {
     handlers: {
@@ -145,7 +147,7 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
                 data: { url: "/app/today" },
               });
             }
-            if (channels.includes("whatsapp")) {
+            if (WHATSAPP_LAUNCH_ENABLED && channels.includes("whatsapp")) {
               attempted++;
               sent += await sendWhatsAppNotification(supabase, row.user_id, body);
             }
@@ -215,7 +217,7 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
                 data: { itemId: task.id, url: "/app/today" },
               });
             }
-            if (channels.includes("whatsapp")) {
+            if (WHATSAPP_LAUNCH_ENABLED && channels.includes("whatsapp")) {
               attempted++;
               sent += await sendWhatsAppNotification(
                 supabase,
@@ -267,7 +269,7 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
                 data: { itemId: waiting.id, url: "/app/waiting" },
               });
             }
-            if (channels.includes("whatsapp")) {
+            if (WHATSAPP_LAUNCH_ENABLED && channels.includes("whatsapp")) {
               attempted++;
               sent += await sendWhatsAppNotification(supabase, waiting.user_id, body);
             }
