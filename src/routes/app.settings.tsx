@@ -50,6 +50,12 @@ import {
   runAssistantSmokeCheck,
   type AssistantEvalRun,
 } from "@/lib/nanti-quality.functions";
+import {
+  disconnectGoogleCalendar,
+  fetchGoogleCalendarStatus,
+  startGoogleCalendarConnect,
+  syncGoogleCalendarNow,
+} from "@/lib/nanti-calendar.functions";
 
 export const Route = createFileRoute("/app/settings")({
   head: () => ({
@@ -73,7 +79,6 @@ const toneOptions: { id: ConversationTone; label: string }[] = [
 
 const channelOpts: { id: ReminderChannel; label: string }[] = [
   { id: "push", label: "Push Notifications" },
-  { id: "calendar", label: "Google Calendar" },
   { id: "in_app", label: "In-app" },
 ];
 
@@ -98,6 +103,20 @@ function SettingsPage() {
   const [qualityRuns, setQualityRuns] = useState<AssistantEvalRun[]>([]);
   const [qualityLoading, setQualityLoading] = useState(true);
   const [qualityRunning, setQualityRunning] = useState(false);
+  const [calendarStatus, setCalendarStatus] = useState<{
+    connected: boolean;
+    status: "connected" | "failed" | "disconnected";
+    last_synced_at?: string | null;
+    connected_at?: string | null;
+    next_event?: {
+      title: string;
+      start_date: string;
+      end_date?: string | null;
+      location?: string | null;
+    } | null;
+  } | null>(null);
+  const [calendarLoading, setCalendarLoading] = useState(true);
+  const [calendarAction, setCalendarAction] = useState<"connect" | "sync" | "disconnect" | null>(null);
   const nantiWhatsAppNumber = String(import.meta.env.VITE_NANTI_WHATSAPP_NUMBER || "").replace(/\D/g, "");
   const whatsappConnected = Boolean(whatsAppLink?.verified_at && whatsAppLink?.phone_number);
   const { user, signOut } = useSupabaseAuth();
@@ -182,6 +201,21 @@ function SettingsPage() {
   useEffect(() => {
     void refreshAssistantQuality();
   }, [refreshAssistantQuality]);
+
+  const refreshCalendar = useCallback(async () => {
+    try {
+      const result = await fetchGoogleCalendarStatus();
+      setCalendarStatus(result);
+    } catch (error) {
+      console.error("Failed to load Google Calendar status:", error);
+    } finally {
+      setCalendarLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshCalendar();
+  }, [refreshCalendar]);
 
   useEffect(() => {
     if (!whatsAppLink?.link_code || whatsappConnected) return;
@@ -379,6 +413,72 @@ function SettingsPage() {
       hour: "2-digit",
       minute: "2-digit",
     }).format(new Date(value));
+
+  const connectCalendar = async () => {
+    if (calendarAction) return;
+    setCalendarAction("connect");
+    try {
+      const result = await startGoogleCalendarConnect({
+        data: { origin: window.location.origin },
+      });
+      window.location.href = result.url;
+    } catch (error) {
+      console.error("Failed to start Google Calendar connection:", error);
+      toast.error("Google Calendar is not ready on this deployment yet.");
+      setCalendarAction(null);
+    }
+  };
+
+  const syncCalendar = async () => {
+    if (calendarAction) return;
+    setCalendarAction("sync");
+    try {
+      const result = await syncGoogleCalendarNow();
+      await refreshCalendar();
+      toast.success(
+        result.synced
+          ? `Calendar synced · ${result.synced} events`
+          : "Calendar is up to date.",
+      );
+    } catch (error) {
+      console.error("Google Calendar sync failed:", error);
+      toast.error("Calendar sync failed. Reconnect if this keeps happening.");
+    } finally {
+      setCalendarAction(null);
+    }
+  };
+
+  const disconnectCalendar = async () => {
+    if (calendarAction) return;
+    setCalendarAction("disconnect");
+    try {
+      await disconnectGoogleCalendar();
+      setCalendarStatus({
+        connected: false,
+        status: "disconnected",
+        last_synced_at: null,
+        next_event: null,
+      });
+      toast.success("Google Calendar disconnected.");
+    } catch (error) {
+      console.error("Google Calendar disconnect failed:", error);
+      toast.error("Could not disconnect Google Calendar.");
+    } finally {
+      setCalendarAction(null);
+    }
+  };
+
+  const formatCalendarTime = (value?: string | null) => {
+    if (!value) return "";
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return value;
+    return new Intl.DateTimeFormat("en", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(parsed);
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -920,26 +1020,66 @@ function SettingsPage() {
               </div>
             )}
           </div>
-          <div className="flex items-center justify-between py-3">
-            <div>
-              <p className="text-[13.5px]">Google Calendar</p>
-              <p className="text-[12px] text-muted-foreground">Sync your schedule</p>
+          <div className="py-3">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-[13.5px]">Google Calendar</p>
+                <p className="text-[12px] text-muted-foreground">
+                  {calendarStatus?.connected
+                    ? calendarStatus.last_synced_at
+                      ? `Last synced ${formatCalendarTime(calendarStatus.last_synced_at)}`
+                      : "Connected · waiting for first sync"
+                    : calendarStatus?.status === "failed"
+                      ? "Connection needs attention"
+                      : "Use your schedule as context in Ask NANTI"}
+                </p>
+                {calendarStatus?.next_event ? (
+                  <p className="mt-1 max-w-sm truncate text-[11px] text-muted-foreground/70">
+                    Next: {calendarStatus.next_event.title} · {formatCalendarTime(calendarStatus.next_event.start_date)}
+                  </p>
+                ) : null}
+              </div>
+
+              {calendarLoading ? (
+                <Loader2 className="mt-1 size-4 animate-spin text-muted-foreground" />
+              ) : calendarStatus?.connected ? (
+                <div className="flex shrink-0 gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={Boolean(calendarAction)}
+                    onClick={() => void syncCalendar()}
+                  >
+                    {calendarAction === "sync" ? (
+                      <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                    ) : (
+                      <RefreshCw className="mr-1.5 size-3.5" />
+                    )}
+                    Sync
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={Boolean(calendarAction)}
+                    onClick={() => void disconnectCalendar()}
+                  >
+                    Disconnect
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={Boolean(calendarAction)}
+                  onClick={() => void connectCalendar()}
+                >
+                  {calendarAction === "connect" ? (
+                    <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                  ) : null}
+                  {calendarStatus?.status === "failed" ? "Reconnect" : "Connect"}
+                </Button>
+              )}
             </div>
-            {settings.calendarConnected ? (
-              <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary">
-                Connected
-              </span>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  window.location.href = `/api/auth/google?state=${settings.preferredName || "user"}`;
-                }}
-              >
-                Connect
-              </Button>
-            )}
           </div>
         </div>
       </section>
