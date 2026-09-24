@@ -1,0 +1,107 @@
+const assert = require("node:assert/strict");
+const { test } = require("node:test");
+const fs = require("node:fs");
+const path = require("node:path");
+const vm = require("node:vm");
+const ts = require("typescript");
+
+const source = ts.transpileModule(
+  fs.readFileSync(path.join(__dirname, "../src/lib/nanti-ai.server.ts"), "utf8"),
+  { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
+).outputText;
+
+function setup(env, responses) {
+  const requests = [];
+  const timeouts = [];
+  const logs = [];
+  const exports = {};
+  vm.runInNewContext(source, {
+    exports,
+    process: { env },
+    console: { error: (...args) => logs.push(args.map(String).join(" ")) },
+    AbortSignal: {
+      timeout(ms) {
+        timeouts.push(ms);
+        return AbortSignal.timeout(ms);
+      },
+    },
+    fetch: async (url, init) => {
+      requests.push({ url, init });
+      const next = responses.shift();
+      assert.ok(next, "Unexpected provider request");
+      if (next instanceof Error) throw next;
+      return { ok: true, status: 200, json: async () => next, ...next };
+    },
+  });
+  return { api: exports, requests, timeouts, logs };
+}
+
+const gemini = (text = "Test answer", finishReason = "STOP") => ({
+  candidates: [{ finishReason, content: { parts: [{ text }] } }],
+});
+
+test("Gemini uses a header key, an escaped model path and a bounded request", async () => {
+  const h = setup({ GEMINI_API_KEY: "fixture-key", GEMINI_MODEL: "model/name" }, [gemini()]);
+  assert.equal(await h.api.askNanti("Test question", ""), "Test answer");
+  assert.equal(h.requests.length, 1);
+  assert.ok(h.requests[0].url.endsWith("/model%2Fname:generateContent"));
+  assert.ok(!h.requests[0].url.includes("fixture-key"));
+  assert.equal(h.requests[0].init.headers["x-goog-api-key"], "fixture-key");
+  assert.ok(h.requests[0].init.signal instanceof AbortSignal);
+  assert.deepEqual(h.timeouts, [20000]);
+});
+
+test("Gemini thought text does not appear in the answer", async () => {
+  const h = setup({ GEMINI_API_KEY: "fixture-key" }, [
+    {
+      candidates: [
+        {
+          finishReason: "STOP",
+          content: { parts: [{ thought: true, text: "Internal" }, { text: "Answer" }] },
+        },
+      ],
+    },
+  ]);
+  assert.equal(await h.api.askNanti("Test question", ""), "Answer");
+});
+
+for (const [name, response] of [
+  ["truncated Gemini output", gemini("Partial", "MAX_TOKENS")],
+  ["missing finish reason", { candidates: [{ content: { parts: [{ text: "Partial" }] } }] }],
+  ["missing candidates", {}],
+  ["empty Gemini text", gemini("  ")],
+  ["provider quota error", { ok: false, status: 429 }],
+  ["provider timeout", new Error("TimeoutError")],
+]) {
+  test(`${name} rejects instead of returning successful output`, async () => {
+    const h = setup({ GEMINI_API_KEY: "fixture-key" }, [response]);
+    await assert.rejects(h.api.askNanti("Test question", ""), /AI sedang bermasalah/);
+    assert.equal(h.requests.length, 1);
+  });
+}
+
+test("Gemini errors do not leak upstream payloads or call another provider", async () => {
+  const h = setup({ GEMINI_API_KEY: "fixture-key", OPENAI_API_KEY: "unused" }, [
+    { ok: false, status: 503, text: async () => "sensitive upstream payload" },
+  ]);
+  await assert.rejects(h.api.askNanti("Test question", ""), /AI sedang bermasalah/);
+  assert.equal(h.requests.length, 1);
+  assert.ok(!h.logs.join(" ").includes("sensitive upstream payload"));
+});
+
+test("a legacy OpenAI key does not enable an unapproved provider", async () => {
+  const h = setup({ OPENAI_API_KEY: "unused" }, []);
+  await assert.rejects(h.api.askNanti("Test question", ""), /AI belum dikonfigurasi/);
+  assert.equal(h.requests.length, 0);
+});
+
+test("malformed extraction JSON rejects instead of reporting zero tasks", async () => {
+  const h = setup({ GEMINI_API_KEY: "fixture-key" }, [gemini("{broken")]);
+  await assert.rejects(h.api.extractItems("Synthetic conversation"), /AI sedang bermasalah/);
+});
+
+test("no configured provider makes no network requests", async () => {
+  const h = setup({}, []);
+  await assert.rejects(h.api.askNanti("Test question", ""), /AI belum dikonfigurasi/);
+  assert.equal(h.requests.length, 0);
+});
