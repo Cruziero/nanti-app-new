@@ -33,7 +33,7 @@ export function usePushSubscription() {
     return () => {
       cancelled = true;
     };
-  }, [configured, vapidPublicKey]);
+  }, []);
 
   useEffect(() => {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
@@ -99,7 +99,7 @@ export function usePushSubscription() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [configured, vapidPublicKey]);
 
   const unsubscribe = useCallback(async () => {
     setLoading(true);
