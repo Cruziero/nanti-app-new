@@ -56,6 +56,7 @@ const EXPANSIONS: Record<string, string> = {
   jmt: "jumat",
   sen: "senin",
   blg: "bilang",
+  sekolah: "sekolah",
 };
 
 const FUZZY_KEYWORDS = [
@@ -145,7 +146,9 @@ function normalizeWord(word: string) {
     // and differ by at most two characters. Explicit weird spellings belong in EXPANSIONS.
     if (lower[0] !== keyword[0] || Math.abs(lower.length - keyword.length) > 2) continue;
     const distance = editDistance(lower, keyword);
-    const threshold = lower.length >= 7 || keyword.length >= 7 ? 2 : 1;
+    // For shorter words (5-6 chars), require distance 1 to avoid false positives.
+    // Only allow distance 2 for longer words (7+ chars) where there's more signal.
+    const threshold = lower.length >= 7 && keyword.length >= 7 ? 2 : 1;
     if (distance <= threshold && distance < bestDistance) {
       best = keyword;
       bestDistance = distance;
