@@ -1049,9 +1049,26 @@ export function NantiProvider({ children }: { children: ReactNode }) {
               await updateTaskFn({ data: { id: promoted.id, time: details.time } });
               promoted = { ...promoted, time: details.time };
             }
+            let promotedPerson: Person | undefined;
+            if (promoted.personId && promoted.personName) {
+              try {
+                const person = await resolvePersonMemory({
+                  data: { name: promoted.personName },
+                });
+                promotedPerson = personToPerson(person);
+              } catch (error) {
+                console.error("Failed to refresh promoted person memory:", error);
+              }
+            }
+
             mutate((s) => ({
               ...s,
               items: [promoted, ...s.items.filter((i) => i.id !== id)],
+              people:
+                promotedPerson &&
+                !s.people.some((person) => person.id === promotedPerson!.id)
+                  ? [promotedPerson, ...s.people]
+                  : s.people,
             }));
             void logProductEvent({
               data: {
