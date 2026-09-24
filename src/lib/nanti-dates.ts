@@ -80,6 +80,21 @@ const PERIOD_DEFAULT_TIME: Record<string, string> = {
   malam: "20:00",
 };
 
+const SETENGAH_WORD_NUMBERS: Record<string, number> = {
+  satu: 1,
+  dua: 2,
+  tiga: 3,
+  empat: 4,
+  lima: 5,
+  enam: 6,
+  tujuh: 7,
+  delapan: 8,
+  sembilan: 9,
+  sepuluh: 10,
+  sebelas: 11,
+  "dua belas": 12,
+};
+
 function parseTime(text: string): string | null {
   const normalize = (hourValue: string, minuteValue?: string, periodValue?: string) => {
     let hour = parseInt(hourValue, 10);
@@ -103,15 +118,26 @@ function parseTime(text: string): string | null {
     );
   if (labelled) return normalize(labelled[1]!, labelled[2], labelled[3]);
 
-  // Indonesian "setengah tiga" = half to three = 02:30
-  const setengah = /\bsetengah\s+(\d{1,2})(?:\s*(pagi|siang|sore|malam|am|pm))?\b/i.exec(text);
+  // Indonesian "setengah tiga" = half to three = 02:30 (also word numbers: "setengah tujuh")
+  const setengah =
+    /\bsetengah\s+(\d{1,2}|dua belas|sebelas|sepuluh|sembilan|delapan|tujuh|enam|lima|empat|tiga|dua|satu)(?:\s*(pagi|siang|sore|malam|am|pm))?\b/i.exec(
+      text,
+    );
   if (setengah) {
-    return normalize(String(parseInt(setengah[1]!, 10) - 1), "30", setengah[2]);
+    const raw = setengah[1]!.toLowerCase();
+    const hour = /^\d+$/.test(raw) ? parseInt(raw, 10) : SETENGAH_WORD_NUMBERS[raw];
+    if (hour != null) return normalize(String(hour - 1), "30", setengah[2]);
   }
 
   const clock =
     /\b(\d{1,2})[.:](\d{2})(?:\s*(am|pm))?\b/i.exec(text);
   if (clock) return normalize(clock[1]!, clock[2], clock[3]);
+
+  // English meridiem without "jam": "2 pm", "10am", "at 3PM".
+  // Runs after the clock rule and ignores digits glued to ":"/"." so the minutes
+  // in "4:15 pm" are not mistaken for the hour.
+  const bareMeridiem = /(?<![:\d.])\b(\d{1,2})\s*(am|pm)\b/i.exec(text);
+  if (bareMeridiem) return normalize(bareMeridiem[1]!, undefined, bareMeridiem[2]);
 
   return null;
 }

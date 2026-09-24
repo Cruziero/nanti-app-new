@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "total": 141,
+  "total": 146,
   "normalize": [
     {
       "id": "norm-01",
@@ -384,6 +384,31 @@
       "id": "date-40",
       "input": "meeting jam 10 di bulan mei",
       "dateAbsent": true
+    },
+    {
+      "id": "date-41",
+      "input": "2 pm",
+      "time": "14:00"
+    },
+    {
+      "id": "date-42",
+      "input": "2pm",
+      "time": "14:00"
+    },
+    {
+      "id": "date-43",
+      "input": "setengah tujuh malam",
+      "time": "18:30"
+    },
+    {
+      "id": "date-44",
+      "input": "setengah 3 sore",
+      "time": "14:30"
+    },
+    {
+      "id": "date-45",
+      "input": "jam setengah 8 pagi",
+      "time": "07:30"
     }
   ],
   "fallbackTask": [
