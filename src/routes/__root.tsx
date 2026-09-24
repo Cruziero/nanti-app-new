@@ -15,6 +15,7 @@ import { isSupabaseConfigured } from "@/integrations/supabase/client";
 import { NantiProvider } from "@/lib/nanti-store";
 import { ItemDetailProvider } from "@/components/nanti/item-detail";
 import { Toaster } from "@/components/ui/sonner";
+import { OG_IMAGE_URL } from "@/lib/site";
 
 function NotFoundComponent() {
   return (
@@ -103,16 +104,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Forward or paste your WhatsApp conversations into NANTI. AI turns them into tracked commitments, reminders and follow-ups.",
       },
-      {
-        property: "og:image",
-        content:
-          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/844d94b3-6ea1-4852-8ad5-b5ded283e4f0",
-      },
-      {
-        name: "twitter:image",
-        content:
-          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/844d94b3-6ea1-4852-8ad5-b5ded283e4f0",
-      },
+      { property: "og:image", content: OG_IMAGE_URL },
+      { name: "twitter:image", content: OG_IMAGE_URL },
     ],
     links: [
       {

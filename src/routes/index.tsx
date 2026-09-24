@@ -1,6 +1,7 @@
 ﻿import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
 import { MarketingLayout, Reveal } from "@/components/nanti/marketing";
+import { OG_IMAGE_URL, SITE_URL } from "@/lib/site";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -18,8 +19,8 @@ export const Route = createFileRoute("/")({
           "NANTI turns everyday WhatsApp conversations into commitments, reminders and follow-ups.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://nanti-app-new.vercel.app" },
-      { property: "og:image", content: "https://nanti-app-new.vercel.app/og-image.png" },
+      { property: "og:url", content: SITE_URL },
+      { property: "og:image", content: OG_IMAGE_URL },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "NANTI — You talk. NANTI remembers." },
       {
@@ -27,7 +28,7 @@ export const Route = createFileRoute("/")({
         content:
           "NANTI turns everyday WhatsApp conversations into commitments, reminders and follow-ups.",
       },
-      { name: "twitter:image", content: "https://nanti-app-new.vercel.app/og-image.png" },
+      { name: "twitter:image", content: OG_IMAGE_URL },
     ],
   }),
   component: HomePage,
