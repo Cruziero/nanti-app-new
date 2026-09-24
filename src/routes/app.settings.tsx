@@ -92,7 +92,7 @@ type WhatsAppLinkState = {
 };
 
 function SettingsPage() {
-  const { settings, setSettings, reset } = useNanti();
+  const { settings, setSettings } = useNanti();
   const [whatsAppLink, setWhatsAppLink] = useState<WhatsAppLinkState | null>(null);
   const [whatsAppLoading, setWhatsAppLoading] = useState(true);
   const [languageMemories, setLanguageMemories] = useState<LanguageMemoryRow[]>([]);
@@ -126,6 +126,7 @@ function SettingsPage() {
     isSubscribed,
     permission,
     loading: pushLoading,
+    configured: pushConfigured,
     subscribe,
     unsubscribe,
   } = usePushSubscription();
@@ -1098,11 +1099,13 @@ function SettingsPage() {
             <div>
               <p className="text-[13.5px]">Push Notifications</p>
               <p className="text-[12px] text-muted-foreground">
-                {permission === "granted"
-                  ? "Active"
-                  : permission === "denied"
-                    ? "Blocked"
-                    : "Not enabled"}
+                {!pushConfigured
+                  ? "Not configured"
+                  : permission === "granted"
+                    ? "Active"
+                    : permission === "denied"
+                      ? "Blocked"
+                      : "Not enabled"}
               </p>
             </div>
           </div>
@@ -1114,11 +1117,13 @@ function SettingsPage() {
             <Button
               variant={isSubscribed ? "outline" : "default"}
               size="sm"
-              disabled={pushLoading}
+              disabled={pushLoading || !pushConfigured}
               onClick={isSubscribed ? unsubscribe : subscribe}
             >
               {pushLoading ? (
                 <Loader2 className="size-3 animate-spin" />
+              ) : !pushConfigured ? (
+                "Unavailable"
               ) : isSubscribed ? (
                 "Disable"
               ) : (
@@ -1126,24 +1131,6 @@ function SettingsPage() {
               )}
             </Button>
           )}
-        </div>
-      </section>
-
-      <section className="mb-10">
-        <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-          Privacy & Data
-        </h2>
-        <div className="space-y-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              reset();
-              toast.success("Demo data restored");
-            }}
-          >
-            Restore demo data
-          </Button>
         </div>
       </section>
 
