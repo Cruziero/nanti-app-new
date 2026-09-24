@@ -1,0 +1,57 @@
+name: Assistant Live Eval
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 23 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  live-assistant-eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GEMINI_MODEL: gemini-3.5-flash
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_MODEL: gpt-4o-mini
+      NANTI_LIVE_EVAL_MIN_SCORE: "0.90"
+      NANTI_LIVE_EVAL_CONCURRENCY: "2"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm install --legacy-peer-deps --no-audit --no-fund
+
+      - name: Run live NANTI behavior benchmark
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          if [ -z "$GEMINI_API_KEY" ] && [ -z "$OPENAI_API_KEY" ]; then
+            echo "::warning::No GEMINI_API_KEY or OPENAI_API_KEY Actions secret is configured. Live assistant eval skipped."
+            cat > artifacts/assistant-live-eval.json <<'JSON'
+          {
+            "skipped": true,
+            "reason": "No AI provider secret configured in GitHub Actions",
+            "required": ["GEMINI_API_KEY or OPENAI_API_KEY"]
+          }
+          JSON
+            exit 0
+          fi
+          npm run eval:assistant-live
+
+      - name: Upload live eval report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: assistant-live-eval
+          path: artifacts/assistant-live-eval.json
+          if-no-files-found: warn
+          retention-days: 30
