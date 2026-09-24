@@ -747,19 +747,21 @@ export function SimpleAssistant() {
               Typos are fine. Paste a conversation, change a task, set a reminder,
               or ask what you’re forgetting.
             </p>
-            <div className="mt-6 flex flex-wrap gap-2">
-              {suggestions.map((suggestion) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void send(suggestion)}
-                  className="rounded-full border border-border px-3 py-1.5 text-[13px] text-foreground hover:bg-secondary disabled:opacity-50"
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
+            {!input.trim() ? (
+              <div className="mt-6 flex flex-wrap gap-2">
+                {suggestions.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void send(suggestion)}
+                    className="rounded-full border border-border px-3 py-1.5 text-[13px] text-foreground hover:bg-secondary disabled:opacity-50"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
         ) : (
           <div
