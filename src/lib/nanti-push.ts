@@ -1,11 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
 
-const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || "";
+const VAPID_PUBLIC_KEY =
+  process.env.VAPID_PUBLIC_KEY || process.env.VITE_VAPID_PUBLIC_KEY || "";
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || "";
 
 export async function subscribeToPushNotifications(userId: string, subscription: PushSubscription) {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return [];
+
   const supabase = createClient(
-    process.env.VITE_SUPABASE_URL || "",
+    process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "",
     process.env.SUPABASE_SERVICE_ROLE_KEY || "",
   );
 
