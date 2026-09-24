@@ -246,13 +246,19 @@ export function chatMessageToFallbackItem(
   if (!raw) return null;
   const normalized = normalizeCasualIndonesian(raw);
   const lower = normalized.toLowerCase();
-  const actionable =
+  if (/\?$/.test(raw) || /^(apa|siapa|kapan|dimana|kenapa|gimana|bagaimana|what|who|when|where|why|how)\b/i.test(lower)) {
+    return null;
+  }
+
+  const parsed = parseSmartDate(normalized);
+  const explicitObligation =
     /\b(harus|perlu|mesti|wajib|jangan\s+lupa|tolong\s+ingat|tolong\s+ingetin|ingatkan|remind|need\s+to|have\s+to|must)\b/i.test(
       lower,
     );
-  if (!actionable) return null;
-
-  const parsed = parseSmartDate(normalized);
+  const futureIntent =
+    /\b(?:saya|aku|gue|gw)\s+(?:mau|akan)\b/i.test(lower) &&
+    Boolean(parsed.date || parsed.time);
+  if (!explicitObligation && !futureIntent) return null;
   const title = normalizeActionTitle(normalized);
   const where = inferLocation(normalized);
   const how = inferMethod(normalized);
@@ -302,4 +308,54 @@ export function chatMessageToFallbackItem(
     reminderChannels: parsed.date || parsed.time ? ["in_app", "push"] : [],
     reminderIntensity: "normal",
   };
+}
+
+
+/**
+ * Deterministic fallback for one or more explicit future actions.
+ * This path is intentionally conservative so Ask NANTI can still save clear
+ * commitments when the AI provider is temporarily unavailable.
+ */
+export function chatMessageToFallbackItems(
+  text: string,
+  ctx: { people: Person[]; projects: Project[] },
+): Item[] {
+  const raw = text.trim();
+  if (!raw) return [];
+
+  const normalized = normalizeCasualIndonesian(raw);
+  if (/\?$/.test(raw)) return [];
+
+  const multi =
+    /^(?:(?:saya|aku|gue|gw)\s+)?(?:(?:mau|akan|harus|perlu|mesti|wajib)\s+)?(.+?)\s+(hari\s+ini|besok|lusa)\s+(?:jam|pukul)\s+(\d{1,2}(?:[.:]\d{2})?(?:\s*(?:pagi|siang|sore|malam))?)\s+(?:dan|,)\s+(?:jam|pukul)\s+(\d{1,2}(?:[.:]\d{2})?(?:\s*(?:pagi|siang|sore|malam))?)\s+(.+)$/i.exec(
+      normalized,
+    );
+
+  if (multi) {
+    const firstAction = multi[1]!.trim();
+    const sharedDate = multi[2]!.trim();
+    const firstTime = multi[3]!.trim();
+    const secondTime = multi[4]!.trim();
+    const secondAction = multi[5]!.trim();
+
+    const first = chatMessageToFallbackItem(
+      `saya harus ${firstAction} ${sharedDate} jam ${firstTime}`,
+      ctx,
+    );
+    const second = chatMessageToFallbackItem(
+      `saya harus ${secondAction} ${sharedDate} jam ${secondTime}`,
+      ctx,
+    );
+
+    return [first, second]
+      .filter((item): item is Item => Boolean(item))
+      .map((item) => ({
+        ...item,
+        quote: raw,
+        source: "Chat dengan NANTI",
+      }));
+  }
+
+  const single = chatMessageToFallbackItem(raw, ctx);
+  return single ? [single] : [];
 }
