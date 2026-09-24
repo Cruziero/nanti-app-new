@@ -5,11 +5,11 @@
   "crons": [
     {
       "path": "/api/cron/check-reminders",
-      "schedule": "*/10 * * * *"
+      "schedule": "0 2 * * *"
     },
     {
       "path": "/api/cron/sync-calendar",
-      "schedule": "0 */6 * * *"
+      "schedule": "0 9 * * *"
     },
     {
       "path": "/api/cron/generate-article",
