@@ -20,6 +20,9 @@ import {
   Copy,
   Brain,
   Trash2,
+  RefreshCw,
+  AlertTriangle,
+  ShieldCheck,
 } from "lucide-react";
 import {
   disconnectWhatsApp,
@@ -42,6 +45,11 @@ import {
   type EntityAliasRow,
   type UserRoutineRow,
 } from "@/lib/nanti-context-memory.functions";
+import {
+  fetchAssistantQuality,
+  runAssistantSmokeCheck,
+  type AssistantEvalRun,
+} from "@/lib/nanti-quality.functions";
 
 export const Route = createFileRoute("/app/settings")({
   head: () => ({
@@ -86,6 +94,9 @@ function SettingsPage() {
   const [routines, setRoutines] = useState<UserRoutineRow[]>([]);
   const [languageLoading, setLanguageLoading] = useState(true);
   const [contextLoading, setContextLoading] = useState(true);
+  const [qualityRuns, setQualityRuns] = useState<AssistantEvalRun[]>([]);
+  const [qualityLoading, setQualityLoading] = useState(true);
+  const [qualityRunning, setQualityRunning] = useState(false);
   const nantiWhatsAppNumber = String(import.meta.env.VITE_NANTI_WHATSAPP_NUMBER || "").replace(/\D/g, "");
   const whatsappConnected = Boolean(whatsAppLink?.verified_at && whatsAppLink?.phone_number);
   const { signOut } = useSupabaseAuth();
@@ -146,6 +157,21 @@ function SettingsPage() {
   useEffect(() => {
     void refreshContextMemory();
   }, [refreshContextMemory]);
+
+  const refreshAssistantQuality = useCallback(async () => {
+    try {
+      const result = await fetchAssistantQuality();
+      setQualityRuns(result.runs || []);
+    } catch (error) {
+      console.error("Failed to load NANTI AI quality:", error);
+    } finally {
+      setQualityLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshAssistantQuality();
+  }, [refreshAssistantQuality]);
 
   useEffect(() => {
     if (!whatsAppLink?.link_code || whatsappConnected) return;
@@ -307,6 +333,43 @@ function SettingsPage() {
       .join(" · ") || "Recurring action pattern";
   };
 
+  const runQualityCheck = async () => {
+    if (qualityRunning) return;
+    setQualityRunning(true);
+    try {
+      const result = await runAssistantSmokeCheck();
+      setQualityRuns((current) => [
+        result.run,
+        ...current.filter((item) => item.id !== result.run.id),
+      ].slice(0, 14));
+      if (result.cached) {
+        toast.success("Using the latest AI quality check from the last 10 minutes.");
+      } else if (
+        result.run.critical_failures.length === 0 &&
+        result.run.score >= 0.8
+      ) {
+        toast.success(`NANTI AI check passed: ${Math.round(result.run.score * 100)}%.`);
+      } else {
+        toast.error("NANTI AI check found a behavior that needs attention.");
+      }
+    } catch (error) {
+      console.error("Failed to run NANTI AI quality check:", error);
+      toast.error("Could not run the AI quality check.");
+    } finally {
+      setQualityRunning(false);
+    }
+  };
+
+  const shortSha = (sha?: string | null) => sha?.slice(0, 7) || "—";
+
+  const formatQualityTime = (value: string) =>
+    new Intl.DateTimeFormat("en", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(value));
+
   const handleSignOut = async () => {
     await signOut();
     toast.success("Signed out.");
@@ -354,6 +417,148 @@ function SettingsPage() {
             </button>
           ))}
         </div>
+      </section>
+
+      <section className="mb-10">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="size-4 text-primary" />
+              <h2 className="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                AI Quality
+              </h2>
+            </div>
+            <p className="mt-1 text-[12px] text-muted-foreground">
+              Live checks against the same Ask NANTI behavior used in production.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={qualityRunning}
+            onClick={() => void runQualityCheck()}
+          >
+            {qualityRunning ? (
+              <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="mr-1.5 size-3.5" />
+            )}
+            Run check
+          </Button>
+        </div>
+
+        {qualityLoading ? (
+          <div className="flex items-center gap-2 py-3 text-xs text-muted-foreground">
+            <Loader2 className="size-3.5 animate-spin" />
+            Loading AI quality…
+          </div>
+        ) : qualityRuns.length ? (
+          <div className="space-y-4">
+            {(() => {
+              const latest = qualityRuns[0]!;
+              const healthy =
+                latest.critical_failures.length === 0 && latest.score >= 0.8;
+              return (
+                <div className="rounded-lg border border-border p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        {healthy ? (
+                          <Check className="size-4 text-primary" />
+                        ) : (
+                          <AlertTriangle className="size-4 text-destructive" />
+                        )}
+                        <p className="text-sm font-medium">
+                          {healthy ? "AI behavior healthy" : "AI quality needs attention"}
+                        </p>
+                      </div>
+                      <p className="mt-1 text-[12px] text-muted-foreground">
+                        {latest.passed}/{latest.total} checks passed · {formatQualityTime(latest.created_at)}
+                      </p>
+                    </div>
+                    <p className="text-2xl font-semibold tabular-nums">
+                      {Math.round(latest.score * 100)}%
+                    </p>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-border pt-3 text-[11px] text-muted-foreground">
+                    <span>Model: {latest.model || "default"}</span>
+                    <span>Deploy: {shortSha(latest.git_sha)}</span>
+                    {latest.duration_ms ? (
+                      <span>{(latest.duration_ms / 1000).toFixed(1)}s</span>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div>
+              <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">
+                Recent checks
+              </p>
+              <div className="divide-y divide-border border-y border-border">
+                {qualityRuns.slice(0, 7).map((run) => {
+                  const healthy =
+                    run.critical_failures.length === 0 && run.score >= 0.8;
+                  return (
+                    <div
+                      key={run.id}
+                      className="flex items-center justify-between gap-3 py-2.5 text-[12px]"
+                    >
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span
+                          aria-hidden="true"
+                          className={cn(
+                            "size-1.5 shrink-0 rounded-full",
+                            healthy ? "bg-primary" : "bg-destructive",
+                          )}
+                        />
+                        <span className="truncate text-muted-foreground">
+                          {formatQualityTime(run.created_at)} · {run.suite}
+                        </span>
+                      </div>
+                      <span className="font-medium tabular-nums">
+                        {Math.round(run.score * 100)}%
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {qualityRuns[0]!.failures?.length ? (
+              <div>
+                <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-destructive/80">
+                  Needs attention
+                </p>
+                <div className="space-y-2">
+                  {qualityRuns[0]!.failures.slice(0, 4).map((failure, index) => (
+                    <div
+                      key={failure.id || index}
+                      className="rounded-md border border-destructive/20 p-3"
+                    >
+                      <p className="text-[12.5px] font-medium">
+                        {failure.input || failure.id || "Assistant behavior mismatch"}
+                      </p>
+                      {failure.errors?.length ? (
+                        <p className="mt-1 text-[11.5px] leading-5 text-muted-foreground">
+                          {failure.errors.join(" · ")}
+                        </p>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed border-border p-4">
+            <p className="text-[13px] font-medium">No live AI quality run yet.</p>
+            <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
+              The scheduled production monitor will create one automatically, or run a smoke check now.
+            </p>
+          </div>
+        )}
       </section>
 
       <section className="mb-10">
