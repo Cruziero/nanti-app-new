@@ -14,6 +14,57 @@ async function loadPersonalAiContext(context: { supabase: any; userId: string })
   return [language, entities].filter(Boolean).join("\n\n");
 }
 
+async function consumeAiQuota(
+  context: { supabase: any; userId: string },
+  kind: "text" | "screenshot",
+) {
+  const cutoff = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const eventName = kind === "screenshot" ? "ai_screenshot_request" : "ai_request";
+
+  const { count: totalCount, error: totalError } = await context.supabase
+    .from("product_events")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", context.userId)
+    .in("event_name", ["ai_request", "ai_screenshot_request"])
+    .gte("created_at", cutoff);
+
+  if (totalError) {
+    console.error("AI quota lookup failed:", totalError);
+    throw new Error("AI usage check failed. Please try again.");
+  }
+  if ((totalCount || 0) >= 90) {
+    throw new Error("AI request limit reached. Please try again later.");
+  }
+
+  if (kind === "screenshot") {
+    const { count: screenshotCount, error: screenshotError } = await context.supabase
+      .from("product_events")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", context.userId)
+      .eq("event_name", "ai_screenshot_request")
+      .gte("created_at", cutoff);
+
+    if (screenshotError) {
+      console.error("Screenshot quota lookup failed:", screenshotError);
+      throw new Error("AI usage check failed. Please try again.");
+    }
+    if ((screenshotCount || 0) >= 15) {
+      throw new Error("Screenshot analysis limit reached. Please try again later.");
+    }
+  }
+
+  const { error: insertError } = await context.supabase.from("product_events").insert({
+    user_id: context.userId,
+    event_name: eventName,
+    source: "web",
+    properties: { kind },
+  });
+  if (insertError) {
+    console.error("AI quota event write failed:", insertError);
+    throw new Error("AI usage check failed. Please try again.");
+  }
+}
+
 export const analyzeConversation = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
@@ -25,6 +76,7 @@ export const analyzeConversation = createServerFn({ method: "POST" }).middleware
       .parse(data),
   )
   .handler(async ({ data, context }) => {
+    await consumeAiQuota(context, "text");
     const [{ extractItems }, personalContext] = await Promise.all([
       import("./nanti-ai.server"),
       loadPersonalAiContext(context),
@@ -43,6 +95,7 @@ export const analyzeScreenshot = createServerFn({ method: "POST" }).middleware([
       .parse(data),
   )
   .handler(async ({ data, context }) => {
+    await consumeAiQuota(context, "screenshot");
     const [{ extractFromImage }, personalContext] = await Promise.all([
       import("./nanti-ai.server"),
       loadPersonalAiContext(context),
@@ -55,6 +108,7 @@ export const askAssistant = createServerFn({ method: "POST" }).middleware([requi
     z.object({ question: z.string().min(1).max(2000), context: z.string().max(20000) }).parse(data),
   )
   .handler(async ({ data, context }) => {
+    await consumeAiQuota(context, "text");
     const [{ askNanti }, personalContext] = await Promise.all([
       import("./nanti-ai.server"),
       loadPersonalAiContext(context),
@@ -89,6 +143,7 @@ export const interpretTaskCommand = createServerFn({ method: "POST" }).middlewar
     }).parse(data),
   )
   .handler(async ({ data, context }) => {
+    await consumeAiQuota(context, "text");
     const [{ interpretAssistantCommand }, personalContext] = await Promise.all([
       import("./nanti-ai.server"),
       loadPersonalAiContext(context),
@@ -158,6 +213,7 @@ export const processAssistantTurn = createServerFn({ method: "POST" })
     }).parse(data),
   )
   .handler(async ({ data, context }) => {
+    await consumeAiQuota(context, "text");
     const [{ runAssistantTurn }, { normalizeCasualIndonesian }, personalContext] =
       await Promise.all([
         import("./nanti-ai.server"),
