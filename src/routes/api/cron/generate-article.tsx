@@ -148,9 +148,12 @@ CRITICAL: Return ONLY valid JSON. Escape all newlines in the "content" field as 
 
 {"title":"...","excerpt":"...","content":"...","category":"${topic.category}"}`;
 
-  const res = await fetch(`${GEMINI_API_URL}/${MODEL}:generateContent?key=${key}`, {
+  const res = await fetch(`${GEMINI_API_URL}/${MODEL}:generateContent`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": key,
+    },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
@@ -158,11 +161,12 @@ CRITICAL: Return ONLY valid JSON. Escape all newlines in the "content" field as 
         maxOutputTokens: 4096,
       },
     }),
+    signal: AbortSignal.timeout(20_000),
   });
 
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Gemini API error: ${err}`);
+    console.error("Gemini article generation failed:", res.status);
+    throw new Error("Article generation provider failed");
   }
 
   const data = await res.json();
@@ -201,8 +205,8 @@ export const Route = createFileRoute("/api/cron/generate-article")({
       GET: async ({ request }) => {
         try {
           const authHeader = request.headers.get("Authorization");
-          const cronSecret = process.env.CRON_SECRET;
-          if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+          const cronSecret = process.env["CRON_SECRET"];
+          if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
             return new Response(JSON.stringify({ error: "Unauthorized" }), {
               status: 401,
               headers: { "Content-Type": "application/json" },
@@ -275,9 +279,8 @@ export const Route = createFileRoute("/api/cron/generate-article")({
           );
         } catch (error) {
           console.error("Article generation error:", error);
-          const msg = error instanceof Error ? error.message : JSON.stringify(error);
           return new Response(
-            JSON.stringify({ error: "Internal error", message: msg }),
+            JSON.stringify({ error: "Internal error" }),
             { status: 500, headers: { "Content-Type": "application/json" } },
           );
         }
