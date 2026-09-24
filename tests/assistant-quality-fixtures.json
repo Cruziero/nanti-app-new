@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "total": 125,
+  "total": 133,
   "normalize": [
     {
       "id": "norm-01",
@@ -567,6 +567,65 @@
       "id": "task-28",
       "input": "saya harus konfirm ke vendor besok",
       "titleIncludes": "konfirmasi",
+      "hasDue": true
+    },
+    {
+      "id": "task-29",
+      "input": "saya harus pergi naik grab besok jam 7",
+      "titleIncludes": "pergi",
+      "time": "07:00",
+      "how": "Naik grab",
+      "hasDue": true
+    },
+    {
+      "id": "task-30",
+      "input": "saya harus pergi naik gojek besok jam 7",
+      "titleIncludes": "pergi",
+      "how": "Naik gojek",
+      "hasDue": true
+    },
+    {
+      "id": "task-31",
+      "input": "saya harus pergi naik bus besok",
+      "titleIncludes": "pergi",
+      "how": "Naik bus",
+      "hasDue": true
+    },
+    {
+      "id": "task-32",
+      "input": "saya harus pergi naik transjakarta besok",
+      "titleIncludes": "pergi",
+      "how": "Naik transjakarta",
+      "hasDue": true
+    },
+    {
+      "id": "task-33",
+      "input": "saya harus jemput pak budi di bandara soekarno hatta besok jam 8",
+      "titleIncludes": "jemput",
+      "person": "pak budi",
+      "where": "bandara soekarno hatta",
+      "time": "08:00",
+      "hasDue": true
+    },
+    {
+      "id": "task-34",
+      "input": "saya harus bayar di muka besok",
+      "titleIncludes": "bayar",
+      "whereAbsent": true,
+      "hasDue": true
+    },
+    {
+      "id": "task-35",
+      "input": "saya harus makan di luar besok",
+      "titleIncludes": "makan",
+      "whereAbsent": true,
+      "hasDue": true
+    },
+    {
+      "id": "task-36",
+      "input": "saya harus ketemu di sini besok",
+      "titleIncludes": "ketemu",
+      "whereAbsent": true,
       "hasDue": true
     }
   ],

@@ -145,6 +145,9 @@ for (const fixture of fixtures.fallbackTask) {
         "location mismatch",
       );
     }
+    if (fixture.whereAbsent) {
+      assert.equal(item.semanticContext?.where, undefined, "expected no location");
+    }
     if (fixture.how) {
       assert.equal(item.semanticContext?.how, fixture.how, "method mismatch");
     }

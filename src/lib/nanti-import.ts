@@ -20,6 +20,27 @@ function defaultReminderTime(due?: string, time?: string, offsetMinutes?: number
   return reminder.toISOString();
 }
 
+// Words that follow "di/ke/dari" but are not places ("di muka", "di luar", "di sini").
+const NON_PLACE_WORDS = new Set([
+  "muka",
+  "luar",
+  "dalam",
+  "atas",
+  "bawah",
+  "depan",
+  "belakang",
+  "samping",
+  "antara",
+  "sini",
+  "situ",
+  "sana",
+  "online",
+  "awal",
+  "akhir",
+  "sela",
+  "tengah",
+]);
+
 function inferLocation(text: string) {
   const normalized = normalizeCasualIndonesian(text);
   const match = /\b(?:dari|ke|di)\s+(.+?)(?=\s+(?:jam|pukul|tanggal|besok|besok|lusa|hari\s+ini|untuk|dan|dan)\b|$)/i.exec(
@@ -28,6 +49,7 @@ function inferLocation(text: string) {
   const candidate = match?.[1]?.trim().replace(/[.,!?;:]+$/, "");
   if (!candidate || /^(pak|bapak|bu|ibu|mbak|mas)\b/i.test(candidate)) return undefined;
   if (/^(senin|selasa|rabu|kamis|jumat|sabtu|minggu|besok|lusa|hari)$/i.test(candidate)) return undefined;
+  if (NON_PLACE_WORDS.has(candidate.split(/\s+/)[0]!.toLowerCase())) return undefined;
   return candidate;
 }
 
@@ -48,7 +70,10 @@ function inferMethod(text: string) {
   if (/\b(zoom)\b/.test(lower)) return "Zoom";
   if (/\b(gmeet|google\s+meet)\b/.test(lower)) return "Google Meet";
   if (/\b(transfer|bank\s+transfer)\b/.test(lower)) return "Transfer";
-  const transport = /\b(?:naik\s+)?(mobil|motor|kereta|pesawat|ojek|taxi|taksi)\b/.exec(lower);
+  const transport =
+    /\b(?:naik\s+)?(mobil|motor|kereta|pesawat|ojek|taxi|taksi|grab|gojek|go-jek|bus|angkot|transjakarta|sepeda|kapal|ferry|bajaj)\b/.exec(
+      lower,
+    );
   return transport ? `Naik ${transport[1]}` : undefined;
 }
 
