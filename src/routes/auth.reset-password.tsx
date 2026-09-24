@@ -24,8 +24,8 @@ function ResetPasswordPage() {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error("Password minimal 6 karakter.");
+    if (password.length < 8) {
+      toast.error("Password minimal 8 karakter.");
       return;
     }
 
@@ -58,7 +58,7 @@ function ResetPasswordPage() {
           <Input
             id="password"
             type="password"
-            placeholder="Minimal 6 karakter"
+            placeholder="Minimal 8 karakter"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
