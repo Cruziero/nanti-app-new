@@ -191,27 +191,38 @@ export async function syncGoogleCalendarForUser(
   endpoint.searchParams.set("orderBy", "startTime");
   endpoint.searchParams.set("maxResults", "500");
 
-  const response = await fetch(endpoint, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+  const events: Array<Record<string, any>> = [];
+  let pageToken: string | null = null;
 
-  if (!response.ok) {
-    const body = await response.text().catch(() => "");
-    if (response.status === 401 || response.status === 403) {
-      await markCalendarFailed(supabase, userId);
+  do {
+    if (pageToken) endpoint.searchParams.set("pageToken", pageToken);
+    else endpoint.searchParams.delete("pageToken");
+
+    const response = await fetch(endpoint, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      if (response.status === 401 || response.status === 403) {
+        await markCalendarFailed(supabase, userId);
+      }
+      console.error("Google Calendar sync failed:", response.status, body.slice(0, 300));
+      throw new Error("Google Calendar could not be synced.");
     }
-    console.error("Google Calendar sync failed:", response.status, body.slice(0, 300));
-    throw new Error("Google Calendar could not be synced.");
-  }
 
-  const body = (await response.json()) as { items?: Array<Record<string, any>> };
-  const events = Array.isArray(body.items) ? body.items : [];
-  let saved = 0;
+    const body = (await response.json()) as {
+      items?: Array<Record<string, any>>;
+      nextPageToken?: string;
+    };
+    if (Array.isArray(body.items)) events.push(...body.items);
+    pageToken = body.nextPageToken || null;
+  } while (pageToken);
 
-  for (const event of events) {
+  const normalizedEvents = events.flatMap((event) => {
     const eventId = typeof event.id === "string" ? event.id : "";
     const startDate = event.start?.dateTime || event.start?.date;
-    if (!eventId || !startDate) continue;
+    if (!eventId || !startDate || event.status === "cancelled") return [];
 
     const attendees = Array.isArray(event.attendees)
       ? event.attendees
@@ -222,36 +233,49 @@ export async function syncGoogleCalendarForUser(
           .slice(0, 100)
       : [];
 
-    const { error: upsertError } = await supabase
+    return [{
+      user_id: userId,
+      provider: "google",
+      external_event_id: eventId,
+      title:
+        typeof event.summary === "string" && event.summary.trim()
+          ? event.summary.trim()
+          : "Untitled event",
+      description:
+        typeof event.description === "string"
+          ? event.description.slice(0, 10000)
+          : "",
+      start_date: String(startDate),
+      end_date: event.end?.dateTime || event.end?.date || null,
+      location:
+        typeof event.location === "string"
+          ? event.location.slice(0, 1000)
+          : "",
+      attendees,
+      raw_json: event,
+      updated_at: new Date().toISOString(),
+    }];
+  });
+
+  // This table is only a rolling schedule cache. Replacing the Google snapshot
+  // removes cancelled/deleted events instead of leaving stale AI memory behind.
+  const { error: clearError } = await supabase
+    .from("calendar_events")
+    .delete()
+    .eq("user_id", userId)
+    .eq("provider", "google");
+  if (clearError) throw clearError;
+
+  for (let index = 0; index < normalizedEvents.length; index += 200) {
+    const batch = normalizedEvents.slice(index, index + 200);
+    if (!batch.length) continue;
+    const { error: insertError } = await supabase
       .from("calendar_events")
-      .upsert(
-        {
-          user_id: userId,
-          provider: "google",
-          external_event_id: eventId,
-          title:
-            typeof event.summary === "string" && event.summary.trim()
-              ? event.summary.trim()
-              : "Untitled event",
-          description:
-            typeof event.description === "string"
-              ? event.description.slice(0, 10000)
-              : "",
-          start_date: String(startDate),
-          end_date: event.end?.dateTime || event.end?.date || null,
-          location:
-            typeof event.location === "string"
-              ? event.location.slice(0, 1000)
-              : "",
-          attendees,
-          raw_json: event,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id,external_event_id" },
-      );
-    if (upsertError) throw upsertError;
-    saved++;
+      .insert(batch);
+    if (insertError) throw insertError;
   }
+
+  const saved = normalizedEvents.length;
 
   const syncedAt = new Date().toISOString();
   const { error: connectionError } = await supabase
