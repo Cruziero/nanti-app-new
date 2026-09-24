@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createClient } from "@supabase/supabase-js";
 import type { InvoiceTemplate } from "@/lib/nanti-types";
 
 export const Route = createFileRoute("/api/invoices/pdf")({
@@ -6,6 +7,30 @@ export const Route = createFileRoute("/api/invoices/pdf")({
     handlers: {
       POST: async ({ request }) => {
         try {
+          const authHeader = request.headers.get("Authorization");
+          if (!authHeader?.startsWith("Bearer ")) {
+            return json({ error: "Unauthorized" }, 401);
+          }
+
+          const supabaseUrl =
+            process.env["SUPABASE_URL"] || process.env["VITE_SUPABASE_URL"] || "";
+          const serviceKey = process.env["SUPABASE_SERVICE_ROLE_KEY"] || "";
+          if (!supabaseUrl || !serviceKey) {
+            return json({ error: "Invoice service is not configured" }, 503);
+          }
+
+          const token = authHeader.slice("Bearer ".length).trim();
+          const supabase = createClient(supabaseUrl, serviceKey, {
+            auth: { persistSession: false, autoRefreshToken: false },
+          });
+          const {
+            data: { user },
+            error: authError,
+          } = await supabase.auth.getUser(token);
+          if (authError || !user) {
+            return json({ error: "Unauthorized" }, 401);
+          }
+
           const body = await request.json();
           const {
             invoiceNumber,
@@ -70,6 +95,23 @@ export const Route = createFileRoute("/api/invoices/pdf")({
   },
 });
 
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function escapeHtml(value: unknown) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 interface InvoiceData {
   invoiceNumber: string;
   clientName: string;
@@ -123,7 +165,7 @@ function generateInvoiceHTML(data: InvoiceData): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Invoice ${invoiceNumber}</title>
+  <title>Invoice ${escapeHtml(invoiceNumber)}</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     
@@ -322,30 +364,30 @@ function generateInvoiceHTML(data: InvoiceData): string {
   <div class="invoice">
     <div class="header">
       <div class="company-info">
-        <h1>${companyName}</h1>
-        ${compAddr ? `<p>${compAddr}</p>` : ""}
-        ${compEmail ? `<p>${compEmail}</p>` : ""}
-        ${compPhone ? `<p>${compPhone}</p>` : ""}
+        <h1>${escapeHtml(companyName)}</h1>
+        ${compAddr ? `<p>${escapeHtml(compAddr)}</p>` : ""}
+        ${compEmail ? `<p>${escapeHtml(compEmail)}</p>` : ""}
+        ${compPhone ? `<p>${escapeHtml(compPhone)}</p>` : ""}
       </div>
       <div class="invoice-meta">
         <h2>Invoice</h2>
-        <div class="number">${invoiceNumber}</div>
+        <div class="number">${escapeHtml(invoiceNumber)}</div>
       </div>
     </div>
     
     <div class="meta-grid">
       <div class="meta-item">
         <label>Klien</label>
-        <span>${clientName}</span>
-        ${clientAddress ? `<br><span style="font-size:12px;color:#6b7280">${clientAddress}</span>` : ""}
+        <span>${escapeHtml(clientName)}</span>
+        ${clientAddress ? `<br><span style="font-size:12px;color:#6b7280">${escapeHtml(clientAddress)}</span>` : ""}
       </div>
       <div class="meta-item">
         <label>Tanggal Invoice</label>
-        <span>${date}</span>
+        <span>${escapeHtml(date)}</span>
       </div>
       <div class="meta-item">
         <label>Jatuh Tempo</label>
-        <span>${dueDate}</span>
+        <span>${escapeHtml(dueDate)}</span>
       </div>
     </div>
     
@@ -363,7 +405,7 @@ function generateInvoiceHTML(data: InvoiceData): string {
           .map(
             (item) => `
         <tr>
-          <td>${item.description}</td>
+          <td>${escapeHtml(item.description)}</td>
           <td>${item.quantity}</td>
           <td>${formatCurrency(item.unitPrice)}</td>
           <td>${formatCurrency(item.amount)}</td>
@@ -395,7 +437,7 @@ function generateInvoiceHTML(data: InvoiceData): string {
         ? `
     <div class="notes">
       <h3>Catatan</h3>
-      <p>${notes}</p>
+      <p>${escapeHtml(notes)}</p>
     </div>`
         : ""
     }
