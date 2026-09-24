@@ -56,6 +56,10 @@ import {
   startGoogleCalendarConnect,
   syncGoogleCalendarNow,
 } from "@/lib/nanti-calendar.functions";
+import {
+  deleteMyNantiAccount,
+  exportMyNantiData,
+} from "@/lib/nanti-account.functions";
 
 export const Route = createFileRoute("/app/settings")({
   head: () => ({
@@ -117,6 +121,10 @@ function SettingsPage() {
   } | null>(null);
   const [calendarLoading, setCalendarLoading] = useState(true);
   const [calendarAction, setCalendarAction] = useState<"connect" | "sync" | "disconnect" | null>(null);
+  const [accountExporting, setAccountExporting] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
+  const [accountDeleting, setAccountDeleting] = useState(false);
   const nantiWhatsAppNumber = String(import.meta.env.VITE_NANTI_WHATSAPP_NUMBER || "").replace(/\D/g, "");
   const whatsappConnected = Boolean(whatsAppLink?.verified_at && whatsAppLink?.phone_number);
   const { user, signOut } = useSupabaseAuth();
@@ -479,6 +487,48 @@ function SettingsPage() {
       hour: "2-digit",
       minute: "2-digit",
     }).format(parsed);
+  };
+
+  const downloadAccountData = async () => {
+    if (accountExporting) return;
+    setAccountExporting(true);
+    try {
+      const payload = await exportMyNantiData();
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      const date = new Date().toISOString().slice(0, 10);
+      anchor.href = url;
+      anchor.download = `nanti-data-${date}.json`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Your NANTI data export is ready.");
+    } catch (error) {
+      console.error("NANTI data export failed:", error);
+      toast.error("Could not export your data.");
+    } finally {
+      setAccountExporting(false);
+    }
+  };
+
+  const deleteAccount = async () => {
+    if (accountDeleting || deleteConfirmation !== "DELETE MY ACCOUNT") return;
+    setAccountDeleting(true);
+    try {
+      await deleteMyNantiAccount({
+        data: { confirmation: "DELETE MY ACCOUNT" },
+      });
+      await signOut();
+      await navigate({ to: "/auth/signup" });
+    } catch (error) {
+      console.error("NANTI account deletion failed:", error);
+      toast.error("Could not delete your account. Please try again.");
+      setAccountDeleting(false);
+    }
   };
 
   const handleSignOut = async () => {
@@ -1135,9 +1185,72 @@ function SettingsPage() {
       </section>
 
       <section className="border-t border-border pt-6">
-        <Button variant="destructive" size="sm" onClick={handleSignOut}>
-          Sign out
-        </Button>
+        <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+          Account & data
+        </h2>
+
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={accountExporting}
+            onClick={() => void downloadAccountData()}
+          >
+            {accountExporting ? (
+              <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+            ) : null}
+            Download my data
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleSignOut}>
+            Sign out
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => setDeleteAccountOpen((open) => !open)}
+          >
+            Delete account
+          </Button>
+        </div>
+
+        {deleteAccountOpen ? (
+          <div className="mt-4 max-w-lg rounded-lg border border-destructive/20 p-4">
+            <p className="text-[13px] font-medium text-destructive">
+              Permanently delete this NANTI account
+            </p>
+            <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
+              This removes your tasks, People memory, projects, conversations,
+              learned preferences, notifications, and connected Calendar data.
+              This cannot be undone.
+            </p>
+            <Label htmlFor="delete-account-confirmation" className="mt-4 block text-[12px]">
+              Type DELETE MY ACCOUNT to confirm
+            </Label>
+            <Input
+              id="delete-account-confirmation"
+              className="mt-1"
+              value={deleteConfirmation}
+              onChange={(event) => setDeleteConfirmation(event.target.value)}
+              autoComplete="off"
+              spellCheck={false}
+            />
+            <Button
+              variant="destructive"
+              size="sm"
+              className="mt-3"
+              disabled={
+                accountDeleting || deleteConfirmation !== "DELETE MY ACCOUNT"
+              }
+              onClick={() => void deleteAccount()}
+            >
+              {accountDeleting ? (
+                <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+              ) : null}
+              Permanently delete account
+            </Button>
+          </div>
+        ) : null}
       </section>
     </div>
   );
