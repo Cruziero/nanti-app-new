@@ -170,6 +170,34 @@ assert.equal(
   "ordinary tasks must never be misclassified as teaching",
 );
 
+const multiRaw = "saya mau uodate nanti bsk jam 9 dan jam 12 siang solat jumat";
+assert.equal(
+  language.normalizeCasualIndonesian(multiRaw).toLowerCase(),
+  "saya mau update nanti besok jam 9 dan jam 12 siang solat jumat",
+);
+const multiItems = importer.chatMessageToFallbackItems(multiRaw, {
+  people: [],
+  projects: [],
+});
+assert.equal(multiItems.length, 2, "two explicit actions must become two tasks");
+assert.ok(
+  multiItems[0].title.toLowerCase().includes("update nanti"),
+  `first task should be Update NANTI, got "${multiItems[0].title}"`,
+);
+assert.equal(multiItems[0].time, "09:00");
+assert.ok(
+  multiItems[1].title.toLowerCase().includes("solat jumat"),
+  `second task should be Solat Jumat, got "${multiItems[1].title}"`,
+);
+assert.equal(multiItems[1].time, "12:00");
+assert.equal(
+  multiItems[0].due,
+  multiItems[1].due,
+  "both tasks should share tomorrow's date",
+);
+assert.equal(multiItems[0].quote, multiRaw);
+assert.equal(multiItems[1].quote, multiRaw);
+
 console.log(
   "PASS: typo/slang normalization, semantic extraction, teaching detection, people/place disambiguation and reminder strategy.",
 );
