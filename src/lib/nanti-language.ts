@@ -203,6 +203,7 @@ const FUZZY_KEYWORDS = [
   "vendor",
   "invoice",
   "deadline",
+  "update",
   "appointment",
   "jemput",
   "hubungi",
