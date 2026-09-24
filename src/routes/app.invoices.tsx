@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/app/invoices")({
   head: () => ({
@@ -229,9 +230,17 @@ function InvoicesPage() {
               variant="outline"
               onClick={async () => {
                 try {
+                  const {
+                    data: { session },
+                  } = await supabase.auth.getSession();
+                  if (!session?.access_token) throw new Error("Not authenticated");
+
                   const response = await fetch("/api/invoices/pdf", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${session.access_token}`,
+                    },
                     body: JSON.stringify({
                       invoiceNumber: `INV-${Date.now().toString(36).toUpperCase()}`,
                       clientName: form.clientName || "Client",

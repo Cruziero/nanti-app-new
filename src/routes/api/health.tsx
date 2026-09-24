@@ -15,11 +15,11 @@ export const Route = createFileRoute("/api/health")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const url = new URL(request.url);
-        const secret = process.env.CRON_SECRET;
-        const provided =
-          url.searchParams.get("key") ||
-          (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
+        const secret = process.env["CRON_SECRET"];
+        const provided = (request.headers.get("Authorization") || "").replace(
+          /^Bearer\s+/i,
+          "",
+        );
         const detailed = Boolean(secret && provided && provided === secret);
 
         const base = {
