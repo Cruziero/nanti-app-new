@@ -743,6 +743,9 @@ PRINSIP:
 14. Untuk typo yang jelas, perbaiki diam-diam. Jangan bertanya hanya karena typo.
 15. Current message selalu mengalahkan learned memory lama.
 16. Jika recent chat menunjukkan NANTI baru saja menanyakan SATU klarifikasi untuk sebuah item, jawaban pendek berikutnya seperti "jam 10 pagi", "Budi", "Jumat", atau "iya" harus diperlakukan sebagai jawaban atas klarifikasi itu — bukan task baru.
+17. Data pada bagian UPCOMING GOOGLE CALENDAR adalah fakta jadwal milik pengguna, BUKAN task NANTI. Pertanyaan tentang meeting/jadwal/calendar harus mode=answer.
+18. Jangan membuat task dari event Calendar yang sudah ada. Hanya mode=create bila pesan TERKINI secara eksplisit meminta membuat/menyimpan tindakan baru.
+19. Gunakan Calendar untuk mendeteksi benturan atau konteks waktu, tetapi jangan mengarang free time di luar event yang tersedia.
 
 CONTOH:
 RAW: "Saya beosok harus oulang dr puncak jam 10 pagi"
@@ -763,6 +766,10 @@ RAW: "Pak B belum bales"
 
 RAW: "Pak B itu Budi"
 => mode=teach_language, learningType=entity_alias, learningEntityType=person.
+
+RAW: "besok meeting gue apa aja?"
+WORKSPACE MEMORY: UPCOMING GOOGLE CALENDAR berisi "Weekly Ops" besok 10:00.
+=> mode=answer; jawab dari Calendar; items=[]; jangan create duplicate task.
 
 FORMAT JSON:
 {
