@@ -116,33 +116,52 @@ function parseTime(text: string): string | null {
   return null;
 }
 
-function parseMonthDay(text: string): { month: number; day: number } | null {
+function parseMonthDay(
+  text: string,
+): { month: number; day: number | null; year?: number } | null {
   const lower = text.toLowerCase();
 
-  // Try Indonesian: "28 agustus", "tanggal 28 agustus", "28 agustus 2026"
-  for (let i = 0; i < MONTH_NAMES_ID.length; i++) {
-    if (lower.includes(MONTH_NAMES_ID[i]!)) {
-      const dayMatch = /(\d{1,2})/.exec(lower.replace(MONTH_NAMES_ID[i]!, ""));
-      if (dayMatch) {
-        return { month: i + 1, day: parseInt(dayMatch[1], 10) };
+  // The day number must sit directly beside the month name ("28 agustus" / "agustus 28")
+  // and the month must be a whole word. This stops an unrelated digit
+  // ("jam 10 di bulan mei") from being read as a day, and stops "may" from matching
+  // inside "maybe". An optional 4-digit year may follow: "28 agustus 2026".
+  const tryMonths = (names: string[]) => {
+    for (let i = 0; i < names.length; i++) {
+      const name = names[i]!;
+      const before = new RegExp(`\\b(\\d{1,2})\\s+${name}\\b(?:\\s+(\\d{4})\\b)?`).exec(lower);
+      if (before) {
+        return {
+          month: i + 1,
+          day: parseInt(before[1]!, 10),
+          year: before[2] ? parseInt(before[2], 10) : undefined,
+        };
+      }
+      const after = new RegExp(
+        `\\b${name}\\b(?:\\s+(\\d{1,2})\\b)?(?:\\s+(\\d{4})\\b)?`,
+      ).exec(lower);
+      // Require a day or a year next to the month; a bare month ("saya suka mei")
+      // is not a date.
+      if (after && (after[1] !== undefined || after[2] !== undefined)) {
+        return {
+          month: i + 1,
+          day: after[1] ? parseInt(after[1], 10) : null,
+          year: after[2] ? parseInt(after[2], 10) : undefined,
+        };
       }
     }
-  }
+    return null;
+  };
 
-  // Try English: "august 28", "28 august"
-  for (let i = 0; i < MONTH_NAMES_EN.length; i++) {
-    if (lower.includes(MONTH_NAMES_EN[i]!)) {
-      const dayMatch = /(\d{1,2})/.exec(lower.replace(MONTH_NAMES_EN[i]!, ""));
-      if (dayMatch) {
-        return { month: i + 1, day: parseInt(dayMatch[1], 10) };
-      }
-    }
-  }
+  const indonesian = tryMonths(MONTH_NAMES_ID);
+  if (indonesian) return indonesian;
 
-  // Try "tanggal 28" or just "28" with implied month
+  const english = tryMonths(MONTH_NAMES_EN);
+  if (english) return english;
+
+  // Try "tanggal 28" with implied month
   const dateMatch = /tanggal\s+(\d{1,2})/.exec(lower);
   if (dateMatch) {
-    return { month: -1, day: parseInt(dateMatch[1], 10) }; // month=-1 means current month
+    return { month: -1, day: parseInt(dateMatch[1]!, 10) }; // month=-1 means current month
   }
 
   return null;
@@ -228,15 +247,17 @@ export function parseIndonesianDate(text: string): DateParseResult {
   const monthDay = parseMonthDay(lower);
   if (monthDay) {
     const impliedMonth = monthDay.month === -1;
+    const explicitYear = monthDay.year;
     let m = impliedMonth ? new Date().getMonth() + 1 : monthDay.month;
-    let y = year;
-    const day = monthDay.day;
+    let y = explicitYear ?? year;
+    const day = monthDay.day ?? 1;
     const build = () =>
       `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     let dateStr = build();
 
+    // Only roll forward when the user did not give an explicit year.
     // Day already passed: roll to next month (implied) or next year (explicit month)
-    if (dateStr < today) {
+    if (explicitYear === undefined && dateStr < today) {
       if (impliedMonth) {
         m += 1;
         if (m > 12) {

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "total": 133,
+  "total": 141,
   "normalize": [
     {
       "id": "norm-01",
@@ -338,6 +338,52 @@
       "input": "tanggal 10",
       "hasDate": true,
       "dateValid": true
+    },
+    {
+      "id": "date-33",
+      "input": "28 agustus 2026 jam 10 pagi",
+      "date": "2026-08-28",
+      "time": "10:00",
+      "dateValid": true
+    },
+    {
+      "id": "date-34",
+      "input": "agustus 2026",
+      "date": "2026-08-01",
+      "dateValid": true
+    },
+    {
+      "id": "date-35",
+      "input": "3 desember 2027",
+      "date": "2027-12-03",
+      "dateValid": true
+    },
+    {
+      "id": "date-36",
+      "input": "rapat 5 maret 2028",
+      "date": "2028-03-05",
+      "dateValid": true
+    },
+    {
+      "id": "date-37",
+      "input": "31 september 2026",
+      "date": "2026-10-31",
+      "dateValid": true
+    },
+    {
+      "id": "date-38",
+      "input": "maybe 5 orang",
+      "dateAbsent": true
+    },
+    {
+      "id": "date-39",
+      "input": "saya suka mei",
+      "dateAbsent": true
+    },
+    {
+      "id": "date-40",
+      "input": "meeting jam 10 di bulan mei",
+      "dateAbsent": true
     }
   ],
   "fallbackTask": [

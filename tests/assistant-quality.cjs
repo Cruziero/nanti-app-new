@@ -88,6 +88,9 @@ for (const fixture of fixtures.dateTime) {
     if (fixture.hasDate) {
       assert.ok(result.date, "expected a date");
     }
+    if (fixture.dateAbsent) {
+      assert.equal(result.date, null, "expected no date");
+    }
     if (fixture.weekday != null) {
       assert.ok(result.date, "expected weekday date");
       const [year, month, day] = result.date.split("-").map(Number);
