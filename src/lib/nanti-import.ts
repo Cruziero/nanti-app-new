@@ -326,17 +326,39 @@ export function chatMessageToFallbackItems(
   const normalized = normalizeCasualIndonesian(raw);
   if (/\?$/.test(raw)) return [];
 
-  const multi =
+  const actionThenDate =
     /^(?:(?:saya|aku|gue|gw)\s+)?(?:(?:mau|akan|harus|perlu|mesti|wajib)\s+)?(.+?)\s+(hari\s+ini|besok|lusa)\s+(?:jam|pukul)\s+(\d{1,2}(?:[.:]\d{2})?(?:\s*(?:pagi|siang|sore|malam))?)\s+(?:dan|,)\s+(?:jam|pukul)\s+(\d{1,2}(?:[.:]\d{2})?(?:\s*(?:pagi|siang|sore|malam))?)\s+(.+)$/i.exec(
       normalized,
     );
+  const dateThenAction =
+    /^(?:(?:saya|aku|gue|gw)\s+)?(hari\s+ini|besok|lusa)\s+(?:(?:mau|akan|harus|perlu|mesti|wajib)\s+)?(.+?)\s+(?:jam|pukul)\s+(\d{1,2}(?:[.:]\d{2})?(?:\s*(?:pagi|siang|sore|malam))?)\s+(?:dan|,)\s+(?:jam|pukul)\s+(\d{1,2}(?:[.:]\d{2})?(?:\s*(?:pagi|siang|sore|malam))?)\s+(.+)$/i.exec(
+      normalized,
+    );
+
+  const multi = actionThenDate
+    ? {
+        firstAction: actionThenDate[1]!,
+        sharedDate: actionThenDate[2]!,
+        firstTime: actionThenDate[3]!,
+        secondTime: actionThenDate[4]!,
+        secondAction: actionThenDate[5]!,
+      }
+    : dateThenAction
+      ? {
+          firstAction: dateThenAction[2]!,
+          sharedDate: dateThenAction[1]!,
+          firstTime: dateThenAction[3]!,
+          secondTime: dateThenAction[4]!,
+          secondAction: dateThenAction[5]!,
+        }
+      : null;
 
   if (multi) {
-    const firstAction = multi[1]!.trim();
-    const sharedDate = multi[2]!.trim();
-    const firstTime = multi[3]!.trim();
-    const secondTime = multi[4]!.trim();
-    const secondAction = multi[5]!.trim();
+    const firstAction = multi.firstAction.trim();
+    const sharedDate = multi.sharedDate.trim();
+    const firstTime = multi.firstTime.trim();
+    const secondTime = multi.secondTime.trim();
+    const secondAction = multi.secondAction.trim();
 
     const first = chatMessageToFallbackItem(
       `saya harus ${firstAction} ${sharedDate} jam ${firstTime}`,
