@@ -39,7 +39,12 @@ WhatsApp is intentionally **not part of the launch scope** and remains hidden be
 - [x] Calendar Connect / Status / Sync / Disconnect implemented.
 - [x] Calendar events feed Ask NANTI schedule context.
 - [x] Push configuration is checked at runtime; unavailable Push is shown as unavailable instead of failing silently.
+- [x] Push subscription ownership is protected against cross-account endpoint takeover.
+- [x] Customers can send an authenticated test Push from Settings after subscribing.
 - [x] Reminder worker skips Push safely if VAPID keys are absent.
+- [x] Supabase reminder dispatch is active every 5 minutes and recent HTTP responses are 200.
+- [x] WhatsApp delivery is hard-disabled server-side for launch, not merely hidden in the UI.
+- [x] Service-only tables have explicit deny-all client RLS policies in addition to revoked client grants.
 - [x] 146 deterministic messy-language cases remain a blocking CI gate.
 - [x] Live-model benchmark expanded to 66 behavior cases.
 - [x] Production AI smoke monitoring remains enabled.
@@ -76,8 +81,9 @@ These cannot be safely completed or verified through the currently authorized co
 ### Push
 
 - [ ] Verify `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` are configured in production.
-- [ ] Test Push permission/subscription on at least iOS Safari/PWA, Android Chrome, and desktop Chrome.
-- [ ] Confirm reminder cron authorization (`CRON_SECRET`) is configured.
+- [ ] Test Push permission/subscription on at least iOS Safari/PWA, Android Chrome, and desktop Chrome using the new **Send test notification** action.
+- [x] Reminder scheduler is active in Supabase every 5 minutes and is successfully reaching the production endpoint.
+- [x] Scheduler authorization is working against the production reminder endpoint.
 
 ## Pre-launch validation
 
@@ -100,5 +106,14 @@ These cannot be safely completed or verified through the currently authorized co
 ## Go / no-go
 
 Public launch is **NO-GO** until the owner/infrastructure Auth items are verified, especially production email delivery and leaked-password protection.
+
+### Verified production state
+
+- Reminder scheduler: active every 5 minutes with recent HTTP 200 responses.
+- Existing accounts: all current accounts are email-confirmed.
+- Calendar connections: no customer connection has been exercised yet.
+- Push subscriptions: no customer browser has been subscribed yet, so real-device delivery remains unverified.
+- AI production smoke runs: no stored production run yet at the time of this audit; deterministic CI remains green.
+- Supabase Auth security advisor: leaked-password protection remains the only actionable Auth warning available to this toolset.
 
 Once those configuration items and the fresh-account end-to-end checks pass, the current launch scope can move to GO without WhatsApp.
