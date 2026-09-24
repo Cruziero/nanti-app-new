@@ -22,17 +22,18 @@ function defaultReminderTime(due?: string, time?: string, offsetMinutes?: number
 
 function inferLocation(text: string) {
   const normalized = normalizeCasualIndonesian(text);
-  const match = /\b(?:dari|ke|di)\s+(.+?)(?=\s+(?:jam|pukul|tanggal|besok|hari\s+ini|lusa|untuk|dan)\b|$)/i.exec(
+  const match = /\b(?:dari|ke|di)\s+(.+?)(?=\s+(?:jam|pukul|tanggal|besok|besok|lusa|hari\s+ini|untuk|dan|dan)\b|$)/i.exec(
     normalized,
   );
   const candidate = match?.[1]?.trim().replace(/[.,!?;:]+$/, "");
   if (!candidate || /^(pak|bapak|bu|ibu|mbak|mas)\b/i.test(candidate)) return undefined;
+  if (/^(senin|selasa|rabu|kamis|jumat|sabtu|minggu|besok|lusa|hari)$/i.test(candidate)) return undefined;
   return candidate;
 }
 
 function inferRelatedPerson(text: string) {
   const normalized = normalizeCasualIndonesian(text);
-  const match = /\b(pak|bapak|bu|ibu|mbak|mas)\s+([A-Za-z][A-Za-z'-]*(?:\s+(?!(?:jam|pukul|tanggal|besok|hari|di|ke|dari|untuk|soal|tentang|via|lewat)\b)[A-Za-z][A-Za-z'-]*)?)/i.exec(
+  const match = /\b(pak|bapak|bu|ibu|mbak|mas|si)\s+([A-Za-z][A-Za-z'-]*(?:\s+(?!(?:jam|pukul|tanggal|besok|hari|di|ke|dari|untuk|soal|tentang|via|lewat)\b)[A-Za-z][A-Za-z'-]*)?)/i.exec(
     normalized,
   );
   if (!match) return undefined;

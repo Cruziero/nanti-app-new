@@ -55,6 +55,7 @@ const EXPANSIONS: Record<string, string> = {
   mnt: "menit",
   jmt: "jumat",
   sen: "senin",
+  blg: "bilang",
 };
 
 const FUZZY_KEYWORDS = [
