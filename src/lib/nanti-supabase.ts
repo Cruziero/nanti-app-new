@@ -67,7 +67,10 @@ async function recordTaskPersonMemory(
 
   const occurredAt = new Date().toISOString();
   const eventType = input.eventType || "captured";
-  const dedupeKey = `${input.dedupePrefix || eventType}:${input.itemId}:${input.personId}`;
+  const dedupeKey =
+    eventType === "captured"
+      ? `capture:${input.itemId}`
+      : `${input.dedupePrefix || eventType}:${input.itemId}:${input.personId}`;
   const { error } = await supabase.from("person_activity").insert({
     user_id: input.userId,
     person_id: input.personId,
