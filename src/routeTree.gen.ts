@@ -51,6 +51,7 @@ import { Route as ApiDebugServerInfoRouteImport } from './routes/api/debug/serve
 import { Route as ApiInvoicesPdfRouteImport } from './routes/api/invoices/pdf'
 import { Route as ApiPushConfigRouteImport } from './routes/api/push/config'
 import { Route as ApiPushSubscribeRouteImport } from './routes/api/push/subscribe'
+import { Route as ApiPushTestRouteImport } from './routes/api/push/test'
 import { Route as ApiPushUnsubscribeRouteImport } from './routes/api/push/unsubscribe'
 import { Route as ApiRemindersCompleteRouteImport } from './routes/api/reminders/complete'
 import { Route as ApiRemindersSnoozeRouteImport } from './routes/api/reminders/snooze'
@@ -269,6 +270,11 @@ const ApiPushSubscribeRoute = ApiPushSubscribeRouteImport.update({
   path: '/api/push/subscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPushTestRoute = ApiPushTestRouteImport.update({
+  id: '/api/push/test',
+  path: '/api/push/test',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPushUnsubscribeRoute = ApiPushUnsubscribeRouteImport.update({
   id: '/api/push/unsubscribe',
   path: '/api/push/unsubscribe',
@@ -348,6 +354,7 @@ export interface FileRoutesByFullPath {
   '/api/invoices/pdf': typeof ApiInvoicesPdfRoute
   '/api/push/config': typeof ApiPushConfigRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
+  '/api/push/test': typeof ApiPushTestRoute
   '/api/push/unsubscribe': typeof ApiPushUnsubscribeRoute
   '/api/reminders/complete': typeof ApiRemindersCompleteRoute
   '/api/reminders/snooze': typeof ApiRemindersSnoozeRoute
@@ -398,6 +405,7 @@ export interface FileRoutesByTo {
   '/api/invoices/pdf': typeof ApiInvoicesPdfRoute
   '/api/push/config': typeof ApiPushConfigRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
+  '/api/push/test': typeof ApiPushTestRoute
   '/api/push/unsubscribe': typeof ApiPushUnsubscribeRoute
   '/api/reminders/complete': typeof ApiRemindersCompleteRoute
   '/api/reminders/snooze': typeof ApiRemindersSnoozeRoute
@@ -450,6 +458,7 @@ export interface FileRoutesById {
   '/api/invoices/pdf': typeof ApiInvoicesPdfRoute
   '/api/push/config': typeof ApiPushConfigRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
+  '/api/push/test': typeof ApiPushTestRoute
   '/api/push/unsubscribe': typeof ApiPushUnsubscribeRoute
   '/api/reminders/complete': typeof ApiRemindersCompleteRoute
   '/api/reminders/snooze': typeof ApiRemindersSnoozeRoute
@@ -503,6 +512,7 @@ export interface FileRouteTypes {
     | '/api/invoices/pdf'
     | '/api/push/config'
     | '/api/push/subscribe'
+    | '/api/push/test'
     | '/api/push/unsubscribe'
     | '/api/reminders/complete'
     | '/api/reminders/snooze'
@@ -553,6 +563,7 @@ export interface FileRouteTypes {
     | '/api/invoices/pdf'
     | '/api/push/config'
     | '/api/push/subscribe'
+    | '/api/push/test'
     | '/api/push/unsubscribe'
     | '/api/reminders/complete'
     | '/api/reminders/snooze'
@@ -604,6 +615,7 @@ export interface FileRouteTypes {
     | '/api/invoices/pdf'
     | '/api/push/config'
     | '/api/push/subscribe'
+    | '/api/push/test'
     | '/api/push/unsubscribe'
     | '/api/reminders/complete'
     | '/api/reminders/snooze'
@@ -640,6 +652,7 @@ export interface RootRouteChildren {
   ApiInvoicesPdfRoute: typeof ApiInvoicesPdfRoute
   ApiPushConfigRoute: typeof ApiPushConfigRoute
   ApiPushSubscribeRoute: typeof ApiPushSubscribeRoute
+  ApiPushTestRoute: typeof ApiPushTestRoute
   ApiPushUnsubscribeRoute: typeof ApiPushUnsubscribeRoute
   ApiRemindersCompleteRoute: typeof ApiRemindersCompleteRoute
   ApiRemindersSnoozeRoute: typeof ApiRemindersSnoozeRoute
@@ -943,6 +956,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPushSubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/push/test': {
+      id: '/api/push/test'
+      path: '/api/push/test'
+      fullPath: '/api/push/test'
+      preLoaderRoute: typeof ApiPushTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/push/unsubscribe': {
       id: '/api/push/unsubscribe'
       path: '/api/push/unsubscribe'
@@ -1082,6 +1102,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiInvoicesPdfRoute: ApiInvoicesPdfRoute,
   ApiPushConfigRoute: ApiPushConfigRoute,
   ApiPushSubscribeRoute: ApiPushSubscribeRoute,
+  ApiPushTestRoute: ApiPushTestRoute,
   ApiPushUnsubscribeRoute: ApiPushUnsubscribeRoute,
   ApiRemindersCompleteRoute: ApiRemindersCompleteRoute,
   ApiRemindersSnoozeRoute: ApiRemindersSnoozeRoute,
