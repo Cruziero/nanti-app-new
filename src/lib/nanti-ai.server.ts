@@ -132,7 +132,16 @@ async function chatGemini(
     if (!lastError.retryable || attempt >= GEMINI_MAX_ATTEMPTS) {
       throw lastError;
     }
-    await wait(300 * attempt);
+
+    let retryDelayMs = 500 * attempt;
+    if (response?.status === 429) {
+      const retryAfter = response.headers?.get?.("retry-after");
+      const retryAfterSeconds = retryAfter ? Number(retryAfter) : Number.NaN;
+      retryDelayMs = Number.isFinite(retryAfterSeconds)
+        ? Math.max(500, Math.min(10_000, retryAfterSeconds * 1000))
+        : 2_500;
+    }
+    await wait(retryDelayMs);
   }
 
   if (!response?.ok) {
@@ -871,8 +880,19 @@ Return one decision only.`,
     parsed?.mode && allowed.has(parsed.mode as AssistantTurnMode)
       ? (parsed.mode as AssistantTurnMode)
       : "clarify";
+  const targetModes = new Set<AssistantTurnMode>([
+    "complete",
+    "dismiss",
+    "reschedule",
+    "set_reminder",
+    "edit",
+    "mark_followed_up",
+    "mark_received",
+  ]);
   const targetId =
-    typeof parsed?.targetId === "string" && ids.has(parsed.targetId)
+    targetModes.has(mode) &&
+    typeof parsed?.targetId === "string" &&
+    ids.has(parsed.targetId)
       ? parsed.targetId
       : null;
 
