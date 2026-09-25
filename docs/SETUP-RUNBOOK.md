@@ -21,7 +21,15 @@ Without this NANTI runs but cannot extract or answer anything.
 5. **Deployments** tab → top deployment → **⋯** → **Redeploy**.
 
 Verify: open https://nanti-app-new.vercel.app/api/health → `"ok": true`.
-Then https://nanti-app-new.vercel.app/api/health?key=YOUR_CRON_SECRET (after step 4) → all `checks` `true`.
+
+After Step 4, verify the detailed integration checks with an Authorization header:
+
+```bash
+curl https://nanti-app-new.vercel.app/api/health \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
+```
+
+The detailed response should show the configured integrations as `true`.
 
 ---
 
@@ -29,57 +37,32 @@ Then https://nanti-app-new.vercel.app/api/health?key=YOUR_CRON_SECRET (after ste
 
 Open https://supabase.com/dashboard → project **qyfywekaorkwpzrvbrth**.
 
-### 2.1 Run the backfill migration
+### 2.1 Database schema — completed on production
 
-I checked the live database against the migration folder. **Three of the 25 migrations never ran**, and they are the ones that create `reminders`, `invoices`, `ai_clarifications`, `blog_articles`, `audit_log` and friends.
+The live Supabase project was audited on 2026-09-25. Nine tables were genuinely missing because historical migrations had drifted from the deployed schema.
 
-Missing right now:
+This is now fixed in production. The missing tables were created with RLS and the two missing foreign-key indexes were added. The blog was seeded with 5 published articles.
 
-| Missing table | Why it matters |
-|---|---|
-| `reminders` | Reminders screen / scheduled alerts |
-| `ai_clarifications` | The assistant's ask-then-clarify loop |
-| `invoices` | Invoices screen |
-| `blog_articles` | Blog (currently falls back to static files, which is the PGRST205 you saw) |
-| `audit_log`, `user_preferences`, `reminder_preferences`, `notification_devices`, `whatsapp_connections` | Supporting tables |
+For future environments, the corrective migration is:
 
-1. Open **SQL Editor** → **New query**.
-2. Paste the entire contents of `supabase/manual/20260925_backfill_missing_tables.sql`.
-3. **Run**.
+`supabase/migrations/20260925021000_surgical_launch_backfill.sql`
 
-That file is the three migrations that never ran, made safe to re-run (it only differs by `CREATE INDEX IF NOT EXISTS` and a `DROP POLICY IF EXISTS` before each policy; the seed uses `ON CONFLICT DO NOTHING`). Running it twice is harmless.
+**Do not paste or run** `supabase/manual/20260925_backfill_missing_tables.sql` on the current production project. It contains old definitions for tables that have since evolved and is retained only as historical audit material.
 
-4. Confirm it worked. Run this:
+Verified production objects now include:
 
-```sql
-select 'table:' || table_name as what
-from information_schema.tables
-where table_schema = 'public'
-  and table_name in ('reminders','invoices','ai_clarifications','blog_articles','audit_log')
-union all
-select 'schema:' || schema_name
-from information_schema.schemata
-where schema_name = 'private'
-union all
-select 'fn:' || routine_name
-from information_schema.routines
-where routine_schema = 'private'
-order by 1;
-```
+- `reminders`
+- `invoices`
+- `ai_clarifications`
+- `blog_articles`
+- `audit_log`
+- `user_preferences`
+- `reminder_preferences`
+- `notification_devices`
+- `whatsapp_connections`
+- private `dispatch_nanti_reminders` function
 
-Expected: 5 `table:` rows, 1 `schema:private`, 1 `fn:dispatch_nanti_reminders`.
-
-If the `private` schema / `fn:` rows are missing, also paste and run `supabase/migrations/20260922162000_supabase_reminder_cron.sql` (it installs the 5-minute reminder dispatcher). It is also safe to run once only; do not run it twice.
-
-> Do not run the other migration files. They are already applied. The only exceptions are the cron file mentioned above and the optional 2.1b below.
-
-### 2.1b Optional: RLS performance pass
-
-`supabase/migrations/20260924180453_optimize_core_rls_initplans.sql` (added upstream after my audit) wraps 32 row-level-security predicates in a subquery so Postgres does not re-evaluate them per row. It only affects speed, not correctness.
-
-Paste and run it **as its own query**, separate from 2.1, so nothing else can be affected either way. It is idempotent.
-
-If it fails on a `whatsapp_configs` policy (those policies were created outside the migration files), Postgres rolls the whole script back, meaning no performance change and no damage either. Skip it and move on; it does not affect correctness.
+The reminder dispatcher is active every 5 minutes and recent requests return HTTP 200.
 
 ### 2.2 Auth URLs
 
@@ -104,7 +87,7 @@ https://supabase.com/dashboard/project/qyfywekaorkwpzrvbrth/auth/providers/email
 
 ```sql
 update auth.users
-set raw_user_meta_data = coalesce(raw_user_meta_data, '{}'::jsonb) || '{"role":"admin"}'::jsonb
+set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"admin"}'::jsonb
 where email = 'YOUR_EMAIL@example.com';
 ```
 
@@ -198,14 +181,15 @@ Locally, the repo's own gate (all tests plus build):
 cmd /c "npm run verify:launch"
 ```
 
-Then after Step 4 and a redeploy, in the browser:
+Then after Step 4 and a redeploy:
 
-```
-https://nanti-app-new.vercel.app/api/health
-https://nanti-app-new.vercel.app/api/health?key=<your CRON_SECRET>
+```bash
+curl https://nanti-app-new.vercel.app/api/health
+curl https://nanti-app-new.vercel.app/api/health \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
 ```
 
-Second link returns `checks`:
+The authenticated request returns `checks`:
 
 ```json
 { "supabase": true, "ai": true, "aiModel": "gemini-3.5-flash", "googleCalendar": true, "push": true, "cron": true }
