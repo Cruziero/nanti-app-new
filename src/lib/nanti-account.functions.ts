@@ -37,6 +37,10 @@ export const exportMyNantiData = createServerFn({ method: "GET" })
       productEvents,
       calendarEvents,
       calendarConnection,
+      whatsappMessages,
+      whatsappLink,
+      whatsappConfig,
+      pushSubscriptions,
     ] = await Promise.all([
       readAllExportPages((from, to) =>
         supabase.from("tasks").select("*").eq("user_id", userId).order("id").range(from, to),
@@ -141,6 +145,34 @@ export const exportMyNantiData = createServerFn({ method: "GET" })
         )
         .eq("user_id", userId)
         .maybeSingle(),
+      readAllExportPages((from, to) =>
+        supabase
+          .from("whatsapp_messages")
+          .select(
+            "id,external_message_id,direction,message_type,content,from_number,to_number,status,error,created_at,updated_at",
+          )
+          .eq("user_id", userId)
+          .order("id")
+          .range(from, to),
+      ),
+      supabase
+        .from("whatsapp_user_links")
+        .select("phone_number,verified_at,created_at,updated_at")
+        .eq("user_id", userId)
+        .maybeSingle(),
+      supabase
+        .from("whatsapp_configs")
+        .select("phone_number_id,business_account_id,is_active,created_at,updated_at")
+        .eq("user_id", userId)
+        .maybeSingle(),
+      readAllExportPages((from, to) =>
+        supabase
+          .from("push_subscriptions")
+          .select("id,user_agent,created_at,updated_at")
+          .eq("user_id", userId)
+          .order("id")
+          .range(from, to),
+      ),
     ]);
 
     const results = [
@@ -161,6 +193,10 @@ export const exportMyNantiData = createServerFn({ method: "GET" })
       productEvents,
       calendarEvents,
       calendarConnection,
+      whatsappMessages,
+      whatsappLink,
+      whatsappConfig,
+      pushSubscriptions,
     ];
     const firstError = results.find((result) => result.error)?.error;
     if (firstError) throw firstError;
@@ -189,6 +225,10 @@ export const exportMyNantiData = createServerFn({ method: "GET" })
         product_events: productEvents.data || [],
         calendar_events: calendarEvents.data || [],
         calendar_connection: calendarConnection.data || null,
+        whatsapp_messages: whatsappMessages.data || [],
+        whatsapp_link: whatsappLink.data || null,
+        whatsapp_config: whatsappConfig.data || null,
+        push_subscriptions: pushSubscriptions.data || [],
       },
     };
   });

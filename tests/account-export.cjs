@@ -130,8 +130,45 @@ test("account export scopes every page to the caller and excludes Calendar token
     if (request.table === "calendar_connections") {
       assert.ok(!request.columns.includes("token"));
       assert.notEqual(request.columns, "*");
+    } else if (request.table === "whatsapp_configs") {
+      assert.ok(!request.columns.includes("access_token"));
+      assert.ok(!request.columns.includes("verify_token"));
+      assert.ok(!request.columns.includes("app_secret"));
+      assert.notEqual(request.columns, "*");
+    } else if (request.table === "whatsapp_user_links") {
+      assert.ok(!request.columns.includes("link_code"));
+      assert.notEqual(request.columns, "*");
+    } else if (request.table === "push_subscriptions") {
+      assert.ok(!request.columns.includes("endpoint"));
+      assert.ok(!request.columns.includes("p256dh"));
+      assert.ok(!request.columns.includes("auth"));
+      assert.notEqual(request.columns, "*");
+      assert.equal(request.order, "id");
     } else if (request.table !== "user_settings") {
       assert.equal(request.order, request.table === "daily_briefings" ? "brief_date" : "id");
     }
   }
+  assert.deepEqual(Object.keys(result.data).sort(), [
+    "ai_messages",
+    "calendar_connection",
+    "calendar_events",
+    "conversations",
+    "daily_briefings",
+    "entity_aliases",
+    "inbox_items",
+    "notifications",
+    "people",
+    "person_activity",
+    "product_events",
+    "projects",
+    "push_subscriptions",
+    "tasks",
+    "user_language_memory",
+    "user_routines",
+    "user_settings",
+    "waiting_items",
+    "whatsapp_config",
+    "whatsapp_link",
+    "whatsapp_messages",
+  ]);
 });
