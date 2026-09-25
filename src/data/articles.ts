@@ -37,7 +37,7 @@ Instead of trying to remember everything, let NANTI do it for you:
 
 Forward a conversation and NANTI keeps track of what was promised.
 
-## Try It
+## See It in Practice
 
 NANTI is free to start. Forward your first conversation and see what it catches.
     `,
@@ -64,7 +64,7 @@ Don't rely on WhatsApp's search. Forward important conversations to a tool like 
 
 ## 4. Set Reminders for Follow-Ups
 
-Every time someone promises something, set a reminder. Better yet, let AI do it for you.
+Every time someone promises something, set a reminder. Better yet, let NANTI do it for you.
 
 ## 5. Review Your Commitments Weekly
 
