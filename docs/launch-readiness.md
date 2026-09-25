@@ -83,7 +83,9 @@ Verified on production on 2026-09-25:
 
 These are the only items still preventing an unrestricted public launch.
 
-### 1. Production email / account recovery — BLOCKER
+### 1. Production email / account recovery - BLOCKER
+
+Supabase's default outbound is **not** broken: `POST /auth/v1/signup` returns 200 with `confirmation_sent_at`, and `generate_link` type `recovery` returns 200 with `action_link` and `recovery_sent_at`. `smtp_host` is `null`, so sends go through Supabase's shared relay. What remains unproven is inbox arrival and whether that relay holds up under real signup volume, so treat this as "not yet confirmed" rather than "failing".
 
 - [ ] Configure a real transactional email provider for Supabase Auth.
 - [ ] Verify a new-user confirmation email reaches a real inbox if confirmation is enabled.
@@ -92,7 +94,9 @@ These are the only items still preventing an unrestricted public launch.
 
 A Resend integration is available and can be used once connected.
 
-### 2. Gemini billing / privacy capacity — BLOCKER
+Auth redirect URLs were also wrong and are now fixed: `uri_allow_list` contained only `/app/today`, which would have rejected the `/welcome`, `/auth/reset-password` and `/api/auth/google` redirects the app actually uses. It now allows `/*`, `/welcome`, `/auth/reset-password`, `/api/auth/google`, `/app/today`.
+
+### 2. Gemini billing / privacy capacity - BLOCKER
 
 Production currently has a working primary + fallback model path, but public customer conversation data should not rely on Gemini Free Tier.
 
@@ -105,16 +109,16 @@ Useful checks:
 - https://ai.google.dev/gemini-api/docs/billing
 - https://ai.google.dev/gemini-api/docs/rate-limits
 
-### 3. Supabase built-in leaked-password protection — HARDENING
+### 3. Supabase built-in leaked-password protection - HARDENING
 
-Supabase's advisor still reports its built-in leaked-password protection disabled on the current plan.
+Supabase's advisor still reports its built-in leaked-password protection disabled on the current plan. Attempting to enable it through the Management API returns **402**, so it is a paid-plan feature and cannot be turned on from Free.
 
 - [x] NANTI mitigates this in the product by checking new passwords against the HIBP corpus and requiring 12+ characters.
 - [ ] When the Supabase plan permits it, also enable Supabase Auth Leaked Password Protection for defense in depth.
 
 This no longer blocks internal beta, but should be enabled before a larger public rollout when available.
 
-### 4. Final manual browser/device acceptance — BLOCKER FOR BROAD PROMOTION
+### 4. Final manual browser/device acceptance - BLOCKER FOR BROAD PROMOTION
 
 Automated production E2E is green, but the following UI behavior still requires a real browser/device:
 
@@ -127,7 +131,7 @@ Automated production E2E is green, but the following UI behavior still requires 
 
 Calendar and Push do **not** block the initial launch because their public surfaces remain hidden.
 
-### 5. Legal / Indonesian operator setup — BLOCKER
+### 5. Legal / Indonesian operator setup - BLOCKER
 
 - [ ] Identify the legal operator/entity and registered contact details used for NANTI.
 - [ ] Have Indonesian counsel review the Terms, Privacy Policy, signup consent wording and consumer-liability language.
@@ -140,9 +144,9 @@ See `docs/LEGAL-LAUNCH-CHECKLIST.md`.
 
 ## Non-blocking post-launch / later activation
 
-- [ ] Add `GEMINI_API_KEY` to GitHub Actions if the nightly 66-case external live-model benchmark should run there. Production smoke monitoring already runs independently.
-- [ ] Validate Google Calendar with a real OAuth account before enabling `CALENDAR_LAUNCH_ENABLED`.
-- [ ] Validate Push on supported real devices before enabling `PUSH_LAUNCH_ENABLED`.
+- [ ] Add `GEMINI_API_KEY` to GitHub Actions if the nightly 66-case external live-model benchmark should run there. Production smoke monitoring already runs independently. This needs a GitHub PAT with the `repo` scope; the API rejects unauthenticated writes to repository secrets, so it cannot be done without owner credentials.
+- [ ] Validate Google Calendar with a real OAuth account before enabling `CALENDAR_LAUNCH_ENABLED`. The redirect URI is **confirmed missing**: `https://nanti-app-new.vercel.app/api/auth/google` returns Google's `redirect_uri_mismatch`, so Calendar Connect fails at Google. `https://qyfywekaorkwpzrvbrth.supabase.co/auth/v1/callback` is already registered, so Google sign-in is unaffected. Add the URI at https://console.cloud.google.com/apis/credentials before enabling the flag.
+- [ ] Validate Push on supported real devices before enabling `PUSH_LAUNCH_ENABLED`. `VAPID_PUBLIC_KEY`, `VITE_VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` are all set and `/api/health` reports `push: true`; only real-device delivery is unverified.
 - [ ] Finish WhatsApp Cloud API operational verification before enabling `WHATSAPP_LAUNCH_ENABLED`.
 
 ## Release decision
