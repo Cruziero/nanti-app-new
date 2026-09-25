@@ -27,10 +27,11 @@ export const Route = createFileRoute("/api/cron/assistant-eval")({
           const fixtures = selectDailyAssistantSmokeFixtures(new Date());
           const results: EvalResult[] = [];
 
-          for (let index = 0; index < fixtures.length; index += 2) {
-            const pair = fixtures.slice(index, index + 2);
-            const batch = await Promise.all(pair.map((fixture) => evaluateFixture(fixture)));
-            results.push(...batch);
+          for (let index = 0; index < fixtures.length; index += 1) {
+            results.push(await evaluateFixture(fixtures[index]!));
+            if (index < fixtures.length - 1) {
+              await wait(350);
+            }
           }
 
           const passed = results.filter((result) => result.passed).length;
@@ -114,14 +115,49 @@ type EvalResult = {
 };
 
 async function evaluateFixture(fixture: AssistantSmokeFixture): Promise<EvalResult> {
-  const result = await runAssistantTurn({
-    rawMessage: fixture.message,
-    normalizedMessage:
-      fixture.normalized || normalizeCasualIndonesian(fixture.message),
-    workspaceContext: fixture.workspace || "",
-    itemContext: fixture.items || [],
-    recentConversation: fixture.recent || "",
-  });
+  let result: Awaited<ReturnType<typeof runAssistantTurn>>;
+  try {
+    result = await runAssistantTurn({
+      rawMessage: fixture.message,
+      normalizedMessage:
+        fixture.normalized || normalizeCasualIndonesian(fixture.message),
+      workspaceContext: fixture.workspace || "",
+      itemContext: fixture.items || [],
+      recentConversation: fixture.recent || "",
+    });
+  } catch (error) {
+    const coded = error as Error & {
+      providerCode?: string;
+      providerStatus?: number;
+    };
+    const provider = coded.providerCode || "UNKNOWN";
+    const status = coded.providerStatus ? ` status=${coded.providerStatus}` : "";
+    const evaluated: EvalResult = {
+      id: fixture.id,
+      critical: Boolean(fixture.critical),
+      input: fixture.message,
+      expected: fixture.expect,
+      actual: {
+        mode: "provider_error",
+        targetId: null,
+        confidence: 0,
+        reminderOffsetMinutes: null,
+        learningType: null,
+        learningEntityType: null,
+        items: [],
+        reply: "",
+      },
+      passed: false,
+      errors: [`provider error ${provider}${status}`],
+    };
+    console.error("Assistant smoke provider failure:", {
+      id: fixture.id,
+      critical: evaluated.critical,
+      provider,
+      status: coded.providerStatus,
+    });
+    return evaluated;
+  }
 
   const errors = scoreFixture(fixture, result);
   const evaluated: EvalResult = {
@@ -217,6 +253,10 @@ function scoreFixture(
   }
 
   return errors;
+}
+
+function wait(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
 
 async function isAuthorized(
