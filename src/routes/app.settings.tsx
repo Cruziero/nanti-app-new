@@ -82,12 +82,16 @@ const toneOptions: { id: ConversationTone; label: string }[] = [
   { id: "direct", label: "Direct" },
 ];
 
+const PUSH_LAUNCH_ENABLED = false;
+const CALENDAR_LAUNCH_ENABLED = false;
+const WHATSAPP_LAUNCH_ENABLED = false;
+
 const channelOpts: { id: ReminderChannel; label: string }[] = [
-  { id: "push", label: "Push Notifications" },
+  ...(PUSH_LAUNCH_ENABLED
+    ? [{ id: "push" as ReminderChannel, label: "Push Notifications" }]
+    : []),
   { id: "in_app", label: "In-app" },
 ];
-
-const WHATSAPP_LAUNCH_ENABLED = false;
 
 type WhatsAppLinkState = {
   phone_number?: string | null;
@@ -214,6 +218,10 @@ function SettingsPage() {
   }, [refreshAssistantQuality]);
 
   const refreshCalendar = useCallback(async () => {
+    if (!CALENDAR_LAUNCH_ENABLED) {
+      setCalendarLoading(false);
+      return;
+    }
     try {
       const result = await fetchGoogleCalendarStatus();
       setCalendarStatus(result);
@@ -1109,10 +1117,10 @@ function SettingsPage() {
               </div>
             )}
           </div>
-          <div className="py-3">
+          <div className={CALENDAR_LAUNCH_ENABLED ? "py-3" : "hidden"}>
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
-                <p className="text-[13.5px]">Google Calendar</p>
+                <p className="text-[13.5px]">Google Calendar <span className="text-[10px] text-muted-foreground">Beta</span></p>
                 <p className="text-[12px] text-muted-foreground">
                   {calendarStatus?.connected
                     ? calendarStatus.last_synced_at
@@ -1173,7 +1181,7 @@ function SettingsPage() {
         </div>
       </section>
 
-      <section className="mb-10">
+      <section className={PUSH_LAUNCH_ENABLED ? "mb-10" : "hidden"}>
         <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground/70">
           Notifications
         </h2>
