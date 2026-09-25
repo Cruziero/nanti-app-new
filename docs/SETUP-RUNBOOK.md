@@ -2,6 +2,23 @@
 
 Six steps, in order. Everything else in code is done. Work top to bottom.
 
+## Status (2026-09-25)
+
+Already configured, nothing to do:
+
+- **Step 1** done. `GEMINI_API_KEY`, `GEMINI_MODEL`, `VITE_SITE_URL`, `CRON_SECRET`, all three `VAPID_*` keys and `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` are set in Vercel, and a production deploy has gone out with them.
+- **Step 2** mostly done. Site URL, the redirect URLs (`/welcome`, `/auth/reset-password`, `/api/auth/google`) and the admin role are set in Supabase. Google sign-in is already configured there too.
+- **Step 3** the Google client is configured on both sides. Only the redirect-URI list in Google Cloud is unverified, since that needs your Google login.
+- **Step 4** done, same values as Step 1.
+
+Still yours to do:
+
+- **SMTP** (Step 2.3). No mail provider is configured, so signup and password-reset emails will not deliver. This blocks real signups.
+- **Step 5**, the GitHub Actions secret.
+- **Step 6**, legal review.
+
+All six production `/api/health` checks return `true`.
+
 ---
 
 ## Step 1: Turn the AI on (Vercel)
@@ -9,7 +26,7 @@ Six steps, in order. Everything else in code is done. Work top to bottom.
 Without this NANTI runs but cannot extract or answer anything.
 
 1. Get a free key: https://aistudio.google.com/apikey → **Create API key** → copy it.
-2. Open Vercel env vars: https://vercel.com/dashboard → project **nanti-app-new** → **Settings** → **Environment Variables**.
+2. Open Vercel env vars: https://vercel.com/dashboard → project **nanti-aja** (the project name is `nanti-aja`, it serves the `nanti-app-new.vercel.app` domain) → **Settings** → **Environment Variables**.
 3. Add these (Production, Preview and Development):
 
 | Name | Value |
@@ -37,7 +54,7 @@ The detailed response should show the configured integrations as `true`.
 
 Open https://supabase.com/dashboard → project **qyfywekaorkwpzrvbrth**.
 
-### 2.1 Database schema — completed on production
+### 2.1 Database schema: completed on production
 
 The live Supabase project was audited on 2026-09-25. Nine tables were genuinely missing because historical migrations had drifted from the deployed schema.
 
@@ -78,7 +95,7 @@ https://supabase.com/dashboard/project/qyfywekaorkwpzrvbrth/auth/url-configurati
 https://supabase.com/dashboard/project/qyfywekaorkwpzrvbrth/auth/providers/email
 
 - **Confirm email**: decide ON (recommended, real sign-up) or OFF (if you want instant signup for testing). Both work with the current code.
-- **Leaked password protection**: ON. https://supabase.com/dashboard/project/qyfywekaorkwpzrvbrth/auth/settings, then scroll to *Password Protection*.
+- **Leaked password protection**: ON, but this needs a paid plan. The API returns HTTP 402 on the current Free plan, so leave it off until you upgrade. Settings: https://supabase.com/dashboard/project/qyfywekaorkwpzrvbrth/auth/settings, then scroll to *Password Protection*.
 - **SMTP**: https://supabase.com/dashboard/project/qyfywekaorkwpzrvbrth/auth/smtp. Switch from Inbucket to a real provider (Resend, Brevo, or a Gmail app password) so signup and reset mails actually deliver.
 
 ### 2.4 Make yourself admin
