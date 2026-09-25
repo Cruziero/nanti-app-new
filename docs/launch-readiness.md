@@ -1,6 +1,8 @@
 # NANTI Launch Readiness
 
-Updated: 2026-09-24
+Updated: 2026-09-25
+
+**Stage: Release Candidate / Pre-launch Hardening**
 
 ## Launch scope
 
@@ -31,7 +33,7 @@ WhatsApp is intentionally **not part of the launch scope** and remains hidden be
 - [x] Person activity is deduplicated and persisted.
 - [x] WhatsApp controls/reminder channel are hidden for launch.
 - [x] Development-only Restore demo data control removed from customer Settings.
-- [x] Customer data export is available from Settings without exposing OAuth tokens.
+- [x] Customer data export is available from Settings and now covers WhatsApp/push metadata without exposing OAuth, WhatsApp, link-code, or push delivery secrets.
 - [x] Customer account deletion removes the auth account and cascades NANTI-owned data.
 - [x] Google Calendar OAuth uses one-time account-bound state.
 - [x] Calendar sync paginates Google results and purges stale/cancelled events from NANTI schedule memory.
@@ -62,7 +64,7 @@ These cannot be safely completed or verified through the currently authorized co
 - [ ] Set `GEMINI_MODEL=gemini-3.5-flash` (optional; defaults to `gemini-3.5-flash`).
 - [ ] Remove the obsolete `OPENAI_API_KEY` variable from Vercel and local `.env`.
 - [ ] Confirm one Ask NANTI create + answer flow works in production after deploy.
-- [ ] Add `GEMINI_API_KEY` as a GitHub Actions secret so the scheduled live eval runs (it skips cleanly without it).
+- [ ] Add `GEMINI_API_KEY` as a GitHub Actions secret. The 2026-09-25 scheduled workflow completed but explicitly skipped the live-model benchmark because this secret is absent.
 
 ### Supabase Auth
 
@@ -70,7 +72,7 @@ These cannot be safely completed or verified through the currently authorized co
 - [ ] Verify production SMTP / custom email provider for signup confirmation and password recovery. Do not rely on Supabase's default development email service for a public launch.
 - [ ] Verify the production Site URL and allowed redirect URLs include the final NANTI domain and welcome / password-recovery flows.
 - [ ] Decide whether email confirmation is required. The product code works in either mode.
-- [ ] Assign `app_metadata.role = admin` to the owner account if in-product AI Quality diagnostics should be visible. No account is currently marked admin.
+- [ ] Assign `app_metadata.role = admin` to the owner account if in-product AI Quality diagnostics should be visible. No account is currently marked admin. Use `raw_app_meta_data` when updating `auth.users`, not `raw_user_meta_data`.
 
 ### Google
 
@@ -100,7 +102,7 @@ These cannot be safely completed or verified through the currently authorized co
 - [ ] Run Ask NANTI core flows: create, answer, edit, reschedule, complete, reminder, Waiting follow-up, clarify.
 - [ ] Verify mobile layout and keyboard/composer behavior.
 - [ ] Confirm `https://<domain>/og-image.png` returns 200 and social previews render.
-- [ ] Open `https://<domain>/api/health?key=<CRON_SECRET>` and confirm all `checks` are `true`.
+- [ ] Call `https://<domain>/api/health` with `Authorization: Bearer <CRON_SECRET>` and confirm required `checks` are `true`.
 - [ ] Review production runtime errors after the test session.
 
 ## Go / no-go
@@ -113,7 +115,9 @@ Public launch is **NO-GO** until the owner/infrastructure Auth items are verifie
 - Existing accounts: all current accounts are email-confirmed.
 - Calendar connections: no customer connection has been exercised yet.
 - Push subscriptions: no customer browser has been subscribed yet, so real-device delivery remains unverified.
-- AI production smoke runs: no stored production run yet at the time of this audit; deterministic CI remains green.
-- Supabase Auth security advisor: leaked-password protection remains the only actionable Auth warning available to this toolset.
+- Database schema: the nine missing launch tables are now present with RLS; blog has 5 published rows; reminder dispatcher is still active.
+- AI production smoke runs: still 0 stored runs as of 2026-09-25 08:55 WIB; this monitor needs its first successful execution.
+- GitHub live-model eval: scheduled workflow currently skips because `GEMINI_API_KEY` is not configured as an Actions secret.
+- Supabase security advisor: leaked-password protection remains disabled. `pg_net` is also installed in `public`; treat that as post-launch infrastructure hygiene unless your Supabase configuration allows relocating it safely.
 
 Once those configuration items and the fresh-account end-to-end checks pass, the current launch scope can move to GO without WhatsApp.
