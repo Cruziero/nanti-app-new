@@ -25,6 +25,10 @@ function setup(env, responses) {
         return AbortSignal.timeout(ms);
       },
     },
+    setTimeout: (fn) => {
+      fn();
+      return 0;
+    },
     fetch: async (url, init) => {
       requests.push({ url, init });
       const next = responses.shift();
@@ -48,7 +52,9 @@ test("Gemini uses a header key, an escaped model path and a bounded request", as
   assert.ok(!h.requests[0].url.includes("fixture-key"));
   assert.equal(h.requests[0].init.headers["x-goog-api-key"], "fixture-key");
   assert.ok(h.requests[0].init.signal instanceof AbortSignal);
-  assert.deepEqual(h.timeouts, [20000]);
+  assert.deepEqual(h.timeouts, [30000]);
+  const body = JSON.parse(h.requests[0].init.body);
+  assert.equal(body.generationConfig.thinkingConfig.thinkingLevel, "low");
 });
 
 test("Gemini thought text does not appear in the answer", async () => {
@@ -70,8 +76,6 @@ for (const [name, response] of [
   ["missing finish reason", { candidates: [{ content: { parts: [{ text: "Partial" }] } }] }],
   ["missing candidates", {}],
   ["empty Gemini text", gemini("  ")],
-  ["provider quota error", { ok: false, status: 429 }],
-  ["provider timeout", new Error("TimeoutError")],
 ]) {
   test(`${name} rejects instead of returning successful output`, async () => {
     const h = setup({ GEMINI_API_KEY: "fixture-key" }, [response]);
@@ -80,12 +84,39 @@ for (const [name, response] of [
   });
 }
 
-test("Gemini errors do not leak upstream payloads or call another provider", async () => {
-  const h = setup({ GEMINI_API_KEY: "fixture-key", OPENAI_API_KEY: "unused" }, [
-    { ok: false, status: 503, text: async () => "sensitive upstream payload" },
+test("Gemini retries transient quota errors once", async () => {
+  const h = setup({ GEMINI_API_KEY: "fixture-key" }, [
+    { ok: false, status: 429 },
+    { ok: false, status: 429 },
+  ]);
+  await assert.rejects(h.api.askNanti("Test question", ""), /AI sedang bermasalah/);
+  assert.equal(h.requests.length, 2);
+  assert.deepEqual(h.timeouts, [30000, 30000]);
+});
+
+test("Gemini retries provider timeouts once", async () => {
+  const timeout = Object.assign(new Error("Timeout"), { name: "TimeoutError" });
+  const h = setup({ GEMINI_API_KEY: "fixture-key" }, [timeout, timeout]);
+  await assert.rejects(h.api.askNanti("Test question", ""), /AI sedang bermasalah/);
+  assert.equal(h.requests.length, 2);
+});
+
+test("Gemini does not retry permanent permission errors", async () => {
+  const h = setup({ GEMINI_API_KEY: "fixture-key" }, [
+    { ok: false, status: 403 },
   ]);
   await assert.rejects(h.api.askNanti("Test question", ""), /AI sedang bermasalah/);
   assert.equal(h.requests.length, 1);
+});
+
+test("Gemini errors do not leak upstream payloads or call another provider", async () => {
+  const failure = { ok: false, status: 503, text: async () => "sensitive upstream payload" };
+  const h = setup({ GEMINI_API_KEY: "fixture-key", OPENAI_API_KEY: "unused" }, [
+    failure,
+    failure,
+  ]);
+  await assert.rejects(h.api.askNanti("Test question", ""), /AI sedang bermasalah/);
+  assert.equal(h.requests.length, 2);
   assert.ok(!h.logs.join(" ").includes("sensitive upstream payload"));
 });
 
