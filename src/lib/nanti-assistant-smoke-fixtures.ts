@@ -155,6 +155,6 @@ export function selectDailyAssistantSmokeFixtures(now = new Date()) {
   const always = fixtures.filter((fixture) => fixture.always);
   const rotating = fixtures.filter((fixture) => !fixture.always);
   const dayIndex = Math.floor(now.getTime() / 86400000) % 3;
-  const selected = rotating.filter((_, index) => index % 3 === dayIndex).slice(0, 3);
+  const selected = rotating.filter((_, index) => index % 3 === dayIndex).slice(0, 1);
   return [...always, ...selected];
 }

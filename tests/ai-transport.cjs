@@ -136,3 +136,50 @@ test("no configured provider makes no network requests", async () => {
   await assert.rejects(h.api.askNanti("Test question", ""), /AI belum dikonfigurasi/);
   assert.equal(h.requests.length, 0);
 });
+
+
+test("answer mode never exposes a mutable target id", async () => {
+  const h = setup({ GEMINI_API_KEY: "fixture-key" }, [
+    gemini(JSON.stringify({
+      mode: "answer",
+      reply: "Pak Budi belum balas.",
+      confidence: 0.95,
+      targetId: "w1",
+      items: [],
+    })),
+  ]);
+  const result = await h.api.runAssistantTurn({
+    rawMessage: "pak b belum bales jadi gimana?",
+    normalizedMessage: "pak b belum balas jadi bagaimana?",
+    workspaceContext: "",
+    itemContext: [
+      { id: "w1", title: "Tunggu jawaban kontrak", kind: "waiting", status: "open" },
+    ],
+    recentConversation: "",
+  });
+  assert.equal(result.mode, "answer");
+  assert.equal(result.targetId, null);
+});
+
+test("mutable command modes keep a valid target id", async () => {
+  const h = setup({ GEMINI_API_KEY: "fixture-key" }, [
+    gemini(JSON.stringify({
+      mode: "complete",
+      reply: "Siap, saya tandai selesai.",
+      confidence: 0.95,
+      targetId: "t1",
+      items: [],
+    })),
+  ]);
+  const result = await h.api.runAssistantTurn({
+    rawMessage: "yang tadi sudah selesai",
+    normalizedMessage: "yang tadi sudah selesai",
+    workspaceContext: "",
+    itemContext: [
+      { id: "t1", title: "Kirim invoice", kind: "task", status: "open" },
+    ],
+    recentConversation: "",
+  });
+  assert.equal(result.mode, "complete");
+  assert.equal(result.targetId, "t1");
+});
