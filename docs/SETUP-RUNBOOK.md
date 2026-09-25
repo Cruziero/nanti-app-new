@@ -1,217 +1,247 @@
-# NANTI launch runbook
+# NANTI public-launch runbook
 
-Six steps, in order. Everything else in code is done. Work top to bottom.
+Updated: 2026-09-25
 
-## Status (2026-09-25)
+The product core is already deployed and technically validated. Do not add another major feature before completing the external launch setup below.
 
-Already configured, nothing to do:
+## Current production status
 
-- **Step 1** done. `GEMINI_API_KEY`, `GEMINI_MODEL`, `VITE_SITE_URL`, `CRON_SECRET`, all three `VAPID_*` keys and `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` are set in Vercel, and a production deploy has gone out with them.
-- **Step 2** mostly done. Site URL, the redirect URLs (`/welcome`, `/auth/reset-password`, `/api/auth/google`) and the admin role are set in Supabase. Google sign-in is already configured there too.
-- **Step 3** the Google client is configured on both sides. Only the redirect-URI list in Google Cloud is unverified, since that needs your Google login.
-- **Step 4** done, same values as Step 1.
+Already done:
 
-Still yours to do:
+- production Supabase schema repaired and recorded as migrations,
+- per-user RLS and service-only access controls verified,
+- reminder scheduler active every 5 minutes,
+- Gemini primary model + retry policy + Flash-Lite fallback deployed,
+- production AI smoke on commit `6add3e7`: **4/4 passed**,
+- disposable production E2E on commit `6add3e7`: **9/9 passed**,
+- owner admin role configured,
+- production Site URL and Supabase redirect URLs configured,
+- Google credentials and VAPID values are present in Vercel,
+- WhatsApp, Calendar and browser Push are hidden from the initial public launch,
+- legal/privacy production drafts and Indonesian operator checklist exist.
 
-- **SMTP** (Step 2.3). No mail provider is configured, so signup and password-reset emails will not deliver. This blocks real signups.
-- **Step 5**, the GitHub Actions secret.
-- **Step 6**, legal review.
+Still required before unrestricted public promotion:
 
-All six production `/api/health` checks return `true`.
+1. production email / account recovery,
+2. Gemini Paid Tier + privacy-capacity confirmation,
+3. one real-device browser acceptance pass,
+4. Indonesian legal / PSE operator completion.
 
 ---
 
-## Step 1: Turn the AI on (Vercel)
+## Step 1 — Production email and account recovery
 
-Without this NANTI runs but cannot extract or answer anything.
+This is the main authentication blocker.
 
-1. Get a free key: https://aistudio.google.com/apikey → **Create API key** → copy it.
-2. Open Vercel env vars: https://vercel.com/dashboard → project **nanti-aja** (the project name is `nanti-aja`, it serves the `nanti-app-new.vercel.app` domain) → **Settings** → **Environment Variables**.
-3. Add these (Production, Preview and Development):
+Open Supabase project `qyfywekaorkwpzrvbrth`:
 
-| Name | Value |
+- Auth → SMTP / Email provider.
+- Configure a real transactional provider such as Resend.
+- Do not rely on the default development mail service for public users.
+
+Verify all of these with a disposable account:
+
+- signup confirmation arrives if confirmation is enabled,
+- resend confirmation works,
+- forgot-password email arrives,
+- reset-password link opens the production NANTI reset page,
+- the new password can be used to sign in.
+
+Also verify that these mailboxes receive real mail:
+
+- `support@nanti.app`
+- `privacy@nanti.app`
+
+NANTI already requires 12+ character new passwords and checks them against HIBP Pwned Passwords using k-anonymity.
+
+Supabase's built-in Leaked Password Protection is still recommended as defense in depth when the plan permits it.
+
+---
+
+## Step 2 — Gemini Paid Tier and privacy capacity
+
+The production app currently uses:
+
+| Variable | Value |
 |---|---|
-| `GEMINI_API_KEY` | *(paste the key from item 1 above)* |
 | `GEMINI_MODEL` | `gemini-3.5-flash` |
+| `GEMINI_FALLBACK_MODEL` | `gemini-3.5-flash-lite` |
+| `GEMINI_THINKING_LEVEL` | `low` |
+| `GEMINI_API_KEY` | production key |
+| `GEMINI_PAID_TIER` | set to `true` only after paid-tier verification |
 
-4. Find any existing `OPENAI_API_KEY` → **Delete**.
-5. **Deployments** tab → top deployment → **⋯** → **Redeploy**.
+Before public customer conversations are processed:
 
-Verify: open https://nanti-app-new.vercel.app/api/health → `"ok": true`.
+1. Open Google AI Studio billing / rate limits.
+2. Link the Gemini project to an active billing account / Paid Tier.
+3. Confirm the project has non-zero production request quotas.
+4. Confirm the API key belongs to that paid project.
+5. In Vercel project **nanti-aja**, set:
+   - `GEMINI_PAID_TIER=true`
+6. Redeploy production.
+7. Rerun:
+   - production AI smoke,
+   - disposable launch E2E.
 
-After Step 4, verify the detailed integration checks with an Authorization header:
+Official references:
 
-```bash
-curl https://nanti-app-new.vercel.app/api/health \
-  -H "Authorization: Bearer YOUR_CRON_SECRET"
+- https://ai.google.dev/gemini-api/docs/billing
+- https://ai.google.dev/gemini-api/docs/rate-limits
+- https://ai.google.dev/gemini-api/docs/models
+
+The fallback model improves reliability but does not replace Paid Tier capacity or paid-service data handling.
+
+---
+
+## Step 3 — Initial launch integrations
+
+### In-app reminders
+
+Required for launch and already active.
+
+- Supabase reminder dispatcher runs every 5 minutes.
+- Scheduler authorization has been verified.
+- In-app reminder delivery remains the initial supported reminder channel.
+
+### Google Calendar
+
+Implemented, but **hidden from the initial public launch**.
+
+Do not enable `CALENDAR_LAUNCH_ENABLED` until a real Google account has completed:
+
+- connect,
+- OAuth callback,
+- sync,
+- Ask NANTI schedule question,
+- disconnect.
+
+Google client configuration should include:
+
+```
+https://qyfywekaorkwpzrvbrth.supabase.co/auth/v1/callback
+https://nanti-app-new.vercel.app/api/auth/google
 ```
 
-The detailed response should show the configured integrations as `true`.
+### Browser Push
+
+Implemented, but **hidden from the initial public launch**.
+
+Do not enable `PUSH_LAUNCH_ENABLED` until real-device delivery is tested.
+
+### WhatsApp
+
+Implemented partially but intentionally **not part of the initial public launch**.
+
+Keep `WHATSAPP_LAUNCH_ENABLED=false` until the WhatsApp Cloud API workflow is operationally verified.
 
 ---
 
-## Step 2: Supabase
+## Step 4 — Final real-browser acceptance
 
-Open https://supabase.com/dashboard → project **qyfywekaorkwpzrvbrth**.
+The automated production test has already verified:
 
-### 2.1 Database schema: completed on production
+- normal password sign-in,
+- task create/edit/reschedule/complete/delete,
+- cross-account RLS isolation,
+- Waiting and Inbox isolation,
+- typo-heavy Gemini extraction,
+- account deletion / cascade cleanup.
 
-The live Supabase project was audited on 2026-09-25. Nine tables were genuinely missing because historical migrations had drifted from the deployed schema.
+One final UI pass still needs a human browser/device:
 
-This is now fixed in production. The missing tables were created with RLS and the two missing foreign-key indexes were added. The blog was seeded with 5 published articles.
+1. Open a private/incognito browser.
+2. Create a brand-new account through the final email flow.
+3. Finish onboarding.
+4. Confirm the workspace is visually empty.
+5. Send typo-heavy messages to Ask NANTI.
+6. Verify create, answer, edit, reschedule, complete, reminder, Waiting/follow-up and clarify flows.
+7. Open the app on a real phone and verify composer + keyboard behavior.
+8. Download account export.
+9. Delete the disposable account through Settings.
+10. Review production errors afterward.
 
-For future environments, the corrective migration is:
-
-`supabase/migrations/20260925021000_surgical_launch_backfill.sql`
-
-**Do not paste or run** `supabase/manual/20260925_backfill_missing_tables.sql` on the current production project. It contains old definitions for tables that have since evolved and is retained only as historical audit material.
-
-Verified production objects now include:
-
-- `reminders`
-- `invoices`
-- `ai_clarifications`
-- `blog_articles`
-- `audit_log`
-- `user_preferences`
-- `reminder_preferences`
-- `notification_devices`
-- `whatsapp_connections`
-- private `dispatch_nanti_reminders` function
-
-The reminder dispatcher is active every 5 minutes and recent requests return HTTP 200.
-
-### 2.2 Auth URLs
-
-https://supabase.com/dashboard/project/qyfywekaorkwpzrvbrth/auth/url-configuration
-
-- **Site URL**: `https://nanti-app-new.vercel.app`
-- **Redirect URLs**, add both:
-  - `https://nanti-app-new.vercel.app/welcome`
-  - `https://nanti-app-new.vercel.app/auth/reset-password`
-
-### 2.3 Security toggles
-
-https://supabase.com/dashboard/project/qyfywekaorkwpzrvbrth/auth/providers/email
-
-- **Confirm email**: decide ON (recommended, real sign-up) or OFF (if you want instant signup for testing). Both work with the current code.
-- **Leaked password protection**: ON, but this needs a paid plan. The API returns HTTP 402 on the current Free plan, so leave it off until you upgrade. Settings: https://supabase.com/dashboard/project/qyfywekaorkwpzrvbrth/auth/settings, then scroll to *Password Protection*.
-- **SMTP**: https://supabase.com/dashboard/project/qyfywekaorkwpzrvbrth/auth/smtp. Switch from Inbucket to a real provider (Resend, Brevo, or a Gmail app password) so signup and reset mails actually deliver.
-
-### 2.4 Make yourself admin
-
-**SQL Editor** → run (replace the email with yours):
-
-```sql
-update auth.users
-set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"admin"}'::jsonb
-where email = 'YOUR_EMAIL@example.com';
-```
-
-Then log out and log back in.
+Calendar and Push are not part of this acceptance pass because their customer surfaces remain hidden.
 
 ---
 
-## Step 3: Google (sign-in + Calendar)
+## Step 5 — Legal / Indonesian operator setup
 
-Skip if you only want email/password login. NANTI works without it.
+Use:
 
-One OAuth client covers both **Sign in with Google** and **Google Calendar**. It needs two redirect URIs.
+`docs/LEGAL-LAUNCH-CHECKLIST.md`
 
-1. https://console.cloud.google.com/apis/credentials
-   - Pick or create a project → **OAuth consent screen** → External → app name + your email → **Save and Continue**.
-   - Scopes screen: **Add or remove scopes** → add `.../auth/userinfo.email`, `.../auth/userinfo.profile`, `https://www.googleapis.com/auth/calendar.readonly` → Update → Continue → Save.
-2. **Credentials** → **Create credentials** → **OAuth client ID** → **Web application** → name it `NANTI`.
-   - **Authorized redirect URIs** → **Add URI**, paste both:
-     ```
-     https://qyfywekaorkwpzrvbrth.supabase.co/auth/v1/callback
-     https://nanti-app-new.vercel.app/api/auth/google
-     ```
-   - **Create** → copy **Client ID** and **Client Secret**.
-3. Supabase → https://supabase.com/dashboard/project/qyfywekaorkwpzrvbrth/auth/providers → **Google** → ON → paste Client ID + Client Secret → Save.
-4. Vercel → Settings → Environment Variables:
-   - `GOOGLE_CLIENT_ID` = *(Client ID)*
-   - `GOOGLE_CLIENT_SECRET` = *(Client Secret)*
-5. Redeploy (Step 1.5).
+Before broad public promotion:
 
-> While the consent screen is in **Testing** mode only your own Google account can use it. Publish the app to Google Cloud when you open signups to others.
+- identify the legal operator/entity and registered contact details,
+- confirm PSE Lingkup Privat obligations and complete registration through OSS when applicable,
+- have Indonesian counsel approve:
+  - `src/routes/legal.terms.tsx`
+  - `src/routes/legal.privacy.tsx`
+  - signup consent wording,
+  - liability / consumer wording,
+  - age eligibility,
+- document PDP processing purposes, retention, subprocessors and cross-border safeguards,
+- define the incident-response owner,
+- define the data-subject-request process,
+- confirm `support@nanti.app` and `privacy@nanti.app` are monitored.
 
----
-
-## Step 4: Remaining Vercel env vars
-
-Vercel → **Settings** → **Environment Variables**. Add:
-
-| Name | Value |
-|---|---|
-| `VITE_SITE_URL` | `https://nanti-app-new.vercel.app` |
-| `CRON_SECRET` | *(generate one below, paste it)* |
-| `VAPID_PUBLIC_KEY` | *(generate below)* |
-| `VITE_VAPID_PUBLIC_KEY` | *(same value as above)* |
-| `VAPID_PRIVATE_KEY` | *(generate below)* |
-
-Generate the two secrets locally. Run this in the project folder:
-
-```powershell
-cmd /c "npx web-push generate-vapid-keys"
-```
-
-Copy **Public Key** into both `VAPID_PUBLIC_KEY` and `VITE_VAPID_PUBLIC_KEY`, **Private Key** into `VAPID_PRIVATE_KEY`.
-
-Generate `CRON_SECRET` (any long random string), for example:
-
-```powershell
--join ((48..57)+(97..122) | Get-Random -Count 48 | ForEach-Object {[char]$_})
-```
-
-Finally, redeploy: **Deployments** → top deployment → **⋯** → **Redeploy**.
+Do not remove the source-level legal-review comments until counsel has approved the final text.
 
 ---
 
-## Step 5: GitHub Actions secret
+## Optional QA — GitHub Actions live benchmark
 
-https://github.com/Cruziero/nanti-app-new/settings/secrets/actions
+The 66-case external live-model benchmark is supplemental QA, not a public-launch dependency because production smoke monitoring already runs from Supabase.
 
-- **New repository secret**
-  - Name: `GEMINI_API_KEY`
-  - Value: *(same key as Step 1)*
+If you want it active:
 
-This powers the nightly live-eval workflow. Without it the workflow skips safely.
+GitHub → repository Settings → Secrets and variables → Actions → add:
 
----
+- `GEMINI_API_KEY`
 
-## Step 6: Legal review
-
-`src/routes/legal.terms.tsx` and `src/routes/legal.privacy.tsx` both open with a `// DRAFT` comment saying they require legal review before publication.
-
-- Get them reviewed by a lawyer before you promote the app publicly.
-- Confirm the retention wording matches what you actually do (data kept while the account is active).
-- Delete the `// DRAFT` comment on line 1 of each file once approved.
+Without that secret, the workflow skips safely.
 
 ---
 
-## Final check
+## Health check
 
-Locally, the repo's own gate (all tests plus build):
-
-```powershell
-cmd /c "npm run verify:launch"
-```
-
-Then after Step 4 and a redeploy:
+Public health:
 
 ```bash
 curl https://nanti-app-new.vercel.app/api/health
+```
+
+Detailed health:
+
+```bash
 curl https://nanti-app-new.vercel.app/api/health \
   -H "Authorization: Bearer YOUR_CRON_SECRET"
 ```
 
-The authenticated request returns `checks`:
+Important fields include:
 
 ```json
-{ "supabase": true, "ai": true, "aiModel": "gemini-3.5-flash", "googleCalendar": true, "push": true, "cron": true }
+{
+  "supabase": true,
+  "ai": true,
+  "aiModel": "gemini-3.5-flash",
+  "aiFallbackModel": "gemini-3.5-flash-lite",
+  "aiPrivacyReady": true,
+  "cron": true
+}
 ```
 
-`ai` false → Step 1 not done or not redeployed. `googleCalendar` false → you skipped Step 3 (fine, email login still works). `push` false → Step 4 keys missing.
+For unrestricted public launch, `aiPrivacyReady` should be `true`.
 
-Then sign up with a test account and add one commitment to confirm extraction works end to end.
+---
+
+## Release gate
+
+**Controlled/internal beta:** GO.
+
+**Unrestricted public promotion:** wait until all four are complete:
+
+- production SMTP / password recovery,
+- Gemini Paid Tier with `aiPrivacyReady=true`,
+- one real-device customer journey,
+- legal/PSE/operator sign-off.
