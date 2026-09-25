@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { checkPasswordSafety } from "@/lib/password-safety";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth/signup")({
@@ -17,6 +19,7 @@ function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [acceptedLegal, setAcceptedLegal] = useState(false);
   const navigate = useNavigate();
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -32,13 +35,30 @@ function SignupPage() {
       toast.error("Password tidak cocok.");
       return;
     }
-    if (password.length < 8) {
-      toast.error("Password minimal 8 karakter.");
+    if (password.length < 12) {
+      toast.error("Password minimal 12 karakter.");
+      return;
+    }
+
+    if (!acceptedLegal) {
+      toast.error("Setujui Ketentuan Layanan dan Kebijakan Privasi untuk melanjutkan.");
       return;
     }
 
     setLoading(true);
     try {
+      let safety;
+      try {
+        safety = await checkPasswordSafety(password);
+      } catch {
+        toast.error("NANTI belum bisa memverifikasi keamanan password. Coba lagi.");
+        return;
+      }
+      if (safety.compromised) {
+        toast.error("Password ini pernah muncul dalam kebocoran data. Gunakan password unik lain.");
+        return;
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email: normalizedEmail,
         password,
@@ -130,7 +150,7 @@ function SignupPage() {
             id="password"
             type="password"
             autoComplete="new-password"
-            placeholder="Minimal 8 karakter"
+            placeholder="Minimal 12 karakter"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -147,6 +167,25 @@ function SignupPage() {
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
           />
+        </div>
+        <div className="flex items-start gap-2.5 rounded-lg border border-border p-3">
+          <Checkbox
+            id="acceptLegal"
+            checked={acceptedLegal}
+            onCheckedChange={(value) => setAcceptedLegal(Boolean(value))}
+            className="mt-0.5"
+          />
+          <Label htmlFor="acceptLegal" className="text-[12px] font-normal leading-5 text-muted-foreground">
+            Saya menyetujui{" "}
+            <Link to="/legal/terms" className="font-medium text-foreground underline underline-offset-2">
+              Ketentuan Layanan
+            </Link>{" "}
+            dan telah membaca{" "}
+            <Link to="/legal/privacy" className="font-medium text-foreground underline underline-offset-2">
+              Kebijakan Privasi
+            </Link>
+            .
+          </Label>
         </div>
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? "Membuat akun..." : "Buat akun"}
@@ -184,7 +223,7 @@ function SignupPage() {
       </Button>
 
       <p className="text-center text-[11px] leading-5 text-muted-foreground">
-        Dengan membuat akun, kamu menyetujui penggunaan NANTI untuk menyimpan tugas dan memori kerja pribadi kamu.
+        Gunakan hanya percakapan dan data yang berhak kamu bagikan ke NANTI.
       </p>
     </div>
   );
