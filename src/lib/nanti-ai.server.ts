@@ -1,5 +1,7 @@
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 const GEMINI_MODEL = process.env["GEMINI_MODEL"] || "gemini-3.5-flash";
+const GEMINI_FALLBACK_MODEL =
+  process.env["GEMINI_FALLBACK_MODEL"] || "gemini-3.5-flash-lite";
 const AI_REQUEST_TIMEOUT_MS = 30_000;
 const GEMINI_MAX_ATTEMPTS = 2;
 const GEMINI_RETRYABLE_STATUSES = new Set([408, 429, 500, 502, 503, 504]);
@@ -176,23 +178,52 @@ async function chat(
     throw new Error("AI belum dikonfigurasi.");
   }
 
-  try {
-    return await chatGemini(messages, opts);
-  } catch (error) {
-    const provider =
-      error instanceof GeminiProviderError
-        ? { code: error.code, status: error.status }
-        : { code: "UNKNOWN", status: undefined };
-    console.error("Gemini API error:", provider);
+  const primaryModel = opts.model || GEMINI_MODEL;
+  let finalError: unknown;
 
-    const publicError = new Error("AI sedang bermasalah. Coba lagi sebentar lagi.") as Error & {
-      providerCode?: string;
-      providerStatus?: number;
-    };
-    publicError.providerCode = provider.code;
-    publicError.providerStatus = provider.status;
-    throw publicError;
+  try {
+    return await chatGemini(messages, { ...opts, model: primaryModel });
+  } catch (error) {
+    finalError = error;
+
+    const canFallback =
+      !opts.model &&
+      error instanceof GeminiProviderError &&
+      error.retryable &&
+      GEMINI_FALLBACK_MODEL &&
+      GEMINI_FALLBACK_MODEL !== primaryModel;
+
+    if (canFallback) {
+      console.error("Gemini primary unavailable, trying fallback:", {
+        model: primaryModel,
+        code: error.code,
+        status: error.status,
+        fallbackModel: GEMINI_FALLBACK_MODEL,
+      });
+      try {
+        return await chatGemini(messages, {
+          ...opts,
+          model: GEMINI_FALLBACK_MODEL,
+        });
+      } catch (fallbackError) {
+        finalError = fallbackError;
+      }
+    }
   }
+
+  const provider =
+    finalError instanceof GeminiProviderError
+      ? { code: finalError.code, status: finalError.status }
+      : { code: "UNKNOWN", status: undefined };
+  console.error("Gemini API error:", provider);
+
+  const publicError = new Error("AI sedang bermasalah. Coba lagi sebentar lagi.") as Error & {
+    providerCode?: string;
+    providerStatus?: number;
+  };
+  publicError.providerCode = provider.code;
+  publicError.providerStatus = provider.status;
+  throw publicError;
 }
 
 /** Models sometimes wrap JSON in prose or code fences. */
