@@ -13,10 +13,6 @@ export const Route = createFileRoute("/api/cron/assistant-eval")({
       GET: async ({ request }) => {
         const started = Date.now();
         try {
-          if (!isAuthorized(request)) {
-            return json({ error: "Unauthorized" }, 401);
-          }
-
           const supabaseUrl =
             process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "";
           const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
@@ -25,6 +21,9 @@ export const Route = createFileRoute("/api/cron/assistant-eval")({
           }
 
           const supabase = createClient(supabaseUrl, serviceKey);
+          if (!(await isAuthorized(request, supabase))) {
+            return json({ error: "Unauthorized" }, 401);
+          }
           const fixtures = selectDailyAssistantSmokeFixtures(new Date());
           const results: EvalResult[] = [];
 
@@ -220,10 +219,25 @@ function scoreFixture(
   return errors;
 }
 
-function isAuthorized(request: Request) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) return false;
-  return request.headers.get("Authorization") === `Bearer ${secret}`;
+async function isAuthorized(
+  request: Request,
+  supabase: ReturnType<typeof createClient>,
+) {
+  const header = request.headers.get("Authorization") || "";
+  const envSecret = process.env.CRON_SECRET;
+  if (envSecret && header === `Bearer ${envSecret}`) return true;
+
+  const { data, error } = await supabase
+    .from("automation_runtime")
+    .select("secret")
+    .eq("key", "assistant_eval")
+    .maybeSingle();
+
+  if (error) {
+    console.error("Could not read assistant eval scheduler credential:", error);
+    return false;
+  }
+  return Boolean(data?.secret && header === `Bearer ${data.secret}`);
 }
 
 function json(body: unknown, status = 200) {
