@@ -38,6 +38,8 @@ export const Route = createFileRoute("/api/health")({
               configured(process.env.SUPABASE_SERVICE_ROLE_KEY),
             ai: configured(process.env.GEMINI_API_KEY),
             aiModel: process.env.GEMINI_MODEL || "gemini-3.5-flash",
+            aiFallbackModel:
+              process.env.GEMINI_FALLBACK_MODEL || "gemini-3.5-flash-lite",
             aiPrivacyReady: process.env.GEMINI_PAID_TIER === "true",
             googleCalendar:
               configured(process.env.GOOGLE_CLIENT_ID) &&
