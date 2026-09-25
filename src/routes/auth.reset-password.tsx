@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { checkPasswordSafety } from "@/lib/password-safety";
 
 export const Route = createFileRoute("/auth/reset-password")({
   component: ResetPasswordPage,
@@ -24,12 +25,25 @@ function ResetPasswordPage() {
       return;
     }
 
-    if (password.length < 8) {
-      toast.error("Password minimal 8 karakter.");
+    if (password.length < 12) {
+      toast.error("Password minimal 12 karakter.");
       return;
     }
 
     setLoading(true);
+
+    try {
+      const safety = await checkPasswordSafety(password);
+      if (safety.compromised) {
+        toast.error("Password ini pernah muncul dalam kebocoran data. Gunakan password unik lain.");
+        setLoading(false);
+        return;
+      }
+    } catch {
+      toast.error("NANTI belum bisa memverifikasi keamanan password. Coba lagi.");
+      setLoading(false);
+      return;
+    }
 
     const { error } = await supabase.auth.updateUser({
       password,
@@ -58,7 +72,7 @@ function ResetPasswordPage() {
           <Input
             id="password"
             type="password"
-            placeholder="Minimal 8 karakter"
+            placeholder="Minimal 12 karakter"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
