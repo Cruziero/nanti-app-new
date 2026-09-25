@@ -85,10 +85,16 @@ for (const [name, response] of [
 }
 
 test("Gemini retries transient quota errors once", async () => {
-  const h = setup({ GEMINI_API_KEY: "fixture-key" }, [
-    { ok: false, status: 429 },
-    { ok: false, status: 429 },
-  ]);
+  const h = setup(
+    {
+      GEMINI_API_KEY: "fixture-key",
+      GEMINI_FALLBACK_MODEL: "gemini-3.5-flash",
+    },
+    [
+      { ok: false, status: 429 },
+      { ok: false, status: 429 },
+    ],
+  );
   await assert.rejects(h.api.askNanti("Test question", ""), /AI sedang bermasalah/);
   assert.equal(h.requests.length, 2);
   assert.deepEqual(h.timeouts, [30000, 30000]);
@@ -96,7 +102,13 @@ test("Gemini retries transient quota errors once", async () => {
 
 test("Gemini retries provider timeouts once", async () => {
   const timeout = Object.assign(new Error("Timeout"), { name: "TimeoutError" });
-  const h = setup({ GEMINI_API_KEY: "fixture-key" }, [timeout, timeout]);
+  const h = setup(
+    {
+      GEMINI_API_KEY: "fixture-key",
+      GEMINI_FALLBACK_MODEL: "gemini-3.5-flash",
+    },
+    [timeout, timeout],
+  );
   await assert.rejects(h.api.askNanti("Test question", ""), /AI sedang bermasalah/);
   assert.equal(h.requests.length, 2);
 });
@@ -111,10 +123,14 @@ test("Gemini does not retry permanent permission errors", async () => {
 
 test("Gemini errors do not leak upstream payloads or call another provider", async () => {
   const failure = { ok: false, status: 503, text: async () => "sensitive upstream payload" };
-  const h = setup({ GEMINI_API_KEY: "fixture-key", OPENAI_API_KEY: "unused" }, [
-    failure,
-    failure,
-  ]);
+  const h = setup(
+    {
+      GEMINI_API_KEY: "fixture-key",
+      GEMINI_FALLBACK_MODEL: "gemini-3.5-flash",
+      OPENAI_API_KEY: "unused",
+    },
+    [failure, failure],
+  );
   await assert.rejects(h.api.askNanti("Test question", ""), /AI sedang bermasalah/);
   assert.equal(h.requests.length, 2);
   assert.ok(!h.logs.join(" ").includes("sensitive upstream payload"));
@@ -182,4 +198,24 @@ test("mutable command modes keep a valid target id", async () => {
   });
   assert.equal(result.mode, "complete");
   assert.equal(result.targetId, "t1");
+});
+
+
+test("Gemini falls back to Flash-Lite after retryable primary exhaustion", async () => {
+  const h = setup(
+    {
+      GEMINI_API_KEY: "fixture-key",
+      GEMINI_MODEL: "gemini-3.5-flash",
+      GEMINI_FALLBACK_MODEL: "gemini-3.5-flash-lite",
+    },
+    [
+      { ok: false, status: 429 },
+      { ok: false, status: 429 },
+      gemini("Fallback answer"),
+    ],
+  );
+  assert.equal(await h.api.askNanti("Test question", ""), "Fallback answer");
+  assert.equal(h.requests.length, 3);
+  assert.ok(h.requests[0].url.endsWith("/gemini-3.5-flash:generateContent"));
+  assert.ok(h.requests[2].url.endsWith("/gemini-3.5-flash-lite:generateContent"));
 });
