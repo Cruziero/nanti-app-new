@@ -1,6 +1,32 @@
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 const GEMINI_MODEL = process.env["GEMINI_MODEL"] || "gemini-3.5-flash";
-const AI_REQUEST_TIMEOUT_MS = 20_000;
+const AI_REQUEST_TIMEOUT_MS = 30_000;
+const GEMINI_MAX_ATTEMPTS = 2;
+const GEMINI_RETRYABLE_STATUSES = new Set([408, 429, 500, 502, 503, 504]);
+const GEMINI_THINKING_LEVEL = (() => {
+  const value = String(process.env["GEMINI_THINKING_LEVEL"] || "low").toLowerCase();
+  return value === "minimal" || value === "low" || value === "medium" || value === "high"
+    ? value
+    : "low";
+})();
+
+class GeminiProviderError extends Error {
+  status?: number;
+  code: string;
+  retryable: boolean;
+
+  constructor(code: string, status?: number, retryable = false) {
+    super(`Gemini provider error: ${code}`);
+    this.name = "GeminiProviderError";
+    this.code = code;
+    this.status = status;
+    this.retryable = retryable;
+  }
+}
+
+function wait(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
 
 type Content = string | Array<Record<string, unknown>>;
 
@@ -55,24 +81,62 @@ async function chatGemini(
         }
       : {}),
     generationConfig: {
+      thinkingConfig: {
+        thinkingLevel: GEMINI_THINKING_LEVEL,
+      },
       ...(opts.json ? { responseMimeType: "application/json" } : {}),
     },
   };
 
-  const response = await fetch(
-    `${GEMINI_API_URL}/${encodeURIComponent(model)}:generateContent`,
-    {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-goog-api-key": key },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS),
-    },
-  );
+  let response: Response | null = null;
+  let lastError: GeminiProviderError | null = null;
 
-  if (!response.ok) {
-    const error = new Error(`Gemini API error ${response.status}`);
-    console.error("Gemini API error", response.status);
-    throw error;
+  for (let attempt = 1; attempt <= GEMINI_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      response = await fetch(
+        `${GEMINI_API_URL}/${encodeURIComponent(model)}:generateContent`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json", "x-goog-api-key": key },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS),
+        },
+      );
+
+      if (response.ok) break;
+
+      let code = `HTTP_${response.status}`;
+      try {
+        const providerError = (await response.clone().json()) as {
+          error?: { status?: string };
+        };
+        if (providerError?.error?.status) code = providerError.error.status;
+      } catch {
+        // Keep the status-only category. Never surface upstream payloads.
+      }
+
+      lastError = new GeminiProviderError(
+        code,
+        response.status,
+        GEMINI_RETRYABLE_STATUSES.has(response.status),
+      );
+    } catch (error) {
+      const name =
+        error && typeof error === "object" && "name" in error
+          ? String((error as { name?: unknown }).name || "")
+          : "";
+      const code = name === "TimeoutError" || name === "AbortError" ? "TIMEOUT" : "NETWORK_ERROR";
+      lastError = new GeminiProviderError(code, undefined, true);
+    }
+
+    if (!lastError.retryable || attempt >= GEMINI_MAX_ATTEMPTS) {
+      throw lastError;
+    }
+    await wait(300 * attempt);
+  }
+
+  if (!response?.ok) {
+    throw lastError || new GeminiProviderError("UNKNOWN");
   }
 
   const data = (await response.json()) as {
@@ -106,8 +170,19 @@ async function chat(
   try {
     return await chatGemini(messages, opts);
   } catch (error) {
-    console.error("Gemini API error:", error);
-    throw new Error("AI sedang bermasalah. Coba lagi sebentar lagi.");
+    const provider =
+      error instanceof GeminiProviderError
+        ? { code: error.code, status: error.status }
+        : { code: "UNKNOWN", status: undefined };
+    console.error("Gemini API error:", provider);
+
+    const publicError = new Error("AI sedang bermasalah. Coba lagi sebentar lagi.") as Error & {
+      providerCode?: string;
+      providerStatus?: number;
+    };
+    publicError.providerCode = provider.code;
+    publicError.providerStatus = provider.status;
+    throw publicError;
   }
 }
 

@@ -332,8 +332,16 @@ async function isAuthorized(
 }
 
 function sanitizeError(error: unknown) {
+  const coded = error as Error & {
+    providerCode?: string;
+    providerStatus?: number;
+  };
   const message = error instanceof Error ? error.message : String(error);
-  return message
+  const provider =
+    coded?.providerCode
+      ? ` [provider=${coded.providerCode}${coded.providerStatus ? ` status=${coded.providerStatus}` : ""}]`
+      : "";
+  return `${message}${provider}`
     .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, "[redacted-email]")
     .slice(0, 500);
 }
