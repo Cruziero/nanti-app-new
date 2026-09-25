@@ -47,7 +47,6 @@ import { Route as ApiCronAssistantEvalRouteImport } from './routes/api/cron/assi
 import { Route as ApiCronCheckRemindersRouteImport } from './routes/api/cron/check-reminders'
 import { Route as ApiCronGenerateArticleRouteImport } from './routes/api/cron/generate-article'
 import { Route as ApiCronSyncCalendarRouteImport } from './routes/api/cron/sync-calendar'
-import { Route as ApiDebugServerInfoRouteImport } from './routes/api/debug/server-info'
 import { Route as ApiInvoicesPdfRouteImport } from './routes/api/invoices/pdf'
 import { Route as ApiPushConfigRouteImport } from './routes/api/push/config'
 import { Route as ApiPushSubscribeRouteImport } from './routes/api/push/subscribe'
@@ -250,11 +249,6 @@ const ApiCronSyncCalendarRoute = ApiCronSyncCalendarRouteImport.update({
   path: '/api/cron/sync-calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiDebugServerInfoRoute = ApiDebugServerInfoRouteImport.update({
-  id: '/api/debug/server-info',
-  path: '/api/debug/server-info',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiInvoicesPdfRoute = ApiInvoicesPdfRouteImport.update({
   id: '/api/invoices/pdf',
   path: '/api/invoices/pdf',
@@ -350,7 +344,6 @@ export interface FileRoutesByFullPath {
   '/api/cron/check-reminders': typeof ApiCronCheckRemindersRoute
   '/api/cron/generate-article': typeof ApiCronGenerateArticleRoute
   '/api/cron/sync-calendar': typeof ApiCronSyncCalendarRoute
-  '/api/debug/server-info': typeof ApiDebugServerInfoRoute
   '/api/invoices/pdf': typeof ApiInvoicesPdfRoute
   '/api/push/config': typeof ApiPushConfigRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
@@ -401,7 +394,6 @@ export interface FileRoutesByTo {
   '/api/cron/check-reminders': typeof ApiCronCheckRemindersRoute
   '/api/cron/generate-article': typeof ApiCronGenerateArticleRoute
   '/api/cron/sync-calendar': typeof ApiCronSyncCalendarRoute
-  '/api/debug/server-info': typeof ApiDebugServerInfoRoute
   '/api/invoices/pdf': typeof ApiInvoicesPdfRoute
   '/api/push/config': typeof ApiPushConfigRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
@@ -454,7 +446,6 @@ export interface FileRoutesById {
   '/api/cron/check-reminders': typeof ApiCronCheckRemindersRoute
   '/api/cron/generate-article': typeof ApiCronGenerateArticleRoute
   '/api/cron/sync-calendar': typeof ApiCronSyncCalendarRoute
-  '/api/debug/server-info': typeof ApiDebugServerInfoRoute
   '/api/invoices/pdf': typeof ApiInvoicesPdfRoute
   '/api/push/config': typeof ApiPushConfigRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
@@ -508,7 +499,6 @@ export interface FileRouteTypes {
     | '/api/cron/check-reminders'
     | '/api/cron/generate-article'
     | '/api/cron/sync-calendar'
-    | '/api/debug/server-info'
     | '/api/invoices/pdf'
     | '/api/push/config'
     | '/api/push/subscribe'
@@ -559,7 +549,6 @@ export interface FileRouteTypes {
     | '/api/cron/check-reminders'
     | '/api/cron/generate-article'
     | '/api/cron/sync-calendar'
-    | '/api/debug/server-info'
     | '/api/invoices/pdf'
     | '/api/push/config'
     | '/api/push/subscribe'
@@ -611,7 +600,6 @@ export interface FileRouteTypes {
     | '/api/cron/check-reminders'
     | '/api/cron/generate-article'
     | '/api/cron/sync-calendar'
-    | '/api/debug/server-info'
     | '/api/invoices/pdf'
     | '/api/push/config'
     | '/api/push/subscribe'
@@ -648,7 +636,6 @@ export interface RootRouteChildren {
   ApiCronCheckRemindersRoute: typeof ApiCronCheckRemindersRoute
   ApiCronGenerateArticleRoute: typeof ApiCronGenerateArticleRoute
   ApiCronSyncCalendarRoute: typeof ApiCronSyncCalendarRoute
-  ApiDebugServerInfoRoute: typeof ApiDebugServerInfoRoute
   ApiInvoicesPdfRoute: typeof ApiInvoicesPdfRoute
   ApiPushConfigRoute: typeof ApiPushConfigRoute
   ApiPushSubscribeRoute: typeof ApiPushSubscribeRoute
@@ -928,13 +915,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCronSyncCalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/debug/server-info': {
-      id: '/api/debug/server-info'
-      path: '/api/debug/server-info'
-      fullPath: '/api/debug/server-info'
-      preLoaderRoute: typeof ApiDebugServerInfoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/invoices/pdf': {
       id: '/api/invoices/pdf'
       path: '/api/invoices/pdf'
@@ -1098,7 +1078,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCronCheckRemindersRoute: ApiCronCheckRemindersRoute,
   ApiCronGenerateArticleRoute: ApiCronGenerateArticleRoute,
   ApiCronSyncCalendarRoute: ApiCronSyncCalendarRoute,
-  ApiDebugServerInfoRoute: ApiDebugServerInfoRoute,
   ApiInvoicesPdfRoute: ApiInvoicesPdfRoute,
   ApiPushConfigRoute: ApiPushConfigRoute,
   ApiPushSubscribeRoute: ApiPushSubscribeRoute,
