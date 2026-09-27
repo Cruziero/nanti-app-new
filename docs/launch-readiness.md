@@ -92,7 +92,17 @@ Supabase's default outbound is **not** broken: `POST /auth/v1/signup` returns 20
 - [ ] Verify password-reset email delivery end to end.
 - [ ] Confirm `support@nanti.app` and `privacy@nanti.app` receive mail.
 
-A Resend integration is available and can be used once connected.
+A Resend integration is available and can be used once connected. A send-only Resend API key was provided on 2026-09-27 and validated end to end:
+
+- `POST /emails` from `onboarding@resend.dev` returned **200**, so the key and Resend's pipeline work.
+- An SMTP probe to `smtp.resend.com:465` using username `resend` and the API key returned **235 Authentication successful**, so the Supabase credential pair is correct.
+- The key is scope-restricted to sending: `GET /domains` and `GET /emails` both return **401 restricted_api_key**, so verified domains cannot be enumerated.
+
+What is missing is a verified sending domain. Both `nanti.app` and `nanti-app.com` return **403 domain is not verified**, so no sender address works yet.
+
+**Do not switch Supabase Auth onto Resend SMTP until a domain shows verified.** Resend rejects unverified senders with 403, which would make signup confirmation and password recovery fail outright. Supabase's default outbound currently works, so switching early would trade a working path for a broken one.
+
+To close this item: add a domain at https://resend.com/domains, publish the DKIM/SPF/DMARC records it issues, wait for verified status, then set Supabase Auth SMTP to host `smtp.resend.com`, port `465`, username `resend`, password the API key, sender on that domain.
 
 Auth redirect URLs were also wrong and are now fixed: `uri_allow_list` contained only `/app/today`, which would have rejected the `/welcome`, `/auth/reset-password` and `/api/auth/google` redirects the app actually uses. It now allows `/*`, `/welcome`, `/auth/reset-password`, `/api/auth/google`, `/app/today`.
 
