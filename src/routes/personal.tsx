@@ -1,11 +1,22 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { MarketingLayout, Reveal } from "@/components/nanti/marketing";
+import {
+  HonestBoundary,
+  MarketingHero,
+  ProductConversation,
+  ProofRows,
+  SimpleCta,
+} from "@/components/nanti/marketing-proof";
 
 export const Route = createFileRoute("/personal")({
   head: () => ({
     meta: [
-      { title: "For Personal · NANTI" },
-      { name: "description", content: "From work to family, remember what matters." },
+      { title: "NANTI for Personal" },
+      {
+        name: "description",
+        content:
+          "A conversational second memory for appointments, errands, plans, reminders, and the little things you do not want to keep carrying in your head.",
+      },
     ],
   }),
   component: PersonalPage,
@@ -14,150 +25,108 @@ export const Route = createFileRoute("/personal")({
 function PersonalPage() {
   return (
     <MarketingLayout>
-      <Hero />
-      <Features />
-      <Examples />
-      <Cta />
+      <MarketingHero
+        eyebrow="For personal life"
+        title={
+          <>
+            A second memory for the things
+            <br />
+            <span className="text-[#0b6b5f]">you actually mean to do.</span>
+          </>
+        }
+        description="Tell NANTI about an appointment, errand, plan, or reminder in the same language you would text a friend. NANTI can save it, remind you, and let you change it later without making you manage another complicated system."
+        note="NANTI only remembers what you bring into your NANTI workspace. It does not silently read your private chats."
+      />
+
+      <section className="bg-[#f7f9f7] py-16 sm:py-20">
+        <div className="mx-auto grid max-w-[1040px] gap-10 px-5 sm:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+          <Reveal>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#0b6b5f]">
+                Type like yourself
+              </p>
+              <h2 className="mt-3 text-[28px] font-semibold tracking-[-0.025em] text-[#171c24] sm:text-[34px]">
+                You should not need perfect spelling to set a useful reminder.
+              </h2>
+              <p className="mt-4 text-[14px] leading-7 text-[#5c6165]">
+                NANTI is built around messy everyday language: shorthand, typos, Indonesian,
+                English, or both in the same message.
+              </p>
+            </div>
+          </Reveal>
+
+          <ProductConversation
+            label="Personal plan"
+            userText="besok jam 10 aku harus pulang dr puncak"
+            assistantText="Got it — pulang dari Puncak tomorrow at 10:00."
+            saved="Saved to NANTI: Pulang dari Puncak"
+            footer="Later you can say “yang tadi jam 11 aja” or “udah beres” without rebuilding the task from scratch."
+          />
+        </div>
+      </section>
+
+      <ProofRows
+        eyebrow="Everyday use"
+        title="Useful when life happens in fragments."
+        items={[
+          {
+            title: "Appointments",
+            description:
+              "Save a doctor visit, meeting, class, or appointment with the date and time you actually mentioned. Add or change the reminder later by talking to NANTI.",
+          },
+          {
+            title: "Errands & plans",
+            description:
+              "Groceries, pickups, travel timing, things to bring, calls to make, and plans you do not want to keep rehearsing in your head.",
+          },
+          {
+            title: "Things someone else owes you",
+            description:
+              "Use Waiting when you are expecting a document, reply, payment, reservation confirmation, or anything else from another person.",
+          },
+          {
+            title: "Ask instead of search",
+            description:
+              "Ask “What am I forgetting?”, “What do I need to do today?”, or “What’s overdue?” and NANTI answers from your saved workspace.",
+          },
+          {
+            title: "Your own language",
+            description:
+              "Teach useful aliases or preferences when needed. NANTI can remember that “Pak B” means Budi or that you prefer a certain reminder timing.",
+          },
+        ]}
+      />
+
+      <HonestBoundary
+        title="NANTI remembers what you choose to bring in."
+        items={[
+          {
+            label: "It does not read all of your private conversations.",
+            description:
+              "Type something into Ask NANTI, paste the relevant conversation, or upload a screenshot. That is the context NANTI works from.",
+          },
+          {
+            label: "It does not save every casual mention.",
+            description:
+              "A birthday, restaurant, or plan only becomes something trackable when there is enough intent to save it — or when you explicitly ask NANTI to remember it.",
+          },
+          {
+            label: "It can ask one clarification.",
+            description:
+              "If you say “remind me later” without enough context, NANTI should ask what or when rather than silently choosing the wrong thing.",
+          },
+          {
+            label: "It is a memory layer, not a life feed.",
+            description:
+              "NANTI helps you keep selected commitments and reminders organized. It is not monitoring your phone, contacts, or conversations in the background.",
+          },
+        ]}
+      />
+
+      <SimpleCta
+        title="Give NANTI one thing you do not want to carry in your head."
+        description="Start with a real appointment, errand, follow-up, or plan. Use your normal language."
+      />
     </MarketingLayout>
-  );
-}
-
-/* ─── HERO ─── */
-
-function Hero() {
-  return (
-    <section className="bg-white pt-24 pb-16 sm:pt-32 sm:pb-20">
-      <div className="mx-auto max-w-[800px] px-5 sm:px-8">
-        <Reveal>
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#25D366]/10 px-4 py-1.5">
-            <span className="text-[12px] font-semibold text-[#25D366]">For Personal</span>
-          </div>
-          <h1 className="mt-3 text-[28px] font-bold tracking-tight text-[#111111] sm:text-[36px]">
-            Work isn&apos;t the only place you make promises.
-          </h1>
-          <p className="mt-4 max-w-[540px] text-[16px] leading-[1.7] text-[#5F6368]">
-            NANTI also remembers the birthday you almost forgot, the thing you promised your kid,
-            and the appointment your mom mentioned once. If it is in a conversation, NANTI
-            remembers it.
-          </p>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
-
-/* ─── FEATURES ─── */
-
-function Features() {
-  const features = [
-    {
-      title: "Family commitments",
-      desc: "Promises to your partner, your kids, your parents. NANTI remembers them.",
-    },
-    {
-      title: "Personal follow-ups",
-      desc: "That restaurant recommendation, that book someone mentioned, that appointment you need to book.",
-    },
-    {
-      title: "Birthdays & events",
-      desc: "When someone mentions a birthday or event in a conversation, NANTI remembers the date.",
-    },
-    {
-      title: "Appointment tracking",
-      desc: "Doctor visits, meetings, and gatherings. Every appointment mentioned becomes a tracked item.",
-    },
-  ];
-
-  return (
-    <section className="bg-[#F7F8F6] py-16 sm:py-20">
-      <div className="mx-auto max-w-[800px] px-5 sm:px-8">
-        <Reveal>
-          <p className="text-[11px] font-semibold tracking-[0.02em] text-[#5F6368]">
-            Features
-          </p>
-          <h2 className="mt-3 text-[24px] font-bold tracking-tight text-[#111111]">
-            Remember the things that matter.
-          </h2>
-        </Reveal>
-
-        <div className="mt-10 grid gap-6 sm:grid-cols-2">
-          {features.map((item, i) => (
-            <Reveal key={item.title} delay={i * 100}>
-              <div className="rounded-2xl border border-[#E7E9E7] bg-white p-6 transition-all hover:border-[#25D366]/30 hover:shadow-[0_4px_14px_rgba(37,211,102,0.1)]">
-                <h3 className="text-[15px] font-semibold text-[#111111]">{item.title}</h3>
-                <p className="mt-2 text-[13px] leading-[1.6] text-[#5F6368]">{item.desc}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ─── EXAMPLES ─── */
-
-function Examples() {
-  const examples = [
-    {
-      title: "\"Besok kita makan di tempat baru ya\"",
-      desc: "NANTI remembers the dinner plan and reminds you tomorrow morning.",
-    },
-    {
-      title: "\"Happy birthday ya, tgl 15\"",
-      desc: "NANTI catches the birthday date and reminds you a day before.",
-    },
-  ];
-
-  return (
-    <section className="bg-white py-16 sm:py-20">
-      <div className="mx-auto max-w-[800px] px-5 sm:px-8">
-        <Reveal>
-          <p className="text-[11px] font-semibold tracking-[0.02em] text-[#5F6368]">
-            Examples
-          </p>
-          <h2 className="mt-3 text-[24px] font-bold tracking-tight text-[#111111]">
-            What you mention becomes something you remember.
-          </h2>
-        </Reveal>
-
-        <div className="mt-10 grid gap-6 sm:grid-cols-2">
-          {examples.map((item, i) => (
-            <Reveal key={item.title} delay={i * 100}>
-              <div className="rounded-2xl border border-[#E7E9E7] bg-[#F7F8F6] p-6">
-                <h3 className="text-[15px] font-semibold text-[#111111]">{item.title}</h3>
-                <p className="mt-2 text-[13px] leading-[1.6] text-[#5F6368]">{item.desc}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ─── CTA ─── */
-
-function Cta() {
-  return (
-    <section className="bg-[#F7F8F6] py-16 sm:py-20">
-      <div className="mx-auto max-w-[500px] px-5 text-center sm:px-8">
-        <Reveal>
-          <h2 className="text-[24px] font-bold tracking-tight text-[#111111]">
-            Try NANTI for your personal life.
-          </h2>
-          <p className="mt-2 text-[14px] text-[#5F6368]">
-            Start remembering what matters from your conversations.
-          </p>
-          <Link
-            to="/welcome"
-            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#128C7E] px-6 py-3 text-[14px] font-semibold text-white shadow-sm transition-all hover:bg-[#0b5e54]"
-          >
-            Try NANTI for free
-          </Link>
-          <p className="mt-3 text-[12px] text-[#5F6368]">No credit card required. Free forever.</p>
-        </Reveal>
-      </div>
-    </section>
   );
 }
