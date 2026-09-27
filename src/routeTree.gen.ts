@@ -22,6 +22,7 @@ import { Route as HelpRouteImport } from './routes/help'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as PersonalRouteImport } from './routes/personal'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as AppIndexRouteImport } from './routes/app.index'
@@ -46,6 +47,7 @@ import { Route as ApiAuthGoogleRouteImport } from './routes/api/auth/google'
 import { Route as ApiCronAssistantEvalRouteImport } from './routes/api/cron/assistant-eval'
 import { Route as ApiCronCheckRemindersRouteImport } from './routes/api/cron/check-reminders'
 import { Route as ApiCronGenerateArticleRouteImport } from './routes/api/cron/generate-article'
+import { Route as ApiCronLaunchE2eRouteImport } from './routes/api/cron/launch-e2e'
 import { Route as ApiCronSyncCalendarRouteImport } from './routes/api/cron/sync-calendar'
 import { Route as ApiInvoicesPdfRouteImport } from './routes/api/invoices/pdf'
 import { Route as ApiPushConfigRouteImport } from './routes/api/push/config'
@@ -122,6 +124,11 @@ const PersonalRoute = PersonalRouteImport.update({
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WelcomeRoute = WelcomeRouteImport.update({
@@ -244,6 +251,11 @@ const ApiCronGenerateArticleRoute = ApiCronGenerateArticleRouteImport.update({
   path: '/api/cron/generate-article',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronLaunchE2eRoute = ApiCronLaunchE2eRouteImport.update({
+  id: '/api/cron/launch-e2e',
+  path: '/api/cron/launch-e2e',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCronSyncCalendarRoute = ApiCronSyncCalendarRouteImport.update({
   id: '/api/cron/sync-calendar',
   path: '/api/cron/sync-calendar',
@@ -319,6 +331,7 @@ export interface FileRoutesByFullPath {
   '/how-it-works': typeof HowItWorksRoute
   '/personal': typeof PersonalRoute
   '/pricing': typeof PricingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/welcome': typeof WelcomeRoute
   '/api/health': typeof ApiHealthRoute
   '/app/follow-ups': typeof AppFollowUpsRoute
@@ -343,6 +356,7 @@ export interface FileRoutesByFullPath {
   '/api/cron/assistant-eval': typeof ApiCronAssistantEvalRoute
   '/api/cron/check-reminders': typeof ApiCronCheckRemindersRoute
   '/api/cron/generate-article': typeof ApiCronGenerateArticleRoute
+  '/api/cron/launch-e2e': typeof ApiCronLaunchE2eRoute
   '/api/cron/sync-calendar': typeof ApiCronSyncCalendarRoute
   '/api/invoices/pdf': typeof ApiInvoicesPdfRoute
   '/api/push/config': typeof ApiPushConfigRoute
@@ -369,6 +383,7 @@ export interface FileRoutesByTo {
   '/how-it-works': typeof HowItWorksRoute
   '/personal': typeof PersonalRoute
   '/pricing': typeof PricingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/welcome': typeof WelcomeRoute
   '/api/health': typeof ApiHealthRoute
   '/app/follow-ups': typeof AppFollowUpsRoute
@@ -393,6 +408,7 @@ export interface FileRoutesByTo {
   '/api/cron/assistant-eval': typeof ApiCronAssistantEvalRoute
   '/api/cron/check-reminders': typeof ApiCronCheckRemindersRoute
   '/api/cron/generate-article': typeof ApiCronGenerateArticleRoute
+  '/api/cron/launch-e2e': typeof ApiCronLaunchE2eRoute
   '/api/cron/sync-calendar': typeof ApiCronSyncCalendarRoute
   '/api/invoices/pdf': typeof ApiInvoicesPdfRoute
   '/api/push/config': typeof ApiPushConfigRoute
@@ -421,6 +437,7 @@ export interface FileRoutesById {
   '/how-it-works': typeof HowItWorksRoute
   '/personal': typeof PersonalRoute
   '/pricing': typeof PricingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/welcome': typeof WelcomeRoute
   '/api/health': typeof ApiHealthRoute
   '/app/follow-ups': typeof AppFollowUpsRoute
@@ -445,6 +462,7 @@ export interface FileRoutesById {
   '/api/cron/assistant-eval': typeof ApiCronAssistantEvalRoute
   '/api/cron/check-reminders': typeof ApiCronCheckRemindersRoute
   '/api/cron/generate-article': typeof ApiCronGenerateArticleRoute
+  '/api/cron/launch-e2e': typeof ApiCronLaunchE2eRoute
   '/api/cron/sync-calendar': typeof ApiCronSyncCalendarRoute
   '/api/invoices/pdf': typeof ApiInvoicesPdfRoute
   '/api/push/config': typeof ApiPushConfigRoute
@@ -474,6 +492,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/personal'
     | '/pricing'
+    | '/sitemap.xml'
     | '/welcome'
     | '/api/health'
     | '/app/follow-ups'
@@ -498,6 +517,7 @@ export interface FileRouteTypes {
     | '/api/cron/assistant-eval'
     | '/api/cron/check-reminders'
     | '/api/cron/generate-article'
+    | '/api/cron/launch-e2e'
     | '/api/cron/sync-calendar'
     | '/api/invoices/pdf'
     | '/api/push/config'
@@ -524,6 +544,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/personal'
     | '/pricing'
+    | '/sitemap.xml'
     | '/welcome'
     | '/api/health'
     | '/app/follow-ups'
@@ -548,6 +569,7 @@ export interface FileRouteTypes {
     | '/api/cron/assistant-eval'
     | '/api/cron/check-reminders'
     | '/api/cron/generate-article'
+    | '/api/cron/launch-e2e'
     | '/api/cron/sync-calendar'
     | '/api/invoices/pdf'
     | '/api/push/config'
@@ -575,6 +597,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/personal'
     | '/pricing'
+    | '/sitemap.xml'
     | '/welcome'
     | '/api/health'
     | '/app/follow-ups'
@@ -599,6 +622,7 @@ export interface FileRouteTypes {
     | '/api/cron/assistant-eval'
     | '/api/cron/check-reminders'
     | '/api/cron/generate-article'
+    | '/api/cron/launch-e2e'
     | '/api/cron/sync-calendar'
     | '/api/invoices/pdf'
     | '/api/push/config'
@@ -627,6 +651,7 @@ export interface RootRouteChildren {
   HowItWorksRoute: typeof HowItWorksRoute
   PersonalRoute: typeof PersonalRoute
   PricingRoute: typeof PricingRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   WelcomeRoute: typeof WelcomeRoute
   ApiHealthRoute: typeof ApiHealthRoute
   LegalPrivacyRoute: typeof LegalPrivacyRoute
@@ -635,6 +660,7 @@ export interface RootRouteChildren {
   ApiCronAssistantEvalRoute: typeof ApiCronAssistantEvalRoute
   ApiCronCheckRemindersRoute: typeof ApiCronCheckRemindersRoute
   ApiCronGenerateArticleRoute: typeof ApiCronGenerateArticleRoute
+  ApiCronLaunchE2eRoute: typeof ApiCronLaunchE2eRoute
   ApiCronSyncCalendarRoute: typeof ApiCronSyncCalendarRoute
   ApiInvoicesPdfRoute: typeof ApiInvoicesPdfRoute
   ApiPushConfigRoute: typeof ApiPushConfigRoute
@@ -738,6 +764,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/welcome': {
@@ -908,6 +941,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCronGenerateArticleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cron/launch-e2e': {
+      id: '/api/cron/launch-e2e'
+      path: '/api/cron/launch-e2e'
+      fullPath: '/api/cron/launch-e2e'
+      preLoaderRoute: typeof ApiCronLaunchE2eRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/cron/sync-calendar': {
       id: '/api/cron/sync-calendar'
       path: '/api/cron/sync-calendar'
@@ -1069,6 +1109,7 @@ const rootRouteChildren: RootRouteChildren = {
   HowItWorksRoute: HowItWorksRoute,
   PersonalRoute: PersonalRoute,
   PricingRoute: PricingRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   WelcomeRoute: WelcomeRoute,
   ApiHealthRoute: ApiHealthRoute,
   LegalPrivacyRoute: LegalPrivacyRoute,
@@ -1077,6 +1118,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCronAssistantEvalRoute: ApiCronAssistantEvalRoute,
   ApiCronCheckRemindersRoute: ApiCronCheckRemindersRoute,
   ApiCronGenerateArticleRoute: ApiCronGenerateArticleRoute,
+  ApiCronLaunchE2eRoute: ApiCronLaunchE2eRoute,
   ApiCronSyncCalendarRoute: ApiCronSyncCalendarRoute,
   ApiInvoicesPdfRoute: ApiInvoicesPdfRoute,
   ApiPushConfigRoute: ApiPushConfigRoute,
