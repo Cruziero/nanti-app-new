@@ -34,7 +34,7 @@ function HowItWorksPage() {
             <span className="text-[#0b6b5f]">It helps you keep track of it.</span>
           </>
         }
-        description="Type naturally — even with typos. Ask NANTI to remember something, paste a conversation, or upload a screenshot. NANTI finds likely actions, dates, people, and follow-ups, then saves what is clear or asks when something important is missing."
+        description="Type naturally, even with typos. Ask NANTI to remember something, paste a conversation, or upload a screenshot. NANTI finds likely actions, dates, people, and follow-ups, then saves what is clear or asks when something important is missing."
         note="You do not need to write perfect task commands. NANTI is designed for everyday Indonesian, English, mixed language, shorthand, and messy chat."
       />
 
@@ -59,7 +59,7 @@ function HowItWorksPage() {
           <ProductConversation
             label="Messy language is okay"
             userText="Saya beosok harus oulang dr puncak jam 10 pagi"
-            assistantText="Got it — pulang dari Puncak tomorrow at 10:00."
+            assistantText="Got it. Pulang dari Puncak tomorrow at 10:00."
             saved="Saved to NANTI: Pulang dari Puncak"
             footer="NANTI normalizes obvious typos quietly. If a key detail is genuinely ambiguous, it asks instead of guessing."
           />
@@ -125,7 +125,7 @@ function HowItWorksPage() {
 
       <SimpleCta
         title="Try NANTI with one real thing you need to remember."
-        description="Use the way you normally type. NANTI should adapt to you — not the other way around."
+        description="Use the way you normally type. NANTI should adapt to you, not the other way around."
       />
     </MarketingLayout>
   );

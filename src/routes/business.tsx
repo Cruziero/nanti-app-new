@@ -34,7 +34,7 @@ function BusinessPage() {
             <span className="text-[#0b6b5f]">It needs fewer forgotten promises.</span>
           </>
         }
-        description="NANTI helps business owners and operators turn chat-driven commitments into tasks, Waiting items, reminders, and follow-ups — then lets you manage them by talking naturally."
+        description="NANTI helps business owners and operators turn chat-driven commitments into tasks, Waiting items, reminders, and follow-ups, then lets you manage them by talking naturally."
         note="Built for the person carrying the operational context today. NANTI is not yet a shared multi-user project-management suite or CRM."
       />
 
@@ -72,7 +72,7 @@ function BusinessPage() {
           {
             title: "Client commitments",
             description:
-              "Save the quotation, revision, invoice, proposal, or callback you promised — including the person and deadline when the conversation makes them clear.",
+              "Save the quotation, revision, invoice, proposal, or callback you promised, including the person and deadline when the conversation makes them clear.",
           },
           {
             title: "Supplier & vendor waiting",
@@ -101,7 +101,7 @@ function BusinessPage() {
         title="Useful for operations today. Not pretending to replace your whole stack."
         items={[
           {
-            label: "Not a shared team workspace — yet.",
+            label: "Not a shared team workspace yet.",
             description:
               "NANTI currently works best as a personal operating memory for an owner, manager, or operator. It does not yet offer full multi-user assignment, permissions, or collaborative boards.",
           },

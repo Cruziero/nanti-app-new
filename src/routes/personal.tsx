@@ -58,7 +58,7 @@ function PersonalPage() {
           <ProductConversation
             label="Personal plan"
             userText="besok jam 10 aku harus pulang dr puncak"
-            assistantText="Got it — pulang dari Puncak tomorrow at 10:00."
+            assistantText="Got it. Pulang dari Puncak tomorrow at 10:00."
             saved="Saved to NANTI: Pulang dari Puncak"
             footer="Later you can say “yang tadi jam 11 aja” or “udah beres” without rebuilding the task from scratch."
           />
@@ -67,7 +67,7 @@ function PersonalPage() {
 
       <ProofRows
         eyebrow="Everyday use"
-        title="Useful when life happens in fragments."
+        title="Appointments, errands, and things you are waiting on."
         items={[
           {
             title: "Appointments",
@@ -108,7 +108,7 @@ function PersonalPage() {
           {
             label: "It does not save every casual mention.",
             description:
-              "A birthday, restaurant, or plan only becomes something trackable when there is enough intent to save it — or when you explicitly ask NANTI to remember it.",
+              "A birthday, restaurant, or plan only becomes something trackable when there is enough intent to save it, or when you explicitly ask NANTI to remember it.",
           },
           {
             label: "It can ask one clarification.",
@@ -124,7 +124,7 @@ function PersonalPage() {
       />
 
       <SimpleCta
-        title="Give NANTI one thing you do not want to carry in your head."
+        title="Give NANTI the reminder you keep rescheduling."
         description="Start with a real appointment, errand, follow-up, or plan. Use your normal language."
       />
     </MarketingLayout>

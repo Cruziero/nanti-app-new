@@ -26,7 +26,7 @@ export function MarketingHero({
             {description}
           </p>
           {note ? (
-            <p className="mt-4 max-w-[640px] text-[13px] leading-5 text-[#767b7f]">
+            <p className="mt-4 max-w-[640px] text-[13px] leading-5 text-[#6b7075]">
               {note}
             </p>
           ) : null}
@@ -55,7 +55,7 @@ export function ProductConversation({
         <div className="flex items-center justify-between border-b border-[#edf0ed] px-5 py-4">
           <div>
             <p className="text-[13px] font-semibold text-[#171c24]">Ask NANTI</p>
-            <p className="mt-0.5 text-[11px] text-[#81868a]">{label}</p>
+            <p className="mt-0.5 text-[11px] text-[#686d71]">{label}</p>
           </div>
           <span className="rounded-full bg-[#eef8f4] px-2.5 py-1 text-[10px] font-semibold text-[#0b6b5f]">
             Real product flow
@@ -83,7 +83,7 @@ export function ProductConversation({
         </div>
 
         {footer ? (
-          <div className="border-t border-[#edf0ed] bg-[#fafbfa] px-5 py-3 text-[11px] leading-5 text-[#73787c]">
+          <div className="border-t border-[#edf0ed] bg-[#fafbfa] px-5 py-3 text-[11px] leading-5 text-[#686d71]">
             {footer}
           </div>
         ) : null}
@@ -131,7 +131,7 @@ export function ProofRows({
 }
 
 export function HonestBoundary({
-  title = "What NANTI does — and what it does not pretend to do.",
+  title = "What NANTI does, and what it does not pretend to do.",
   items,
 }: {
   title?: string;
@@ -186,7 +186,7 @@ export function SimpleCta({
             {button}
             <ArrowRight className="size-4" />
           </Link>
-          <p className="mt-3 text-[11px] text-[#81868a]">No credit card required.</p>
+          <p className="mt-3 text-[11px] text-[#686d71]">No credit card required.</p>
         </Reveal>
       </div>
     </section>
