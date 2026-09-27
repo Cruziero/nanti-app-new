@@ -1,14 +1,21 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { MarketingLayout, Reveal } from "@/components/nanti/marketing";
+import {
+  HonestBoundary,
+  MarketingHero,
+  ProductConversation,
+  ProofRows,
+  SimpleCta,
+} from "@/components/nanti/marketing-proof";
 
 export const Route = createFileRoute("/how-it-works")({
   head: () => ({
     meta: [
-      { title: "How it works · NANTI" },
+      { title: "How NANTI works · NANTI" },
       {
         name: "description",
         content:
-          "Forward the message, or paste the conversation. NANTI reads it, and remembers what needs remembering.",
+          "Talk naturally, paste a conversation, or upload a screenshot. NANTI turns likely commitments, dates, people, and follow-ups into something you can track.",
       },
     ],
   }),
@@ -18,166 +25,108 @@ export const Route = createFileRoute("/how-it-works")({
 function HowItWorksPage() {
   return (
     <MarketingLayout>
-      <Hero />
-      <Workflow />
-      <BringAnything />
-      <Cta />
-    </MarketingLayout>
-  );
-}
+      <MarketingHero
+        eyebrow="How it works"
+        title={
+          <>
+            Tell NANTI what you mean.
+            <br />
+            <span className="text-[#0b6b5f]">It helps you keep track of it.</span>
+          </>
+        }
+        description="Type naturally — even with typos. Ask NANTI to remember something, paste a conversation, or upload a screenshot. NANTI finds likely actions, dates, people, and follow-ups, then saves what is clear or asks when something important is missing."
+        note="You do not need to write perfect task commands. NANTI is designed for everyday Indonesian, English, mixed language, shorthand, and messy chat."
+      />
 
-/* ─── HERO ─── */
-
-function Hero() {
-  return (
-    <section className="relative overflow-hidden bg-white pt-24 pb-16 sm:pt-32 sm:pb-20">
-      <div className="relative mx-auto max-w-[800px] px-5 sm:px-8">
-        <Reveal>
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#e7f7ef] px-4 py-1.5">
-            <span className="text-[12px] font-semibold text-[#075E54]">How it works</span>
-          </div>
-          <h1 className="mt-3 text-[28px] font-bold tracking-tight text-[#171c24] sm:text-[36px]">
-            You do not create tasks. You just talk.
-          </h1>
-          <p className="mt-3 max-w-[480px] text-[15px] leading-[1.7] text-[#45474a]">
-            Forward the message, or paste the conversation. NANTI reads it, and remembers what
-            needs remembering.
-          </p>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
-
-/* ─── WORKFLOW ─── */
-
-function Workflow() {
-  return (
-    <section className="bg-[#F7F8F6] py-16 sm:py-20">
-      <div className="mx-auto max-w-[800px] px-5 sm:px-8">
-        <Reveal>
-          <div className="mb-10">
-            <p className="text-[11px] font-semibold tracking-[0.02em] text-[#075E54]">
-              The process
-            </p>
-            <h2 className="mt-3 text-[24px] font-bold tracking-tight text-[#171c24]">
-              From WhatsApp to memory.
-            </h2>
-          </div>
-        </Reveal>
-
-        <div className="space-y-4">
-          <Reveal delay={100}>
-            <div className="rounded-xl border border-[#E7E9E7] bg-white p-5">
-              <p className="text-[11px] font-semibold tracking-[0.02em] text-[#075E54]">
-                You bring it in
+      <section className="bg-[#f7f9f7] py-16 sm:py-20">
+        <div className="mx-auto grid max-w-[1040px] gap-10 px-5 sm:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+          <Reveal>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#0b6b5f]">
+                One conversation
               </p>
-              <h3 className="mt-2 text-[16px] font-semibold text-[#171c24]">
-                Forward, paste, or upload
-              </h3>
-              <p className="mt-1 text-[14px] text-[#45474a]">
-                Forward a WhatsApp message to NANTI. Paste a conversation. Upload a screenshot of a
-                chat. NANTI accepts all of them.
+              <h2 className="mt-3 text-[28px] font-semibold tracking-[-0.025em] text-[#171c24] sm:text-[34px]">
+                Ask, save, change, and finish work in the same place.
+              </h2>
+              <p className="mt-4 text-[14px] leading-7 text-[#5c6165]">
+                NANTI is not a form you have to maintain. You can tell it what needs to happen,
+                ask what you are forgetting, change the timing later, or mark something done in
+                normal language.
               </p>
             </div>
           </Reveal>
 
-          <Reveal delay={200}>
-            <div className="rounded-xl border border-[#E7E9E7] bg-white p-5">
-              <p className="text-[11px] font-semibold tracking-[0.02em] text-[#075E54]">
-                NANTI reads it
-              </p>
-              <h3 className="mt-2 text-[16px] font-semibold text-[#171c24]">
-                NANTI finds what matters
-              </h3>
-              <p className="mt-1 text-[14px] text-[#45474a]">
-                NANTI reads the conversation and pulls out the commitments, who made them, and when
-                they are due. It does not read your messages for any other purpose.
-              </p>
-            </div>
-          </Reveal>
-
-          <Reveal delay={300}>
-            <div className="rounded-xl border border-[#E7E9E7] bg-white p-5">
-              <p className="text-[11px] font-semibold tracking-[0.02em] text-[#075E54]">
-                NANTI follows up
-              </p>
-              <h3 className="mt-2 text-[16px] font-semibold text-[#171c24]">
-                NANTI reminds you when it matters
-              </h3>
-              <p className="mt-1 text-[14px] text-[#45474a]">
-                When a deadline approaches, NANTI sends a reminder. You do not have to remember
-                anything. NANTI does it for you.
-              </p>
-            </div>
-          </Reveal>
+          <ProductConversation
+            label="Messy language is okay"
+            userText="Saya beosok harus oulang dr puncak jam 10 pagi"
+            assistantText="Got it — pulang dari Puncak tomorrow at 10:00."
+            saved="Saved to NANTI: Pulang dari Puncak"
+            footer="NANTI normalizes obvious typos quietly. If a key detail is genuinely ambiguous, it asks instead of guessing."
+          />
         </div>
-      </div>
-    </section>
-  );
-}
+      </section>
 
-/* ─── BRING ANYTHING ─── */
+      <ProofRows
+        eyebrow="The flow"
+        title="From a conversation to something you can rely on."
+        items={[
+          {
+            title: "1. Bring the context",
+            description:
+              "Type directly into Ask NANTI, paste a conversation, or upload a screenshot. Copying a WhatsApp chat into NANTI works today; direct WhatsApp forwarding is not required for the public app.",
+          },
+          {
+            title: "2. NANTI interprets it",
+            description:
+              "It looks for what needs doing, who is involved, dates and times, projects, places, reminders, and things you are waiting to receive.",
+          },
+          {
+            title: "3. Clear things get saved",
+            description:
+              "When the intent is clear, NANTI creates the task or Waiting item. When a key detail is unclear, it asks one short clarification instead of inventing an answer.",
+          },
+          {
+            title: "4. Keep talking to update it",
+            description:
+              "Say things like “yang tadi Jumat aja”, “udah beres yang invoice”, or “ingatkan 30 menit sebelum”. NANTI can reschedule, complete, edit, and add reminders conversationally.",
+          },
+          {
+            title: "5. Ask NANTI what needs attention",
+            description:
+              "Ask “What am I forgetting?”, “What should I do today?”, “Who should I follow up with?”, or “What’s overdue?” and NANTI answers from your saved workspace.",
+          },
+        ]}
+      />
 
-function BringAnything() {
-  const options = [
-    { label: "WhatsApp", desc: "Forward the conversation to NANTI's WhatsApp contact." },
-    { label: "Screenshot", desc: "Upload a photo of a chat. NANTI reads the text from the image." },
-    { label: "Paste text", desc: "Copy and paste any conversation. NANTI handles the rest." },
-  ];
+      <HonestBoundary
+        items={[
+          {
+            label: "It does not turn every sentence into a task.",
+            description:
+              "Casual conversation and status updates should stay conversation. NANTI only saves a new item when there is a real action, commitment, deadline, waiting item, or reminder intent.",
+          },
+          {
+            label: "It does not guess when two things could be right.",
+            description:
+              "If “Budi” could mean two different people or “the meeting” could refer to two tasks, NANTI should ask which one you mean.",
+          },
+          {
+            label: "It learns useful language over time.",
+            description:
+              "You can teach aliases and preferences such as “Pak B itu Budi” or a usual reminder preference. Learned context stays tied to your account.",
+          },
+          {
+            label: "The public workflow is web-first today.",
+            description:
+              "Ask NANTI, paste conversation, screenshot import, tasks, Waiting, and in-app reminders are the current reliable flow. Calendar, push, and direct WhatsApp integrations are being hardened separately before we promise them as day-one essentials.",
+          },
+        ]}
+      />
 
-  return (
-    <section className="bg-white py-16 sm:py-20">
-      <div className="mx-auto max-w-[700px] px-5 text-center sm:px-8">
-        <Reveal>
-          <h2 className="text-[24px] font-bold tracking-tight text-[#171c24]">
-            Three ways to bring it in.
-          </h2>
-          <p className="mt-2 text-[14px] text-[#45474a]">
-            Pick the one that fits your situation.
-          </p>
-        </Reveal>
-
-        <Reveal delay={150}>
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            {options.map((opt) => (
-              <div
-                key={opt.label}
-                className="rounded-lg border border-[#E7E9E7] bg-[#F7F8F6] p-5 text-left"
-              >
-                <p className="text-[14px] font-semibold text-[#171c24]">{opt.label}</p>
-                <p className="mt-1.5 text-[13px] text-[#45474a]">{opt.desc}</p>
-              </div>
-            ))}
-          </div>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
-
-/* ─── CTA ─── */
-
-function Cta() {
-  return (
-    <section className="bg-[#F7F8F6] py-16 sm:py-20">
-      <div className="relative mx-auto max-w-[500px] px-5 text-center sm:px-8">
-        <Reveal>
-          <h2 className="text-[24px] font-bold tracking-tight text-[#171c24]">
-            Ready to try it?
-          </h2>
-          <p className="mt-2 text-[14px] text-[#45474a]">
-            Paste your first conversation. See what NANTI finds.
-          </p>
-          <Link
-            to="/welcome"
-            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#128C7E] px-6 py-3 text-[14px] font-semibold text-white shadow-sm transition-all hover:bg-[#0b5e54]"
-          >
-            Try NANTI for free
-          </Link>
-          <p className="mt-3 text-[12px] text-[#76777b]">No credit card required. Free forever.</p>
-        </Reveal>
-      </div>
-    </section>
+      <SimpleCta
+        title="Try NANTI with one real thing you need to remember."
+        description="Use the way you normally type. NANTI should adapt to you — not the other way around."
+      />
+    </MarketingLayout>
   );
 }
