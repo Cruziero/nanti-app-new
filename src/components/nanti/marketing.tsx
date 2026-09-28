@@ -64,7 +64,7 @@ export function MarketingNav() {
           </Link>
           <Link
             to="/welcome"
-            className="inline-flex items-center rounded-full bg-[#128C7E] px-4 py-2 text-[13.5px] font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#0b5e54] hover:shadow-md"
+            className="inline-flex items-center rounded-full bg-[#107E71] px-4 py-2 text-[13.5px] font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#0b5e54] hover:shadow-md"
           >
             Try NANTI for free
           </Link>
@@ -103,7 +103,7 @@ export function MarketingNav() {
               <Link
                 to="/welcome"
                 onClick={() => setOpen(false)}
-                className="flex-1 rounded-full bg-[#128C7E] px-4 py-2.5 text-center text-[14px] font-semibold text-white"
+                className="flex-1 rounded-full bg-[#107E71] px-4 py-2.5 text-center text-[14px] font-semibold text-white"
               >
                 Try NANTI for free
               </Link>

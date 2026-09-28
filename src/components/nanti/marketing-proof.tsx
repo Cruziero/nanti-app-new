@@ -64,7 +64,7 @@ export function ProductConversation({
 
         <div className="space-y-5 p-5 sm:p-7">
           <div className="flex justify-end">
-            <div className="max-w-[84%] rounded-2xl rounded-br-md bg-[#128c7e] px-4 py-3 text-[14px] leading-6 text-white">
+            <div className="max-w-[84%] rounded-2xl rounded-br-md bg-[#107e71] px-4 py-3 text-[14px] leading-6 text-white">
               {userText}
             </div>
           </div>
@@ -148,7 +148,7 @@ export function HonestBoundary({
         <div className="mt-8 grid gap-6 md:grid-cols-2">
           {items.map((item, index) => (
             <Reveal key={item.label} delay={index * 70}>
-              <div className="border-l-2 border-[#128c7e] pl-4">
+              <div className="border-l-2 border-[#107e71] pl-4">
                 <p className="text-[13px] font-semibold text-[#171c24]">{item.label}</p>
                 <p className="mt-1 text-[13px] leading-6 text-[#5f6568]">{item.description}</p>
               </div>
@@ -181,7 +181,7 @@ export function SimpleCta({
           </p>
           <Link
             to="/welcome"
-            className="mt-7 inline-flex items-center gap-2 rounded-full bg-[#128c7e] px-6 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-[#0b6b5f]"
+            className="mt-7 inline-flex items-center gap-2 rounded-full bg-[#107e71] px-6 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-[#0b6b5f]"
           >
             {button}
             <ArrowRight className="size-4" />

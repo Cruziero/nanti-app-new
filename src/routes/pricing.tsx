@@ -43,7 +43,7 @@ function PricingPage() {
                 <div
                   className={`relative flex h-full flex-col rounded-2xl border p-6 transition-all ${
                     plan.highlight
-                      ? "border-[#128C7E] bg-white shadow-md"
+                      ? "border-[#107E71] bg-white shadow-md"
                       : "border-[#E7E9E7] bg-white"
                   }`}
                 >
@@ -65,7 +65,7 @@ function PricingPage() {
                     to="/welcome"
                     className={`mt-7 inline-flex items-center justify-center rounded-xl px-5 py-3 text-[14px] font-semibold transition-all ${
                       plan.highlight
-                        ? "bg-[#128C7E] text-white hover:bg-[#0b5e54]"
+                        ? "bg-[#107E71] text-white hover:bg-[#0b5e54]"
                         : "border border-[#E7E9E7] text-[#111111] hover:bg-[#F7F8F6]"
                     }`}
                   >

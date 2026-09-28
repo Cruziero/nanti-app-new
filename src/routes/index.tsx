@@ -56,9 +56,9 @@ function Hero() {
 
   const responses: Record<string, string> = {
     "What did I promise Pak Tom?":
-      'Pak Tom: Send invoice by <strong className="text-[#128C7E]">28 August, 10:00 AM</strong> detected from WhatsApp forwarded message.',
+      'Pak Tom: Send invoice by <strong className="text-[#107E71]">28 August, 10:00 AM</strong> detected from WhatsApp forwarded message.',
     "Follow-up supplier deadline":
-      "PT Maju Supplier: Follow-up raw materials shipment promised by <strong className=\"text-[#128C7E]\">Friday 15:00</strong>.",
+      "PT Maju Supplier: Follow-up raw materials shipment promised by <strong className=\"text-[#107E71]\">Friday 15:00</strong>.",
     "When is invoice due?":
       "Invoice Dispatch: 28 August, 10:00 AM for Pak Tom. Reminder set for 09:00 AM.",
   };
@@ -109,13 +109,13 @@ function Hero() {
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
               <Link
                 to="/welcome"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#128C7E] px-8 py-3.5 text-[15px] font-semibold text-white shadow-lg shadow-[#128C7E]/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#0b5e54] hover:shadow-xl hover:shadow-[#128C7E]/40 active:translate-y-0"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#107E71] px-8 py-3.5 text-[15px] font-semibold text-white shadow-lg shadow-[#107E71]/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#0b5e54] hover:shadow-xl hover:shadow-[#107E71]/40 active:translate-y-0"
               >
                 Try NANTI for free
               </Link>
               <Link
                 to="/how-it-works"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-[#c6c6ca] bg-transparent px-7 py-3.5 text-[15px] font-semibold text-[#171c24] shadow-sm transition-all duration-200 hover:border-[#128C7E]/50 hover:bg-[#f0f3ff] hover:text-[#075E54]"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-[#c6c6ca] bg-transparent px-7 py-3.5 text-[15px] font-semibold text-[#171c24] shadow-sm transition-all duration-200 hover:border-[#107E71]/50 hover:bg-[#f0f3ff] hover:text-[#075E54]"
               >
                 See how it works
               </Link>
@@ -136,7 +136,7 @@ function Hero() {
             <div className="animate-editorial-float-slow rounded-2xl border border-[#e5e8f4]/80 bg-white p-6 shadow-xl transition-all duration-300 hover:shadow-2xl">
               <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#128C7E]/20 bg-[#e7f7ef] text-[14px] font-semibold text-[#075E54]">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#107E71]/20 bg-[#e7f7ef] text-[14px] font-semibold text-[#075E54]">
                     PT
                   </div>
                   <div className="text-left">
@@ -149,9 +149,9 @@ function Hero() {
                 </div>
                 <span className="text-[11px] font-semibold text-[#76777b]">14:32</span>
               </div>
-              <div className="mb-3 rounded-r-lg border-l-4 border-[#128C7E] bg-[#f0f9f4] p-3.5 text-left">
+              <div className="mb-3 rounded-r-lg border-l-4 border-[#107E71] bg-[#f0f9f4] p-3.5 text-left">
                 <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-[#075E54]">
-                  <span className="text-[14px] text-[#128C7E]">&#8618;</span>
+                  <span className="text-[14px] text-[#107E71]">&#8618;</span>
                   <span>Forwarded message</span>
                 </div>
                 <p className="text-[14px] leading-snug text-[#171c24]">
@@ -163,18 +163,18 @@ function Hero() {
                   <span className="h-2 w-2 rounded-full bg-[#25D366]" />
                   <span>Forwarded to NANTI</span>
                 </div>
-                <span className="text-[16px] text-[#128C7E]">&#10003;&#10003;</span>
+                <span className="text-[16px] text-[#107E71]">&#10003;&#10003;</span>
               </div>
             </div>
 
             {/* Right column: Commitment detected */}
             <div className="animate-editorial-float-delayed rounded-2xl border border-[#e5e8f4] bg-white p-6 shadow-2xl transition-all duration-300 hover:shadow-2xl">
               <div className="mb-5 flex items-center justify-between">
-                <div className="inline-flex items-center gap-2 rounded-full border border-[#128C7E]/20 bg-[#e8f8f2] px-3.5 py-1 text-[11px] font-semibold text-[#0f5132]">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#107E71]/20 bg-[#e8f8f2] px-3.5 py-1 text-[11px] font-semibold text-[#0f5132]">
                   <span className="h-2 w-2 rounded-full bg-[#25D366]" />
                   <span>{tracked ? "Saved to Ledger" : "Commitment detected"}</span>
                 </div>
-                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#128C7E] shadow-sm">
+                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#107E71] shadow-sm">
                   <span className="text-[13px] font-bold tracking-tighter text-white">N</span>
                 </div>
               </div>
@@ -205,7 +205,7 @@ function Hero() {
                 className={`flex w-full items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[15px] font-semibold transition-all duration-200 active:scale-95 ${
                   tracked
                     ? "bg-[#075E54] text-[#25D366] shadow-sm"
-                    : "bg-[#128C7E] text-white shadow-sm hover:bg-[#075E54] hover:shadow-md"
+                    : "bg-[#107E71] text-white shadow-sm hover:bg-[#075E54] hover:shadow-md"
                 }`}
               >
                 {tracked ? (
@@ -221,10 +221,10 @@ function Hero() {
           <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-5">
             {/* Search bar: wider */}
             <div className="lg:col-span-3">
-              <div className="rounded-2xl border border-[#128C7E]/25 bg-[#f0f9f4] p-4 shadow-md">
-                <div className="flex items-center justify-between rounded-full border border-[#128C7E]/30 bg-white p-2 pl-4 shadow-sm transition-all focus-within:border-transparent focus-within:ring-2 focus-within:ring-[#128C7E]">
+              <div className="rounded-2xl border border-[#107E71]/25 bg-[#f0f9f4] p-4 shadow-md">
+                <div className="flex items-center justify-between rounded-full border border-[#107E71]/30 bg-white p-2 pl-4 shadow-sm transition-all focus-within:border-transparent focus-within:ring-2 focus-within:ring-[#107E71]">
                   <div className="flex flex-1 items-center gap-2.5 overflow-hidden">
-                    <span className="text-[20px] text-[#128C7E]">&#128269;</span>
+                    <span className="text-[20px] text-[#107E71]">&#128269;</span>
                     <input
                       type="text"
                       value={query}
@@ -236,7 +236,7 @@ function Hero() {
                   </div>
                   <button
                     onClick={() => runQuery(query)}
-                    className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#128C7E] text-white shadow-sm transition-all hover:scale-105 hover:bg-[#075E54] active:scale-95"
+                    className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#107E71] text-white shadow-sm transition-all hover:scale-105 hover:bg-[#075E54] active:scale-95"
                   >
                     <span className="text-[16px]">&#8593;</span>
                   </button>
@@ -263,10 +263,10 @@ function Hero() {
                     ),
                   )}
                 </div>
-                <div className="mt-3 rounded-xl border border-[#128C7E]/20 bg-white p-3 shadow-sm text-left">
+                <div className="mt-3 rounded-xl border border-[#107E71]/20 bg-white p-3 shadow-sm text-left">
                   <div className="mb-1 flex items-center justify-between">
                     <div className="flex items-center gap-1.5 text-[12px] font-semibold text-[#075E54]">
-                      <span className="text-[15px] text-[#128C7E]">&#129302;</span>
+                      <span className="text-[15px] text-[#107E71]">&#129302;</span>
                       <span>NANTI Answer</span>
                     </div>
                     <span className="text-[10px] text-[#76777b]">WhatsApp Memory</span>
@@ -291,7 +291,7 @@ function Hero() {
                     <p className="text-[11px] text-[#76777b]">2 hours before deadline</p>
                   </div>
                 </div>
-                <div className="flex-1 rounded-lg border border-[#128C7E]/15 bg-[#f0f9f4] p-3 text-left">
+                <div className="flex-1 rounded-lg border border-[#107E71]/15 bg-[#f0f9f4] p-3 text-left">
                   <p className="text-[13px] leading-snug text-[#171c24]">
                     &ldquo;Invoice for Pak Tom is due at 10:00 AM today.&rdquo;
                   </p>
@@ -346,7 +346,7 @@ function ProblemSection() {
                     {q.text}
                   </div>
                 </div>
-                <div className="flex items-center justify-between rounded-full border border-[#128C7E]/20 bg-[#e8f8f2] px-4 py-2.5">
+                <div className="flex items-center justify-between rounded-full border border-[#107E71]/20 bg-[#e8f8f2] px-4 py-2.5">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-[#0f5132]">
                     Detected
                   </span>
@@ -460,8 +460,8 @@ function HowItWorks() {
                 onClick={() => setActive(i)}
                 className={`cursor-pointer flex h-full flex-col justify-between rounded-lg border-2 p-8 text-left shadow-sm transition-all duration-300 ${
                   active === i
-                    ? "border-[#128C7E] bg-[#f0f9f4] shadow-md"
-                    : "border-transparent bg-[#f0f3ff] hover:border-[#128C7E]/40 hover:shadow-md"
+                    ? "border-[#107E71] bg-[#f0f9f4] shadow-md"
+                    : "border-transparent bg-[#f0f3ff] hover:border-[#107E71]/40 hover:shadow-md"
                 }`}
               >
                 <div>
@@ -469,7 +469,7 @@ function HowItWorks() {
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-[#76777b]">
                       STEP {s.num}
                     </span>
-                    <span className="text-[15px] font-bold text-[#128C7E]">{s.label}</span>
+                    <span className="text-[15px] font-bold text-[#107E71]">{s.label}</span>
                   </div>
                   <h3 className="font-serif text-[22px] leading-[28px] text-[#171c24] mb-3">
                     {s.title}
@@ -480,7 +480,7 @@ function HowItWorks() {
                   className={`mt-8 flex items-center gap-2 pt-4 ${active === i ? "text-[#075E54]" : "text-[#76777b]"}`}
                 >
                   <span
-                    className="text-[20px] text-[#128C7E]"
+                    className="text-[20px] text-[#107E71]"
                     dangerouslySetInnerHTML={{ __html: s.icon }}
                   />
                   <span className="text-[11px] font-medium">{s.footer}</span>
@@ -492,7 +492,7 @@ function HowItWorks() {
 
         <Reveal delay={400}>
           <div className="mx-auto flex max-w-3xl flex-col items-center gap-5 rounded-xl border border-[#e5e8f4]/80 bg-[#f0f3ff] p-5 sm:flex-row sm:p-6">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#128C7E]/30 bg-[#e7f7ef] text-[#075E54]">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#107E71]/30 bg-[#e7f7ef] text-[#075E54]">
               <span
                 className="text-[24px]"
                 dangerouslySetInnerHTML={{ __html: steps[active].inspector.icon }}
@@ -500,7 +500,7 @@ function HowItWorks() {
             </div>
             <div className="flex-1 text-left">
               <div className="mb-1 flex items-center gap-2">
-                <span className="rounded-full bg-[#128C7E] px-2 py-0.5 text-[11px] font-semibold text-white">
+                <span className="rounded-full bg-[#107E71] px-2 py-0.5 text-[11px] font-semibold text-white">
                   {steps[active].inspector.badge}
                 </span>
                 <span className="text-[15px] font-semibold text-[#171c24]">
@@ -542,7 +542,7 @@ function CompactHowItWorks() {
           <Reveal delay={200}>
             <Link
               to="/how-it-works"
-              className="mt-6 inline-flex items-center gap-2 text-[14px] font-semibold text-[#128C7E] hover:text-[#075E54]"
+              className="mt-6 inline-flex items-center gap-2 text-[14px] font-semibold text-[#107E71] hover:text-[#075E54]"
             >
               See how NANTI works
             </Link>
@@ -569,18 +569,18 @@ function IntegrationsSection() {
         </Reveal>
         <Reveal delay={100}>
           <div className="flex flex-wrap items-center justify-center gap-4">
-            <div className="inline-flex cursor-pointer items-center gap-3 rounded-full border-2 border-[#128C7E] bg-[#e7f7ef] px-5 py-3 shadow-md shadow-[#128C7E]/10 transition-all hover:scale-105 hover:shadow-lg">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#128C7E]">
+            <div className="inline-flex cursor-pointer items-center gap-3 rounded-full border-2 border-[#107E71] bg-[#e7f7ef] px-5 py-3 shadow-md shadow-[#107E71]/10 transition-all hover:scale-105 hover:shadow-lg">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#107E71]">
                 <span className="text-[16px] text-white">&#128172;</span>
               </div>
               <span className="text-[15px] font-bold text-[#075E54]">WhatsApp</span>
             </div>
-            <div className="inline-flex cursor-pointer items-center gap-3 rounded-full border border-[#c6c6ca]/50 bg-white px-5 py-3 shadow-sm transition-all hover:border-[#128C7E]/40 hover:shadow-md hover:scale-105">
-              <span className="text-[20px] text-[#128C7E]">&#128197;</span>
+            <div className="inline-flex cursor-pointer items-center gap-3 rounded-full border border-[#c6c6ca]/50 bg-white px-5 py-3 shadow-sm transition-all hover:border-[#107E71]/40 hover:shadow-md hover:scale-105">
+              <span className="text-[20px] text-[#107E71]">&#128197;</span>
               <span className="text-[15px] font-semibold text-[#171c24]">Google Calendar</span>
             </div>
-            <div className="inline-flex cursor-pointer items-center gap-3 rounded-full border border-[#c6c6ca]/50 bg-white px-5 py-3 shadow-sm transition-all hover:border-[#128C7E]/40 hover:shadow-md hover:scale-105">
-              <span className="text-[20px] text-[#128C7E]">&#128225;</span>
+            <div className="inline-flex cursor-pointer items-center gap-3 rounded-full border border-[#c6c6ca]/50 bg-white px-5 py-3 shadow-sm transition-all hover:border-[#107E71]/40 hover:shadow-md hover:scale-105">
+              <span className="text-[20px] text-[#107E71]">&#128225;</span>
               <span className="text-[15px] font-semibold text-[#171c24]">
                 Lockscreen &amp; Home Widget
               </span>
@@ -643,8 +643,8 @@ function PrivacySection() {
             <Reveal key={item.title} delay={i * 100}>
               <div className="flex flex-col justify-between rounded-lg bg-[#f0f3ff] p-8 transition-shadow hover:shadow-md">
                 <div>
-                  <div className="mb-6 flex h-10 w-10 items-center justify-center rounded-full border border-[#128C7E]/20 bg-[#e7f7ef] text-[#075E54]">
-                    <span className="text-[20px] text-[#128C7E]" dangerouslySetInnerHTML={{ __html: item.icon }} />
+                  <div className="mb-6 flex h-10 w-10 items-center justify-center rounded-full border border-[#107E71]/20 bg-[#e7f7ef] text-[#075E54]">
+                    <span className="text-[20px] text-[#107E71]" dangerouslySetInnerHTML={{ __html: item.icon }} />
                   </div>
                   <h3 className="font-serif text-[22px] leading-[28px] text-[#171c24] mb-3">
                     {item.title}
@@ -667,7 +667,7 @@ function PrivacySection() {
 
 function FinalCta() {
   return (
-    <section className="w-full border-t border-[#128C7E]/15 bg-[#eef7f3] py-24 lg:py-32">
+    <section className="w-full border-t border-[#107E71]/15 bg-[#eef7f3] py-24 lg:py-32">
       <div className="mx-auto max-w-[800px] px-6 text-center">
         <Reveal>
           <span className="mb-4 block text-[11px] font-semibold tracking-[0.02em] text-[#075E54]">
@@ -693,7 +693,7 @@ function FinalCta() {
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link
               to="/welcome"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#128C7E] px-9 py-4 text-[15px] font-semibold text-white shadow-lg shadow-[#128C7E]/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#0b5e54] hover:shadow-xl hover:shadow-[#128C7E]/40 active:translate-y-0"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#107E71] px-9 py-4 text-[15px] font-semibold text-white shadow-lg shadow-[#107E71]/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#0b5e54] hover:shadow-xl hover:shadow-[#107E71]/40 active:translate-y-0"
             >
               Try NANTI for free
             </Link>
@@ -702,7 +702,7 @@ function FinalCta() {
         <Reveal delay={300}>
           <div className="mt-6 flex items-center justify-center gap-4 text-[11px] font-semibold text-[#76777b]">
             <span className="flex items-center gap-1.5 text-[#075E54]">
-              <span className="text-[15px] text-[#128C7E]">&#128737;</span> Encrypted
+              <span className="text-[15px] text-[#107E71]">&#128737;</span> Encrypted
             </span>
             <span>&middot;</span>
             <span>Private</span>
