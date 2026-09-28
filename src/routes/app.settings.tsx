@@ -1099,7 +1099,7 @@ function SettingsPage() {
                 </div>
                 {nantiWhatsAppNumber ? (
                   <a
-                    className="mt-3 inline-flex min-h-10 items-center rounded-md bg-[#25D366] px-3 text-xs font-semibold text-black"
+                    className="mt-3 inline-flex min-h-10 items-center rounded-md bg-[#067a3f] px-3 text-xs font-semibold text-white"
                     href={`https://wa.me/${nantiWhatsAppNumber}?text=${encodeURIComponent(`LINK ${whatsAppLink.link_code}`)}`}
                     target="_blank"
                     rel="noreferrer"

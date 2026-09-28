@@ -142,7 +142,7 @@ function Hero() {
                   <div className="text-left">
                     <div className="flex items-center gap-1.5">
                       <span className="text-[15px] font-semibold text-[#171c24]">Pak Tom</span>
-                      <span className="text-[14px] text-[#25D366]">&#10003;</span>
+                      <span className="text-[14px] text-[#067a3f]">&#10003;</span>
                     </div>
                     <span className="text-[12px] text-[#76777b]">WhatsApp Business</span>
                   </div>
@@ -160,7 +160,7 @@ function Hero() {
               </div>
               <div className="flex items-center justify-between pt-1">
                 <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#075E54]">
-                  <span className="h-2 w-2 rounded-full bg-[#25D366]" />
+                  <span className="h-2 w-2 rounded-full bg-[#067a3f]" />
                   <span>Forwarded to NANTI</span>
                 </div>
                 <span className="text-[16px] text-[#107E71]">&#10003;&#10003;</span>
@@ -171,7 +171,7 @@ function Hero() {
             <div className="animate-editorial-float-delayed rounded-2xl border border-[#e5e8f4] bg-white p-6 shadow-2xl transition-all duration-300 hover:shadow-2xl">
               <div className="mb-5 flex items-center justify-between">
                 <div className="inline-flex items-center gap-2 rounded-full border border-[#107E71]/20 bg-[#e8f8f2] px-3.5 py-1 text-[11px] font-semibold text-[#0f5132]">
-                  <span className="h-2 w-2 rounded-full bg-[#25D366]" />
+                  <span className="h-2 w-2 rounded-full bg-[#067a3f]" />
                   <span>{tracked ? "Saved to Ledger" : "Commitment detected"}</span>
                 </div>
                 <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#107E71] shadow-sm">
@@ -204,7 +204,7 @@ function Hero() {
                 onClick={() => setTracked(!tracked)}
                 className={`flex w-full items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[15px] font-semibold transition-all duration-200 active:scale-95 ${
                   tracked
-                    ? "bg-[#075E54] text-[#25D366] shadow-sm"
+                    ? "bg-[#075E54] text-white shadow-sm"
                     : "bg-[#107E71] text-white shadow-sm hover:bg-[#075E54] hover:shadow-md"
                 }`}
               >
@@ -283,7 +283,7 @@ function Hero() {
             <div className="lg:col-span-2">
               <div className="animate-editorial-float-delayed flex h-full flex-col rounded-2xl border border-[#e5e8f4]/80 bg-white p-5 shadow-xl transition-all duration-300 hover:shadow-2xl">
                 <div className="mb-3 flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#25D366] text-[14px] text-white">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#067a3f] text-[14px] text-white">
                     &#128276;
                   </div>
                   <div className="text-left">
@@ -510,7 +510,7 @@ function HowItWorks() {
               <p className="text-[12px] text-[#45474a]">{steps[active].inspector.desc}</p>
             </div>
             <span className="flex shrink-0 items-center gap-1 text-[11px] text-[#76777b]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#25D366]" /> Click cards above to
+              <span className="h-1.5 w-1.5 rounded-full bg-[#067a3f]" /> Click cards above to
               view steps
             </span>
           </div>

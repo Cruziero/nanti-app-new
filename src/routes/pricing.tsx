@@ -22,8 +22,8 @@ function PricingPage() {
       <section className="bg-white pt-24 pb-16 sm:pt-32 sm:pb-20">
         <div className="mx-auto max-w-[800px] px-5 text-center sm:px-8">
           <Reveal>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#25D366]/10 px-4 py-1.5">
-              <span className="text-[12px] font-semibold text-[#25D366]">Pricing</span>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#067a3f]/10 px-4 py-1.5">
+              <span className="text-[12px] font-semibold text-[#067a3f]">Pricing</span>
             </div>
             <h1 className="mt-3 text-[28px] font-bold tracking-tight text-[#111111] sm:text-[36px]">
               {headline}
@@ -56,7 +56,7 @@ function PricingPage() {
                   <ul className="mt-6 flex-1 space-y-3">
                     {plan.features.map((f) => (
                       <li key={f} className="flex items-start gap-2.5 text-[13px]">
-                        <Check className="mt-0.5 size-4 shrink-0 text-[#25D366]" />
+                        <Check className="mt-0.5 size-4 shrink-0 text-[#067a3f]" />
                         <span className="text-[#5F6368]">{f}</span>
                       </li>
                     ))}

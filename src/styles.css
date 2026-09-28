@@ -67,7 +67,7 @@
   animation: float-medium 4s ease-in-out infinite;
 }
 @utility animate-shimmer {
-  background: linear-gradient(90deg, transparent 0%, rgba(37, 211, 102, 0.04) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(6, 122, 63, 0.04) 50%, transparent 100%);
   background-size: 200% 100%;
   animation: shimmer 3s ease-in-out infinite;
 }
@@ -141,10 +141,10 @@
   --card-foreground: #1a1a1a;
   --popover: #ffffff;
   --popover-foreground: #1a1a1a;
-  --primary: #25D366;
+  --primary: #067a3f;
   --primary-foreground: #ffffff;
-  --brand: #25d366;
-  --brand-foreground: #08301f;
+  --brand: #067a3f;
+  --brand-foreground: #ffffff;
   --secondary: #f7f8f6;
   --secondary-foreground: #111111;
   --muted: #f9f9f9;
@@ -165,7 +165,7 @@
   --sidebar-accent: #f0f0f0;
   --sidebar-border: #ebebeb;
 
-  --accent-emerald: #25D366;
+  --accent-emerald: #067a3f;
   --accent-emerald-bg: #f0fdf4;
   --accent-teal: #107E71;
   --accent-teal-bg: #e6f7f5;

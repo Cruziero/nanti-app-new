@@ -901,7 +901,7 @@ export function DashboardAssistant() {
             .map((activity) => `${activity.date}: ${activity.text}`)
             .join(" | ");
           return [
-            `${person.name}${person.org ? ` — ${person.org}` : ""}`,
+            `${person.name}${person.org ? `, ${person.org}` : ""}`,
             person.role ? `role: ${person.role}` : "",
             person.lastConversation ? `last interaction: ${person.lastConversation}` : "",
             recentActivity ? `recent: ${recentActivity}` : "",
@@ -912,7 +912,7 @@ export function DashboardAssistant() {
         .join("\n");
       const projectMemory = projects
         .slice(0, 50)
-        .map((project) => `${project.name}${project.description ? ` — ${project.description}` : ""}`)
+        .map((project) => `${project.name}${project.description ? `, ${project.description}` : ""}`)
         .join("\n");
       const context = `Today (Asia/Jakarta): ${todayISO()}\nSaved items:\n${taskContext}\nPeople memory:\n${peopleMemory}\nProject memory:\n${projectMemory}\nRecent conversation:\n${history}`;
 

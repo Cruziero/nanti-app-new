@@ -897,7 +897,7 @@ export const seedDemoData = createServerFn({ method: "POST" }).middleware([requi
         user_id: userId,
         name: "ABC Export Order",
         description: "Order 500 pcs untuk PT ABC, termasuk quotation, katalog dan produksi.",
-        color: "#25D366",
+        color: "#067a3f",
       },
       {
         user_id: userId,

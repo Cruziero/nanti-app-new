@@ -56,8 +56,8 @@ function AdminPage() {
         <div className="w-full max-w-[360px]">
           <div className="rounded-2xl border border-[#E7E9E7] bg-white p-8 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
             <div className="mb-6 text-center">
-              <div className="mx-auto mb-3 flex size-10 items-center justify-center rounded-xl bg-[#25D366]/10">
-                <span className="text-[14px] font-bold text-[#25D366]">N</span>
+              <div className="mx-auto mb-3 flex size-10 items-center justify-center rounded-xl bg-[#067a3f]/10">
+                <span className="text-[14px] font-bold text-[#067a3f]">N</span>
               </div>
               <h1 className="text-[18px] font-bold text-[#111111]">Admin Panel</h1>
               <p className="mt-1 text-[13px] text-[#5F6368]">Masuk untuk mengedit konten website</p>
@@ -69,7 +69,7 @@ function AdminPage() {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full rounded-xl border border-[#E7E9E7] bg-[#F7F8F6] px-4 py-2.5 text-[14px] text-[#111111] outline-none transition-colors focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/10"
+                  className="w-full rounded-xl border border-[#E7E9E7] bg-[#F7F8F6] px-4 py-2.5 text-[14px] text-[#111111] outline-none transition-colors focus:border-[#067a3f] focus:ring-2 focus:ring-[#067a3f]/10"
                   autoFocus
                 />
               </div>
@@ -79,20 +79,20 @@ function AdminPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl border border-[#E7E9E7] bg-[#F7F8F6] px-4 py-2.5 text-[14px] text-[#111111] outline-none transition-colors focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/10"
+                  className="w-full rounded-xl border border-[#E7E9E7] bg-[#F7F8F6] px-4 py-2.5 text-[14px] text-[#111111] outline-none transition-colors focus:border-[#067a3f] focus:ring-2 focus:ring-[#067a3f]/10"
                 />
               </div>
               {error && <p className="text-[12px] text-red-500">{error}</p>}
               <button
                 type="submit"
-                className="w-full rounded-xl bg-[#25D366] px-4 py-2.5 text-[14px] font-semibold text-white transition-all hover:bg-[#1fb85c]"
+                className="w-full rounded-xl bg-[#067a3f] px-4 py-2.5 text-[14px] font-semibold text-white transition-all hover:bg-[#056434]"
               >
                 Masuk
               </button>
             </form>
           </div>
           <p className="mt-4 text-center text-[12px] text-[#5F6368]">
-            <Link to="/" className="text-[#25D366] hover:underline">← Kembali ke beranda</Link>
+            <Link to="/" className="text-[#067a3f] hover:underline">← Kembali ke beranda</Link>
           </p>
         </div>
       </div>
@@ -163,7 +163,7 @@ function EditorDashboard() {
               <ArrowLeft className="size-5" />
             </Link>
             <div className="flex items-center gap-2">
-              <div className="flex size-7 items-center justify-center rounded-lg bg-[#25D366]">
+              <div className="flex size-7 items-center justify-center rounded-lg bg-[#067a3f]">
                 <span className="text-[11px] font-bold text-white">N</span>
               </div>
               <span className="text-[15px] font-bold text-[#111111]">Admin Editor</span>
@@ -187,7 +187,7 @@ function EditorDashboard() {
             <button
               onClick={handleSave}
               className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-[12px] font-semibold text-white transition-all ${
-                saved ? "bg-green-500" : "bg-[#25D366] hover:bg-[#1fb85c]"
+                saved ? "bg-[#056434]" : "bg-[#067a3f] hover:bg-[#056434]"
               }`}
             >
               {saved ? <Check className="size-3.5" /> : <Save className="size-3.5" />}
@@ -208,7 +208,7 @@ function EditorDashboard() {
                   onClick={() => setActiveTab(tab.key)}
                   className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all ${
                     activeTab === tab.key
-                      ? "bg-[#25D366]/10 text-[#25D366]"
+                      ? "bg-[#067a3f]/10 text-[#067a3f]"
                       : "text-[#5F6368] hover:bg-[#F7F8F6] hover:text-[#111111]"
                   }`}
                 >
@@ -261,7 +261,7 @@ function Field({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           rows={3}
-          className="w-full rounded-xl border border-[#E7E9E7] bg-white px-4 py-2.5 text-[13px] text-[#111111] outline-none transition-colors focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/10 resize-y"
+          className="w-full rounded-xl border border-[#E7E9E7] bg-white px-4 py-2.5 text-[13px] text-[#111111] outline-none transition-colors focus:border-[#067a3f] focus:ring-2 focus:ring-[#067a3f]/10 resize-y"
         />
       ) : (
         <input
@@ -269,7 +269,7 @@ function Field({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full rounded-xl border border-[#E7E9E7] bg-white px-4 py-2.5 text-[13px] text-[#111111] outline-none transition-colors focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/10"
+          className="w-full rounded-xl border border-[#E7E9E7] bg-white px-4 py-2.5 text-[13px] text-[#111111] outline-none transition-colors focus:border-[#067a3f] focus:ring-2 focus:ring-[#067a3f]/10"
         />
       )}
     </div>
@@ -353,7 +353,7 @@ function ArrayEditor<T extends Record<string, string>>({
       ))}
       <button
         onClick={addItem}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[#25D366]/30 bg-[#25D366]/5 py-2.5 text-[12px] font-medium text-[#25D366] hover:bg-[#25D366]/10 transition-colors"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[#067a3f]/30 bg-[#067a3f]/5 py-2.5 text-[12px] font-medium text-[#067a3f] hover:bg-[#067a3f]/10 transition-colors"
       >
         <Plus className="size-3.5" /> {addLabel}
       </button>
@@ -692,7 +692,7 @@ function PricingEditor({
             <button
               onClick={() => update(`pricing.plans.${i}.highlight`, !plan.highlight)}
               className={`rounded-lg px-3 py-1 text-[12px] font-medium transition-colors ${
-                plan.highlight ? "bg-[#25D366] text-white" : "bg-[#F7F8F6] text-[#5F6368]"
+                plan.highlight ? "bg-[#067a3f] text-white" : "bg-[#F7F8F6] text-[#5F6368]"
               }`}
             >
               {plan.highlight ? "✅ Highlighted" : "Not highlighted"}
@@ -796,7 +796,7 @@ function EffectsEditor({
             <button
               onClick={() => update(`effects.${t.key}`, !e[t.key])}
               className={`relative inline-flex size-10 shrink-0 cursor-pointer rounded-full transition-colors ${
-                e[t.key] ? "bg-[#25D366]" : "bg-[#E7E9E7]"
+                e[t.key] ? "bg-[#067a3f]" : "bg-[#E7E9E7]"
               }`}
             >
               <span

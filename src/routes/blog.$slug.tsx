@@ -52,7 +52,7 @@ function ArticlePage() {
           <Reveal>
             <Link
               to="/blog"
-              className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#5F6368] hover:text-[#25D366] transition-colors"
+              className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#5F6368] hover:text-[#067a3f] transition-colors"
             >
               <ArrowLeft className="size-3.5" />
               Back to blog
@@ -61,7 +61,7 @@ function ArticlePage() {
 
           <Reveal delay={50}>
             <div className="mt-6 flex items-center gap-3">
-              <span className="rounded-full bg-[#25D366]/10 px-2.5 py-0.5 text-[10px] font-semibold text-[#25D366]">
+              <span className="rounded-full bg-[#067a3f]/10 px-2.5 py-0.5 text-[10px] font-semibold text-[#067a3f]">
                 {category}
               </span>
               <span className="flex items-center gap-1 text-[11px] text-[#5F6368]">
@@ -104,7 +104,7 @@ function ArticlePage() {
                     <ul key={i} className="mt-3 space-y-2 pl-4">
                       {items.map((item: string, j: number) => (
                         <li key={j} className="flex items-start gap-2">
-                          <span className="mt-2 size-1.5 shrink-0 rounded-full bg-[#25D366]" />
+                          <span className="mt-2 size-1.5 shrink-0 rounded-full bg-[#067a3f]" />
                           <span>{item.replace("- ", "")}</span>
                         </li>
                       ))}
@@ -118,7 +118,7 @@ function ArticlePage() {
                     <ol key={i} className="mt-3 space-y-2 pl-4">
                       {items.map((item: string, j: number) => (
                         <li key={j} className="flex items-start gap-2">
-                          <span className="mt-0.5 text-[13px] font-semibold text-[#25D366]">
+                          <span className="mt-0.5 text-[13px] font-semibold text-[#067a3f]">
                             {j + 1}.
                           </span>
                           <span>{item.replace(/^\d+\.\s*/, "")}</span>
@@ -143,7 +143,7 @@ function ArticlePage() {
               </p>
               <Link
                 to="/welcome"
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-5 py-2.5 text-[13px] font-semibold text-white shadow-[0_4px_14px_rgba(37,211,102,0.3)] transition-all hover:bg-[#1fb85c]"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#067a3f] px-5 py-2.5 text-[13px] font-semibold text-white shadow-[0_4px_14px_rgba(6,122,63,0.3)] transition-all hover:bg-[#056434]"
               >
                 Try NANTI for free
               </Link>
