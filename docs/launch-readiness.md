@@ -1,6 +1,6 @@
 # NANTI Launch Readiness
 
-Updated: 2026-09-25
+Updated: 2026-09-30
 
 **Stage: Release Candidate / External Launch Setup**
 
@@ -56,6 +56,7 @@ Their implementation remains in the codebase behind launch flags.
 - [x] /api/health exposes detailed readiness only with `Authorization: Bearer <CRON_SECRET>`.
 - [x] Terms and Privacy production drafts were rewritten for the Indonesian launch context.
 - [x] Indonesian legal/PDP/PSE operator checklist exists at `docs/LEGAL-LAUNCH-CHECKLIST.md`.
+- [x] Every text/background pair on the public marketing pages and in the app meets WCAG AA 4.5:1. Brand green was recoloured `#25D366` → `#067a3f` (both a text colour on light and a white-on-fill colour, because contrast is symmetric at luminance ≤ 0.1833), brand teal `#128C7E` → `#107E71`, and muted greys and status badges (`#76777b`, amber/orange/red/green 500–600) darkened to `-700`. The R-25 verifier checks 41 explicit colour pairs, 12 `:root` tokens, 5 `.dark` tokens, 29 named Tailwind utilities and 15 grey shades and reports 0 failures. Verified live on 2026-09-30.
 
 ## Verified production state
 
