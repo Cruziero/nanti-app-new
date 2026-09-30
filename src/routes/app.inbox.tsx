@@ -25,7 +25,7 @@ function ConfidenceBadge({ value }: { value: number }) {
   const pct = Math.round(value * 100);
   if (value >= 0.8) {
     return (
-      <span className="flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-medium text-green-600">
+      <span className="flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-medium text-green-700">
         <CheckCircle className="size-3" />
         {pct}% confident
       </span>
@@ -33,14 +33,14 @@ function ConfidenceBadge({ value }: { value: number }) {
   }
   if (value >= 0.5) {
     return (
-      <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-600">
+      <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
         <AlertCircle className="size-3" />
         {pct}% review
       </span>
     );
   }
   return (
-    <span className="flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-600">
+    <span className="flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-700">
       <HelpCircle className="size-3" />
       {pct}% needs info
     </span>

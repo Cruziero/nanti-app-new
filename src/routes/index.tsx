@@ -123,7 +123,7 @@ function Hero() {
           </Reveal>
 
           <Reveal delay={300}>
-            <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.04em] text-[#76777b]">
+            <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.04em] text-[#6b7075]">
               No credit card required. Free forever.
             </p>
           </Reveal>
@@ -144,10 +144,10 @@ function Hero() {
                       <span className="text-[15px] font-semibold text-[#171c24]">Pak Tom</span>
                       <span className="text-[14px] text-[#067a3f]">&#10003;</span>
                     </div>
-                    <span className="text-[12px] text-[#76777b]">WhatsApp Business</span>
+                    <span className="text-[12px] text-[#6b7075]">WhatsApp Business</span>
                   </div>
                 </div>
-                <span className="text-[11px] font-semibold text-[#76777b]">14:32</span>
+                <span className="text-[11px] font-semibold text-[#6b7075]">14:32</span>
               </div>
               <div className="mb-3 rounded-r-lg border-l-4 border-[#107E71] bg-[#f0f9f4] p-3.5 text-left">
                 <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-[#075E54]">
@@ -188,7 +188,7 @@ function Hero() {
                     key={row.label}
                     className="flex items-baseline justify-between rounded bg-[#f0f3ff] px-3.5 py-2.5 transition-colors hover:bg-[#e5e8f4]"
                   >
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#76777b]">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#6b7075]">
                       {row.label}
                     </span>
                     <span
@@ -231,7 +231,7 @@ function Hero() {
                       onChange={(e) => setQuery(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && runQuery(query)}
                       placeholder="Ask NANTI anything from your chats..."
-                      className="w-full border-0 bg-transparent p-0 text-[14px] text-[#171c24] placeholder-[#76777b] focus:outline-none"
+                      className="w-full border-0 bg-transparent p-0 text-[14px] text-[#171c24] placeholder-[#6b7075] focus:outline-none"
                     />
                   </div>
                   <button
@@ -242,7 +242,7 @@ function Hero() {
                   </button>
                 </div>
                 <div className="mt-3 flex items-center gap-2">
-                  <span className="text-[11px] font-semibold text-[#76777b]">Try:</span>
+                  <span className="text-[11px] font-semibold text-[#6b7075]">Try:</span>
                   {["Promise Pak Tom?", "Supplier follow-up", "Invoice deadline"].map(
                     (chip, i) => (
                       <button
@@ -269,7 +269,7 @@ function Hero() {
                       <span className="text-[15px] text-[#107E71]">&#129302;</span>
                       <span>NANTI Answer</span>
                     </div>
-                    <span className="text-[10px] text-[#76777b]">WhatsApp Memory</span>
+                    <span className="text-[10px] text-[#6b7075]">WhatsApp Memory</span>
                   </div>
                   <p
                     className="text-[12px] leading-relaxed text-[#171c24]"
@@ -288,7 +288,7 @@ function Hero() {
                   </div>
                   <div className="text-left">
                     <p className="text-[14px] font-semibold text-[#171c24]">Reminder from NANTI</p>
-                    <p className="text-[11px] text-[#76777b]">2 hours before deadline</p>
+                    <p className="text-[11px] text-[#6b7075]">2 hours before deadline</p>
                   </div>
                 </div>
                 <div className="flex-1 rounded-lg border border-[#107E71]/15 bg-[#f0f9f4] p-3 text-left">
@@ -466,7 +466,7 @@ function HowItWorks() {
               >
                 <div>
                   <div className="mb-8 flex items-center justify-between">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#76777b]">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#6b7075]">
                       STEP {s.num}
                     </span>
                     <span className="text-[15px] font-bold text-[#107E71]">{s.label}</span>
@@ -477,7 +477,7 @@ function HowItWorks() {
                   <p className="text-[14px] leading-relaxed text-[#45474a]">{s.desc}</p>
                 </div>
                 <div
-                  className={`mt-8 flex items-center gap-2 pt-4 ${active === i ? "text-[#075E54]" : "text-[#76777b]"}`}
+                  className={`mt-8 flex items-center gap-2 pt-4 ${active === i ? "text-[#075E54]" : "text-[#6b7075]"}`}
                 >
                   <span
                     className="text-[20px] text-[#107E71]"
@@ -509,7 +509,7 @@ function HowItWorks() {
               </div>
               <p className="text-[12px] text-[#45474a]">{steps[active].inspector.desc}</p>
             </div>
-            <span className="flex shrink-0 items-center gap-1 text-[11px] text-[#76777b]">
+            <span className="flex shrink-0 items-center gap-1 text-[11px] text-[#6b7075]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#067a3f]" /> Click cards above to
               view steps
             </span>
@@ -700,7 +700,7 @@ function FinalCta() {
           </div>
         </Reveal>
         <Reveal delay={300}>
-          <div className="mt-6 flex items-center justify-center gap-4 text-[11px] font-semibold text-[#76777b]">
+          <div className="mt-6 flex items-center justify-center gap-4 text-[11px] font-semibold text-[#6b7075]">
             <span className="flex items-center gap-1.5 text-[#075E54]">
               <span className="text-[15px] text-[#107E71]">&#128737;</span> Encrypted
             </span>

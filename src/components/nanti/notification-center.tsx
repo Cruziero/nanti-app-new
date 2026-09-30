@@ -29,11 +29,11 @@ const typeIcons: Record<string, typeof Bell> = {
 };
 
 const typeColors: Record<string, string> = {
-  due_soon: "text-amber-500",
+  due_soon: "text-amber-700",
   due_today: "text-primary",
-  overdue: "text-red-500",
-  waiting_too_long: "text-orange-500",
-  followup_suggestion: "text-blue-500",
+  overdue: "text-red-700",
+  waiting_too_long: "text-orange-700",
+  followup_suggestion: "text-blue-600",
   daily_briefing: "text-primary",
 };
 

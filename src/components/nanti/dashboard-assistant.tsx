@@ -1157,7 +1157,7 @@ export function DashboardAssistant() {
               type="button"
               disabled={busy}
               onClick={() => void clearChat()}
-              className="min-h-11 rounded-md px-3 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 dark:hover:bg-red-950"
+              className="min-h-11 rounded-md px-3 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 dark:hover:bg-red-950"
             >
               Clear
             </button>

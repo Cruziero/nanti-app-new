@@ -324,7 +324,7 @@ function ImportPage() {
                         <KindBadge kind={d.kind} />
                         <span className="text-[14.5px] font-medium">{d.title}</span>
                         {clarificationAnswers[i] && (
-                          <span className="flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-medium text-green-600">
+                          <span className="flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-medium text-green-700">
                             <CheckCircle className="size-3" />
                             Complete
                           </span>
@@ -400,7 +400,7 @@ function ImportPage() {
                           </div>
                           <button
                             onClick={() => setClarifyingIndex(null)}
-                            className="mt-2 text-[11px] font-medium text-amber-600 hover:text-amber-800"
+                            className="mt-2 text-[11px] font-medium text-amber-700 hover:text-amber-800"
                           >
                             Done
                           </button>
@@ -410,7 +410,7 @@ function ImportPage() {
                       {d.needsClarification && clarifyingIndex !== i && !clarificationAnswers[i] && (
                         <button
                           onClick={() => setClarifyingIndex(i)}
-                          className="mt-2 flex items-center gap-1 text-[11.5px] font-medium text-amber-600 hover:text-amber-800"
+                          className="mt-2 flex items-center gap-1 text-[11.5px] font-medium text-amber-700 hover:text-amber-800"
                         >
                           <AlertCircle className="size-3" />
                           Missing info: add details
