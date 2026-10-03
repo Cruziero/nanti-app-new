@@ -1,6 +1,17 @@
 import { createClient } from "@supabase/supabase-js";
 
-const WHATSAPP_API_URL = "https://graph.facebook.com/v18.0";
+function whatsappApiBase() {
+  const version = process.env.WHATSAPP_GRAPH_VERSION || "v26.0";
+  return `https://graph.facebook.com/${version}`;
+}
+
+function normalizeIndonesiaPhone(value: string) {
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits.startsWith("62")) return digits;
+  if (digits.startsWith("0")) return `62${digits.slice(1)}`;
+  return `62${digits}`;
+}
 
 export async function sendWhatsAppMessage(
   to: string,
@@ -14,11 +25,13 @@ export async function sendWhatsAppMessage(
     return { success: false, error: "WhatsApp API not configured" };
   }
 
-  const cleanNumber = to.replace(/\D/g, "");
-  const formatted = cleanNumber.startsWith("62") ? cleanNumber : `62${cleanNumber}`;
+  const formatted = normalizeIndonesiaPhone(to);
+  if (!formatted) {
+    return { success: false, error: "Invalid WhatsApp phone number" };
+  }
 
   try {
-    const response = await fetch(`${WHATSAPP_API_URL}/${pid}/messages`, {
+    const response = await fetch(`${whatsappApiBase()}/${pid}/messages`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -67,11 +80,13 @@ export async function sendWhatsAppTemplate(
     return { success: false, error: "WhatsApp API not configured" };
   }
 
-  const cleanNumber = to.replace(/\D/g, "");
-  const formatted = cleanNumber.startsWith("62") ? cleanNumber : `62${cleanNumber}`;
+  const formatted = normalizeIndonesiaPhone(to);
+  if (!formatted) {
+    return { success: false, error: "Invalid WhatsApp phone number" };
+  }
 
   try {
-    const response = await fetch(`${WHATSAPP_API_URL}/${pid}/messages`, {
+    const response = await fetch(`${whatsappApiBase()}/${pid}/messages`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -126,10 +141,10 @@ export async function logOutboundMessage(
   await supabase.from("whatsapp_messages").insert({
     user_id: userId,
     direction: "outbound",
-    phone_number: phoneNumber,
+    to_number: normalizeIndonesiaPhone(phoneNumber),
     message_type: messageType,
     content,
-    wa_message_id: waMessageId,
+    external_message_id: waMessageId,
     status,
   });
 }
@@ -146,5 +161,5 @@ export async function updateMessageStatus(
   await supabase
     .from("whatsapp_messages")
     .update({ status, updated_at: new Date().toISOString() })
-    .eq("wa_message_id", waMessageId);
+    .eq("external_message_id", waMessageId);
 }

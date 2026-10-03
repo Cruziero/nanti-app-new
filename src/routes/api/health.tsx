@@ -43,10 +43,27 @@ export const Route = createFileRoute("/api/health")({
             aiPrivacyReady: process.env.GEMINI_PAID_TIER === "true",
             googleCalendar:
               configured(process.env.GOOGLE_CLIENT_ID) &&
-              configured(process.env.GOOGLE_CLIENT_SECRET),
+              configured(process.env.GOOGLE_CLIENT_SECRET) &&
+              configured(process.env.VITE_SITE_URL),
+            whatsapp:
+              configured(process.env.WHATSAPP_VERIFY_TOKEN) &&
+              configured(process.env.WHATSAPP_APP_SECRET) &&
+              configured(process.env.WHATSAPP_PHONE_NUMBER_ID) &&
+              configured(process.env.WHATSAPP_ACCESS_TOKEN) &&
+              configured(process.env.VITE_NANTI_WHATSAPP_NUMBER),
             push:
               configured(process.env.VAPID_PUBLIC_KEY) &&
-              configured(process.env.VAPID_PRIVATE_KEY),
+              configured(process.env.VAPID_PRIVATE_KEY) &&
+              configured(process.env.VITE_VAPID_PUBLIC_KEY),
+            launchFlags: {
+              whatsapp:
+                String(process.env.VITE_WHATSAPP_LAUNCH_ENABLED || "").toLowerCase() === "true",
+              calendar:
+                String(process.env.VITE_CALENDAR_LAUNCH_ENABLED || "").toLowerCase() === "true",
+              push:
+                String(process.env.VITE_PUSH_LAUNCH_ENABLED || "").toLowerCase() === "true",
+            },
+            pwa: true,
             cron: configured(process.env.CRON_SECRET),
           },
         });
