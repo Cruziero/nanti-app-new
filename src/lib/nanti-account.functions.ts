@@ -41,6 +41,9 @@ export const exportMyNantiData = createServerFn({ method: "GET" })
       whatsappLink,
       whatsappConfig,
       pushSubscriptions,
+      emailWorkspaces,
+      emailTasks,
+      gmailConnections,
     ] = await Promise.all([
       readAllExportPages((from, to) =>
         supabase.from("tasks").select("*").eq("user_id", userId).order("id").range(from, to),
@@ -173,6 +176,25 @@ export const exportMyNantiData = createServerFn({ method: "GET" })
           .order("id")
           .range(from, to),
       ),
+      readAllExportPages((from, to) =>
+        admin
+          .from("email_workspaces")
+          .select("id,kind,name,created_at")
+          .eq("user_id", userId)
+          .order("id")
+          .range(from, to),
+      ),
+      readAllExportPages((from, to) =>
+        admin.from("email_tasks").select("*").eq("user_id", userId).order("id").range(from, to),
+      ),
+      readAllExportPages((from, to) =>
+        admin
+          .from("gmail_connections")
+          .select("id,workspace_id,email,status,connected_at")
+          .eq("user_id", userId)
+          .order("id")
+          .range(from, to),
+      ),
     ]);
 
     const results = [
@@ -197,6 +219,9 @@ export const exportMyNantiData = createServerFn({ method: "GET" })
       whatsappLink,
       whatsappConfig,
       pushSubscriptions,
+      emailWorkspaces,
+      emailTasks,
+      gmailConnections,
     ];
     const firstError = results.find((result) => result.error)?.error;
     if (firstError) throw firstError;
@@ -229,6 +254,9 @@ export const exportMyNantiData = createServerFn({ method: "GET" })
         whatsapp_link: whatsappLink.data || null,
         whatsapp_config: whatsappConfig.data || null,
         push_subscriptions: pushSubscriptions.data || [],
+        email_workspaces: emailWorkspaces.data || [],
+        email_tasks: emailTasks.data || [],
+        gmail_connections: gmailConnections.data || [],
       },
     };
   });

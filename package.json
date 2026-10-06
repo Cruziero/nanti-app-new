@@ -17,7 +17,8 @@
     "test:live-eval-config": "node --check tests/assistant-live-eval.cjs && node -e \"const f=require('./tests/assistant-live-eval-fixtures.json'); if(f.total!==66||f.fixtures.length!==66) process.exit(1); console.log('PASS: 66 live-eval fixtures configured.')\"",
     "test:ai-transport": "node --test tests/ai-transport.cjs",
     "test:account-export": "node --test tests/account-export.cjs",
-    "verify:launch": "npm run test:quality && npm run test:ai-transport && npm run test:account-export && npm run build"
+    "test:gmail": "node --test tests/gmail.cjs",
+    "verify:launch": "npm run test:quality && npm run test:ai-transport && npm run test:account-export && npm run test:gmail && npm run build"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

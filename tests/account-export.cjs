@@ -127,7 +127,7 @@ test("account export scopes every page to the caller and excludes Calendar token
   assert.equal(result.data.tasks.length, 1101);
   for (const request of requests) {
     assert.equal(JSON.stringify(request.filters), JSON.stringify([["user_id", "owner"]]));
-    if (request.table === "calendar_connections") {
+    if (request.table === "calendar_connections" || request.table === "gmail_connections") {
       assert.ok(!request.columns.includes("token"));
       assert.notEqual(request.columns, "*");
     } else if (request.table === "whatsapp_configs") {
@@ -154,7 +154,10 @@ test("account export scopes every page to the caller and excludes Calendar token
     "calendar_events",
     "conversations",
     "daily_briefings",
+    "email_tasks",
+    "email_workspaces",
     "entity_aliases",
+    "gmail_connections",
     "inbox_items",
     "notifications",
     "people",

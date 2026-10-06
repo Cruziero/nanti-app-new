@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/nanti/app-shell";
+import { GmailPanel } from "@/components/nanti/gmail-panel";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -1044,6 +1045,8 @@ function SettingsPage() {
           </div>
         )}
       </section>
+
+      <GmailPanel />
 
       <section className="mb-10">
         <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground/70">

@@ -43,6 +43,7 @@ import { Route as AuthSignupRouteImport } from './routes/auth.signup'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as LegalPrivacyRouteImport } from './routes/legal.privacy'
 import { Route as LegalTermsRouteImport } from './routes/legal.terms'
+import { Route as ApiAuthGmailRouteImport } from './routes/api/auth/gmail'
 import { Route as ApiAuthGoogleRouteImport } from './routes/api/auth/google'
 import { Route as ApiCronAssistantEvalRouteImport } from './routes/api/cron/assistant-eval'
 import { Route as ApiCronCheckRemindersRouteImport } from './routes/api/cron/check-reminders'
@@ -231,6 +232,11 @@ const LegalTermsRoute = LegalTermsRouteImport.update({
   path: '/legal/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAuthGmailRoute = ApiAuthGmailRouteImport.update({
+  id: '/api/auth/gmail',
+  path: '/api/auth/gmail',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthGoogleRoute = ApiAuthGoogleRouteImport.update({
   id: '/api/auth/google',
   path: '/api/auth/google',
@@ -352,6 +358,7 @@ export interface FileRoutesByFullPath {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/app/': typeof AppIndexRoute
+  '/api/auth/gmail': typeof ApiAuthGmailRoute
   '/api/auth/google': typeof ApiAuthGoogleRoute
   '/api/cron/assistant-eval': typeof ApiCronAssistantEvalRoute
   '/api/cron/check-reminders': typeof ApiCronCheckRemindersRoute
@@ -404,6 +411,7 @@ export interface FileRoutesByTo {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/app': typeof AppIndexRoute
+  '/api/auth/gmail': typeof ApiAuthGmailRoute
   '/api/auth/google': typeof ApiAuthGoogleRoute
   '/api/cron/assistant-eval': typeof ApiCronAssistantEvalRoute
   '/api/cron/check-reminders': typeof ApiCronCheckRemindersRoute
@@ -458,6 +466,7 @@ export interface FileRoutesById {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/app/': typeof AppIndexRoute
+  '/api/auth/gmail': typeof ApiAuthGmailRoute
   '/api/auth/google': typeof ApiAuthGoogleRoute
   '/api/cron/assistant-eval': typeof ApiCronAssistantEvalRoute
   '/api/cron/check-reminders': typeof ApiCronCheckRemindersRoute
@@ -513,6 +522,7 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/terms'
     | '/app/'
+    | '/api/auth/gmail'
     | '/api/auth/google'
     | '/api/cron/assistant-eval'
     | '/api/cron/check-reminders'
@@ -565,6 +575,7 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/terms'
     | '/app'
+    | '/api/auth/gmail'
     | '/api/auth/google'
     | '/api/cron/assistant-eval'
     | '/api/cron/check-reminders'
@@ -618,6 +629,7 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/terms'
     | '/app/'
+    | '/api/auth/gmail'
     | '/api/auth/google'
     | '/api/cron/assistant-eval'
     | '/api/cron/check-reminders'
@@ -656,6 +668,7 @@ export interface RootRouteChildren {
   ApiHealthRoute: typeof ApiHealthRoute
   LegalPrivacyRoute: typeof LegalPrivacyRoute
   LegalTermsRoute: typeof LegalTermsRoute
+  ApiAuthGmailRoute: typeof ApiAuthGmailRoute
   ApiAuthGoogleRoute: typeof ApiAuthGoogleRoute
   ApiCronAssistantEvalRoute: typeof ApiCronAssistantEvalRoute
   ApiCronCheckRemindersRoute: typeof ApiCronCheckRemindersRoute
@@ -913,6 +926,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LegalTermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/auth/gmail': {
+      id: '/api/auth/gmail'
+      path: '/api/auth/gmail'
+      fullPath: '/api/auth/gmail'
+      preLoaderRoute: typeof ApiAuthGmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/google': {
       id: '/api/auth/google'
       path: '/api/auth/google'
@@ -1114,6 +1134,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHealthRoute: ApiHealthRoute,
   LegalPrivacyRoute: LegalPrivacyRoute,
   LegalTermsRoute: LegalTermsRoute,
+  ApiAuthGmailRoute: ApiAuthGmailRoute,
   ApiAuthGoogleRoute: ApiAuthGoogleRoute,
   ApiCronAssistantEvalRoute: ApiCronAssistantEvalRoute,
   ApiCronCheckRemindersRoute: ApiCronCheckRemindersRoute,
