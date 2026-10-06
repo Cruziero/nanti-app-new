@@ -42,10 +42,13 @@ Email tasks appear in Settings > Gmail. They do not yet appear in the existing T
 - PASS: targeted ESLint for Gmail server, functions, callback and UI.
 - PASS: 13 Gmail backend tests (`npm run test:gmail`).
 - PASS: existing semantic and assistant-quality fixtures, AI transport tests and account-export tests.
+- PASS: `npm run verify:launch` after the dependency patches. Production dependency audit reports zero vulnerabilities.
+- The first hosted CI run stopped at its dependency audit on vulnerabilities already present in main. The lockfile now updates only `seroval` from 1.6.2 to 1.6.8 and `source-map-js` from 1.2.1 to 1.2.2, which include the patches for [GHSA-jp82-f5mq-hwhp](https://github.com/advisories/GHSA-jp82-f5mq-hwhp) and [GHSA-68fv-2mgg-jv7q](https://github.com/advisories/GHSA-68fv-2mgg-jv7q).
 - PASS: migration executed in a temporary PostgreSQL-compatible PGlite database with Supabase role/auth scaffolding. `tests/gmail-schema.sql` verified owner RLS, cross-owner foreign-key denial, browser credential denial, duplicate prevention and separate workspace keys. No production schema changes were applied.
 - PASS: 13 DOM interaction checks using the real Gmail React component with explicitly synthetic API data: personal inbox loads; selected email opens; AI requires consent; suggestions are editable; task save stays in its workspace; completion/reopening; business switch clears personal context; manual creation/discard; pagination; search empty state; read error state; disconnect; returning to Personal restores its tasks.
 - The full typecheck reports 562 errors on both current main and this branch. Comparing diagnostics shows no added Gmail errors; the changed route-union length in an existing blog error reflects the newly generated callback route.
 - NOT VERIFIED: real Google authorization/token refresh, actual Gmail accounts, signed-in deployment behavior, browser layout at mobile widths and full keyboard/contrast checks. Browser installation failed because the download was unavailable in this environment. DOM checks do not establish visual browser acceptance. This is a draft PR, not a live or fully accepted integration.
+- The initial Vercel preview status reports failure. Its build logs could not be inspected because the connected Vercel identity is not authorized for the deployment's `wunder2` team. This access issue must be resolved to diagnose the preview status; no production deployment is claimed.
 
 ## UI decisions
 
