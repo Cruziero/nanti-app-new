@@ -17,7 +17,8 @@
     "test:live-eval-config": "node --check tests/assistant-live-eval.cjs && node -e \"const f=require('./tests/assistant-live-eval-fixtures.json'); if(f.total!==66||f.fixtures.length!==66) process.exit(1); console.log('PASS: 66 live-eval fixtures configured.')\"",
     "test:ai-transport": "node --test tests/ai-transport.cjs",
     "test:account-export": "node --test tests/account-export.cjs",
-    "verify:launch": "npm run test:quality && npm run test:ai-transport && npm run test:account-export && npm run build"
+    "test:gmail": "node --test tests/gmail.cjs",
+    "verify:launch": "npm run test:quality && npm run test:ai-transport && npm run test:account-export && npm run test:gmail && npm run build"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -51,9 +52,9 @@
     "@supabase/supabase-js": "^2.112.3",
     "@tailwindcss/vite": "^4.2.1",
     "@tanstack/react-query": "^5.101.1",
-    "@tanstack/react-router": "1.170.18",
-    "@tanstack/react-start": "1.168.32",
-    "@tanstack/router-plugin": "1.168.23",
+    "@tanstack/react-router": "1.170.41",
+    "@tanstack/react-start": "1.168.60",
+    "@tanstack/router-plugin": "1.168.42",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

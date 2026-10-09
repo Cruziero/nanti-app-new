@@ -14,7 +14,7 @@ async function loadPersonalAiContext(context: { supabase: any; userId: string })
   return [language, entities].filter(Boolean).join("\n\n");
 }
 
-async function consumeAiQuota(
+export async function consumeAiQuota(
   context: { supabase: any; userId: string },
   kind: "text" | "screenshot",
 ) {
