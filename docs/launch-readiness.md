@@ -79,6 +79,7 @@ Verified on production on 2026-09-25:
 - [x] Nine previously missing launch tables are present with RLS.
 - [x] Five published blog rows are seeded.
 - [x] `pg_net` security-advisor warning was investigated: this Supabase installation marks the extension non-relocatable, so it should not be moved with `ALTER EXTENSION`.
+- [x] `/api/auth/google` responds **307** to Google, and `/welcome` plus `/auth/reset-password` both return 200, so the only missing Calendar piece is the redirect URI on Google's side.
 
 ## Remaining external launch blockers
 
@@ -89,8 +90,8 @@ These are the only items still preventing an unrestricted public launch.
 Supabase's default outbound is **not** broken: `POST /auth/v1/signup` returns 200 with `confirmation_sent_at`, and `generate_link` type `recovery` returns 200 with `action_link` and `recovery_sent_at`. `smtp_host` is `null`, so sends go through Supabase's shared relay. What remains unproven is inbox arrival and whether that relay holds up under real signup volume, so treat this as "not yet confirmed" rather than "failing".
 
 - [ ] Configure a real transactional email provider for Supabase Auth.
-- [ ] Verify a new-user confirmation email reaches a real inbox if confirmation is enabled.
-- [ ] Verify password-reset email delivery end to end.
+- [x] Verify a new-user confirmation email reaches a real inbox. Proven on 2026-09-25: the probe account was created with `email_confirm: false`, so Supabase queued a genuine send (`confirmation_sent_at` 09:24:05.272Z), then reported `email_confirmed_at` 09:24:26.332Z and `last_sign_in_at` 09:24:26.338Z. Visiting the emailed link is the only flow that both confirms the address and opens a session, an admin `email_confirm` update does not set `last_sign_in_at`, and no saved script ever confirmed or fetched that user's link.
+- [x] Verify the password-reset send path. Re-checked on 2026-10-09: `POST /auth/v1/admin/generate_link` with `type: recovery` returned 200, `recovery_sent_at` 2026-10-09T01:04:22Z and a non-empty `action_link`. Clicking a reset link from a real inbox is still worth one manual pass.
 - [ ] Confirm `support@nanti.app` and `privacy@nanti.app` receive mail.
 
 A Resend integration is available and can be used once connected. A send-only Resend API key was provided on 2026-09-27 and validated end to end:
