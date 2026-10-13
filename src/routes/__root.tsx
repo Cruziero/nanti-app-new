@@ -82,26 +82,31 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "NANTI · Memory for WhatsApp" },
+      { name: "theme-color", content: "#107E71" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "apple-mobile-web-app-title", content: "NANTI" },
+      { title: "NANTI · You talk. NANTI remembers." },
       {
         name: "description",
         content:
-          "Forward or paste your WhatsApp conversations into NANTI. NANTI turns them into tracked commitments, reminders and follow-ups.",
+          "Talk naturally, paste a conversation, or upload a screenshot. NANTI helps you track commitments, reminders, and follow-ups.",
       },
       { name: "author", content: "NANTI" },
-      { property: "og:title", content: "NANTI · Memory for WhatsApp" },
+      { property: "og:title", content: "NANTI · You talk. NANTI remembers." },
       {
         property: "og:description",
         content:
-          "Forward or paste your WhatsApp conversations into NANTI. NANTI turns them into tracked commitments, reminders and follow-ups.",
+          "Talk naturally, paste a conversation, or upload a screenshot. NANTI helps you track commitments, reminders, and follow-ups.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "NANTI · Memory for WhatsApp" },
+      { name: "twitter:title", content: "NANTI · You talk. NANTI remembers." },
       {
         name: "twitter:description",
         content:
-          "Forward or paste your WhatsApp conversations into NANTI. NANTI turns them into tracked commitments, reminders and follow-ups.",
+          "Talk naturally, paste a conversation, or upload a screenshot. NANTI helps you track commitments, reminders, and follow-ups.",
       },
       { property: "og:image", content: OG_IMAGE_URL },
       { name: "twitter:image", content: OG_IMAGE_URL },
@@ -118,6 +123,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/nanti-icon.svg" },
     ],
   }),
   shellComponent: RootShell,

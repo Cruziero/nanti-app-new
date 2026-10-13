@@ -2,11 +2,20 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { syncGoogleCalendarForUser } from "@/lib/nanti-calendar.functions";
 
+const CALENDAR_LAUNCH_ENABLED =
+  String(process.env.VITE_CALENDAR_LAUNCH_ENABLED || "").toLowerCase() === "true";
+
 export const Route = createFileRoute("/api/cron/sync-calendar")({
   server: {
     handlers: {
       GET: async ({ request }) => {
         try {
+          if (!CALENDAR_LAUNCH_ENABLED) {
+            return new Response(
+              JSON.stringify({ ok: true, skipped: true, reason: "calendar_launch_disabled" }),
+              { status: 200, headers: { "Content-Type": "application/json" } },
+            );
+          }
           const authHeader = request.headers.get("Authorization");
           if (
             !process.env.CRON_SECRET ||

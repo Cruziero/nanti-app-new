@@ -61,6 +61,7 @@ import {
   deleteMyNantiAccount,
   exportMyNantiData,
 } from "@/lib/nanti-account.functions";
+import { NANTI_LAUNCH_FLAGS } from "@/lib/nanti-launch-flags";
 
 export const Route = createFileRoute("/app/settings")({
   head: () => ({
@@ -82,9 +83,9 @@ const toneOptions: { id: ConversationTone; label: string }[] = [
   { id: "direct", label: "Direct" },
 ];
 
-const PUSH_LAUNCH_ENABLED = false;
-const CALENDAR_LAUNCH_ENABLED = false;
-const WHATSAPP_LAUNCH_ENABLED = false;
+const PUSH_LAUNCH_ENABLED = NANTI_LAUNCH_FLAGS.push;
+const CALENDAR_LAUNCH_ENABLED = NANTI_LAUNCH_FLAGS.calendar;
+const WHATSAPP_LAUNCH_ENABLED = NANTI_LAUNCH_FLAGS.whatsapp;
 
 const channelOpts: { id: ReminderChannel; label: string }[] = [
   ...(PUSH_LAUNCH_ENABLED

@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 
-const WHATSAPP_LAUNCH_ENABLED = false;
+const WHATSAPP_LAUNCH_ENABLED =
+  String(process.env.VITE_WHATSAPP_LAUNCH_ENABLED || "").toLowerCase() === "true";
+const PUSH_LAUNCH_ENABLED =
+  String(process.env.VITE_PUSH_LAUNCH_ENABLED || "").toLowerCase() === "true";
 
 export const Route = createFileRoute("/api/cron/check-reminders")({
   server: {
@@ -138,7 +141,7 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
                 dedupeKey: `briefing:${today}`,
               });
             }
-            if (channels.includes("push")) {
+            if (PUSH_LAUNCH_ENABLED && channels.includes("push")) {
               attempted++;
               sent += await sendPushNotification(supabase, row.user_id, {
                 title: "Your NANTI briefing",
@@ -208,7 +211,7 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
                 dedupeKey: `task:${task.id}:${bucket}`,
               });
             }
-            if (channels.includes("push")) {
+            if (PUSH_LAUNCH_ENABLED && channels.includes("push")) {
               attempted++;
               sent += await sendPushNotification(supabase, task.user_id, {
                 title,
@@ -260,7 +263,7 @@ export const Route = createFileRoute("/api/cron/check-reminders")({
                 dedupeKey: `waiting:${waiting.id}:${dayBucket}`,
               });
             }
-            if (channels.includes("push")) {
+            if (PUSH_LAUNCH_ENABLED && channels.includes("push")) {
               attempted++;
               sent += await sendPushNotification(supabase, waiting.user_id, {
                 title: "Waktunya follow up",

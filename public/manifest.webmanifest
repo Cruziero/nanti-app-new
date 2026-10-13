@@ -1,0 +1,19 @@
+{
+  "name": "NANTI",
+  "short_name": "NANTI",
+  "description": "A conversational second memory for tasks, reminders and follow-ups.",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#107E71",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/nanti-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

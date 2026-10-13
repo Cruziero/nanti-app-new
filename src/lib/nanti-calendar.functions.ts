@@ -26,6 +26,21 @@ function googleConfig() {
   return { clientId, clientSecret };
 }
 
+function calendarAppOrigin(requestedOrigin: string) {
+  const configured =
+    process.env["VITE_SITE_URL"] ||
+    (process.env["VERCEL_PROJECT_PRODUCTION_URL"]
+      ? `https://${process.env["VERCEL_PROJECT_PRODUCTION_URL"]}`
+      : "");
+  if (configured) {
+    return new URL(configured).origin;
+  }
+  if (process.env["VERCEL_ENV"] === "production") {
+    throw new Error("Calendar public site URL is not configured.");
+  }
+  return new URL(requestedOrigin).origin;
+}
+
 export const startGoogleCalendarConnect = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
@@ -41,6 +56,7 @@ export const startGoogleCalendarConnect = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const { clientId } = googleConfig();
+    const appOrigin = calendarAppOrigin(data.origin);
     const supabase = adminClient();
     const state = `${crypto.randomUUID()}${crypto.randomUUID().replace(/-/g, "")}`;
     const expiresAt = new Date(Date.now() + 10 * 60_000).toISOString();
@@ -51,7 +67,7 @@ export const startGoogleCalendarConnect = createServerFn({ method: "POST" })
       .insert({ state, user_id: userId, expires_at: expiresAt });
     if (stateError) throw stateError;
 
-    const redirectUri = `${data.origin.replace(/\/$/, "")}/api/auth/google`;
+    const redirectUri = `${appOrigin}/api/auth/google`;
     const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
     authUrl.searchParams.set("client_id", clientId);
     authUrl.searchParams.set("redirect_uri", redirectUri);

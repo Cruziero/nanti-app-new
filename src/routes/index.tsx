@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { MarketingLayout, Reveal } from "@/components/nanti/marketing";
 import { OG_IMAGE_URL, SITE_URL } from "@/lib/site";
+import { NANTI_LAUNCH_FLAGS, integrationStatusLabel } from "@/lib/nanti-launch-flags";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -10,13 +11,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "NANTI turns everyday WhatsApp conversations into commitments, reminders and follow-ups so you stop carrying everything in your head.",
+          "Talk naturally, paste a conversation, or upload a screenshot. NANTI helps turn commitments, reminders and follow-ups into something you can track.",
       },
       { property: "og:title", content: "NANTI: You talk. NANTI remembers." },
       {
         property: "og:description",
         content:
-          "NANTI turns everyday WhatsApp conversations into commitments, reminders and follow-ups.",
+          "NANTI helps turn everyday commitments, reminders and follow-ups into something you can track.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: SITE_URL },
@@ -26,7 +27,7 @@ export const Route = createFileRoute("/")({
       {
         name: "twitter:description",
         content:
-          "NANTI turns everyday WhatsApp conversations into commitments, reminders and follow-ups.",
+          "NANTI helps turn everyday commitments, reminders and follow-ups into something you can track.",
       },
       { name: "twitter:image", content: OG_IMAGE_URL },
     ],
@@ -56,7 +57,7 @@ function Hero() {
 
   const responses: Record<string, string> = {
     "What did I promise Pak Tom?":
-      'Pak Tom: Send invoice by <strong className="text-[#107E71]">28 August, 10:00 AM</strong> detected from WhatsApp forwarded message.',
+      'Pak Tom: Send invoice by <strong className="text-[#107E71]">28 August, 10:00 AM</strong> from your saved NANTI context.',
     "Follow-up supplier deadline":
       "PT Maju Supplier: Follow-up raw materials shipment promised by <strong className=\"text-[#107E71]\">Friday 15:00</strong>.",
     "When is invoice due?":
@@ -75,7 +76,7 @@ function Hero() {
     );
     return key
       ? responses[key]
-      : `Result for "${query}": 1 active commitment found in WhatsApp archive. Scheduled for review.`;
+      : `Result for "${query}": 1 active commitment found in your NANTI workspace.`;
   };
 
   return (
@@ -87,7 +88,7 @@ function Hero() {
         <div className="mx-auto mb-16 max-w-4xl text-center">
           <Reveal>
             <p className="mb-6 text-[13px] font-semibold tracking-[0.02em] text-[#075E54]">
-              Remembers your WhatsApp commitments
+              A second memory for what you mean to do
             </p>
           </Reveal>
 
@@ -100,8 +101,8 @@ function Hero() {
 
           <Reveal delay={100}>
             <p className="mx-auto mt-6 max-w-xl text-[16px] leading-[1.65] text-[#45474a]">
-              Forward a WhatsApp message. NANTI extracts the commitment, tracks the deadline, and
-              reminds you when it&apos;s time.
+              Type naturally, paste a conversation, or upload a screenshot. NANTI helps you save
+              clear commitments, track follow-ups, and remember what needs attention.
             </p>
           </Reveal>
 
@@ -111,7 +112,7 @@ function Hero() {
                 to="/welcome"
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-[#107E71] px-8 py-3.5 text-[15px] font-semibold text-white shadow-lg shadow-[#107E71]/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#0b5e54] hover:shadow-xl hover:shadow-[#107E71]/40 active:translate-y-0"
               >
-                Try NANTI for free
+                Try NANTI
               </Link>
               <Link
                 to="/how-it-works"
@@ -124,7 +125,7 @@ function Hero() {
 
           <Reveal delay={300}>
             <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.04em] text-[#6b7075]">
-              No credit card required. Free forever.
+              No credit card required.
             </p>
           </Reveal>
         </div>
@@ -144,7 +145,7 @@ function Hero() {
                       <span className="text-[15px] font-semibold text-[#171c24]">Pak Tom</span>
                       <span className="text-[14px] text-[#067a3f]">&#10003;</span>
                     </div>
-                    <span className="text-[12px] text-[#6b7075]">WhatsApp Business</span>
+                    <span className="text-[12px] text-[#6b7075]">Copied from chat</span>
                   </div>
                 </div>
                 <span className="text-[11px] font-semibold text-[#6b7075]">14:32</span>
@@ -152,7 +153,7 @@ function Hero() {
               <div className="mb-3 rounded-r-lg border-l-4 border-[#107E71] bg-[#f0f9f4] p-3.5 text-left">
                 <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-[#075E54]">
                   <span className="text-[14px] text-[#107E71]">&#8618;</span>
-                  <span>Forwarded message</span>
+                  <span>Conversation message</span>
                 </div>
                 <p className="text-[14px] leading-snug text-[#171c24]">
                   &ldquo;nanti saya kirim invoice tgl 28 agustus ya pak Tom&rdquo;
@@ -161,7 +162,7 @@ function Hero() {
               <div className="flex items-center justify-between pt-1">
                 <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#075E54]">
                   <span className="h-2 w-2 rounded-full bg-[#067a3f]" />
-                  <span>Forwarded to NANTI</span>
+                  <span>Brought to NANTI</span>
                 </div>
                 <span className="text-[16px] text-[#107E71]">&#10003;&#10003;</span>
               </div>
@@ -209,7 +210,7 @@ function Hero() {
                 }`}
               >
                 {tracked ? (
-                  <span>&#10003; Tracked in WhatsApp</span>
+                  <span>&#10003; Tracked in NANTI</span>
                 ) : (
                   <span>&#128203; Track commitment</span>
                 )}
@@ -230,7 +231,7 @@ function Hero() {
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && runQuery(query)}
-                      placeholder="Ask NANTI anything from your chats..."
+                      placeholder="Ask NANTI about your saved work..."
                       className="w-full border-0 bg-transparent p-0 text-[14px] text-[#171c24] placeholder-[#6b7075] focus:outline-none"
                     />
                   </div>
@@ -269,7 +270,7 @@ function Hero() {
                       <span className="text-[15px] text-[#107E71]">&#129302;</span>
                       <span>NANTI Answer</span>
                     </div>
-                    <span className="text-[10px] text-[#6b7075]">WhatsApp Memory</span>
+                    <span className="text-[10px] text-[#6b7075]">NANTI memory</span>
                   </div>
                   <p
                     className="text-[12px] leading-relaxed text-[#171c24]"
@@ -377,13 +378,13 @@ function HowItWorks() {
       num: "01",
       label: "TALK",
       title: "Converse naturally",
-      desc: "Your conversations already hold what needs to get done. Just forward a message to NANTI.",
+      desc: "Tell NANTI directly, paste a conversation, or bring in a screenshot when the context lives in chat.",
       footer: "Forward or paste",
       icon: "&#128172;",
       inspector: {
         badge: "Step 1 Preview",
-        title: "Forward the message to NANTI",
-        desc: "Swipe right on any message with a promise and forward it to the NANTI contact.",
+        title: "Bring the context to NANTI",
+        desc: "Type it directly, paste the relevant conversation, or upload a screenshot for NANTI to analyze.",
         icon: "&#128172;",
       },
     },
@@ -419,13 +420,13 @@ function HowItWorks() {
       num: "04",
       label: "FOLLOW UP",
       title: "Gentle surfacing",
-      desc: "When the time comes, NANTI sends a reminder back in WhatsApp.",
+      desc: "When the time comes, NANTI surfaces the reminder in the channels you have enabled.",
       footer: "Reminder with context",
       icon: "&#128276;",
       inspector: {
         badge: "Step 4 Preview",
-        title: "NANTI sends the reminder",
-        desc: "Two hours before the deadline, NANTI sends a reminder: Invoice for Pak Tom is due at 10:00 AM today.",
+        title: "NANTI surfaces the reminder",
+        desc: "Two hours before the deadline, NANTI can surface: Invoice for Pak Tom is due at 10:00 AM today.",
         icon: "&#128276;",
       },
     },
@@ -535,8 +536,8 @@ function CompactHowItWorks() {
           </Reveal>
           <Reveal delay={100}>
             <p className="mt-4 text-[16px] text-[#45474a]">
-              Forward a WhatsApp message. NANTI extracts the commitment, tracks the deadline, and
-              reminds you when it matters.
+              Talk naturally, paste a conversation, or upload a screenshot. NANTI helps turn the
+              important parts into tasks, reminders, and follow-ups.
             </p>
           </Reveal>
           <Reveal delay={200}>
@@ -556,36 +557,84 @@ function CompactHowItWorks() {
 /* ─── INTEGRATIONS ─── */
 
 function IntegrationsSection() {
+  const integrations = [
+    {
+      name: "NANTI Web App",
+      status: "Live",
+      description: "Ask NANTI, Tasks, Inbox, Waiting, memory and in-app reminders.",
+      icon: "N",
+    },
+    {
+      name: "WhatsApp",
+      status: integrationStatusLabel("whatsapp"),
+      description: NANTI_LAUNCH_FLAGS.whatsapp
+        ? "Connect your number in Settings and forward text to NANTI."
+        : "Cloud API flow is built and is being kept in private beta until provider verification is complete.",
+      icon: "WA",
+    },
+    {
+      name: "Google Calendar",
+      status: integrationStatusLabel("calendar"),
+      description: NANTI_LAUNCH_FLAGS.calendar
+        ? "Connect read-only Calendar access in Settings and use your schedule as Ask NANTI context."
+        : "Read-only sync is built; public activation waits for final Google OAuth redirect verification.",
+      icon: "G",
+    },
+    {
+      name: "Home Screen + Push",
+      status: integrationStatusLabel("push"),
+      description: NANTI_LAUNCH_FLAGS.push
+        ? "Install NANTI to your Home Screen and enable supported browser push reminders."
+        : "The web app is installable now; push stays private beta until real-device delivery is verified.",
+      icon: "↗",
+    },
+  ];
+
   return (
-    <section className="w-full bg-[#eaedfa] py-16">
-      <div className="mx-auto max-w-[1240px] px-6 text-center">
+    <section className="w-full border-y border-[#e1e7e2] bg-[#f5f8f6] py-16">
+      <div className="mx-auto max-w-[1040px] px-5 sm:px-8">
         <Reveal>
-          <span className="mb-3 block text-[11px] font-semibold tracking-[0.02em] text-[#075E54]">
-              Integrations
-          </span>
-          <h3 className="font-serif text-[22px] leading-[28px] text-[#171c24] mb-8">
-            Works with the tools you already use
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#075E54]">
+            Integrations
+          </p>
+          <h3 className="mt-3 max-w-[700px] text-[28px] font-semibold tracking-[-0.025em] text-[#171c24] sm:text-[34px]">
+            Connected capabilities turn on only when they are actually ready.
           </h3>
+          <p className="mt-3 max-w-[680px] text-[14px] leading-6 text-[#555a5e]">
+            The core NANTI web app is live. External channels are activated independently after
+            provider and real-device acceptance, so the product never promises an integration that
+            has not been verified.
+          </p>
         </Reveal>
-        <Reveal delay={100}>
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            <div className="inline-flex cursor-pointer items-center gap-3 rounded-full border-2 border-[#107E71] bg-[#e7f7ef] px-5 py-3 shadow-md shadow-[#107E71]/10 transition-all hover:scale-105 hover:shadow-lg">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#107E71]">
-                <span className="text-[16px] text-white">&#128172;</span>
+
+        <div className="mt-9 grid gap-3 sm:grid-cols-2">
+          {integrations.map((item, index) => (
+            <Reveal key={item.name} delay={index * 60}>
+              <div className="flex h-full gap-4 rounded-xl border border-[#dfe4df] bg-white p-5">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#e7f7ef] text-[12px] font-bold text-[#075E54]">
+                  {item.icon}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="text-[14px] font-semibold text-[#171c24]">{item.name}</h4>
+                    <span className="rounded-full bg-[#eef2ef] px-2 py-0.5 text-[10px] font-semibold text-[#5c6165]">
+                      {item.status}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-[13px] leading-5 text-[#5c6165]">
+                    {item.description}
+                  </p>
+                </div>
               </div>
-              <span className="text-[15px] font-bold text-[#075E54]">WhatsApp</span>
-            </div>
-            <div className="inline-flex cursor-pointer items-center gap-3 rounded-full border border-[#c6c6ca]/50 bg-white px-5 py-3 shadow-sm transition-all hover:border-[#107E71]/40 hover:shadow-md hover:scale-105">
-              <span className="text-[20px] text-[#107E71]">&#128197;</span>
-              <span className="text-[15px] font-semibold text-[#171c24]">Google Calendar</span>
-            </div>
-            <div className="inline-flex cursor-pointer items-center gap-3 rounded-full border border-[#c6c6ca]/50 bg-white px-5 py-3 shadow-sm transition-all hover:border-[#107E71]/40 hover:shadow-md hover:scale-105">
-              <span className="text-[20px] text-[#107E71]">&#128225;</span>
-              <span className="text-[15px] font-semibold text-[#171c24]">
-                Lockscreen &amp; Home Widget
-              </span>
-            </div>
-          </div>
+            </Reveal>
+          ))}
+        </div>
+
+        <Reveal delay={260}>
+          <p className="mt-5 text-[11px] leading-5 text-[#73787c]">
+            “Home Screen + Push” is an installable web-app experience. A native iOS/Android
+            lock-screen widget is not part of the current web release.
+          </p>
         </Reveal>
       </div>
     </section>
@@ -695,7 +744,7 @@ function FinalCta() {
               to="/welcome"
               className="inline-flex items-center justify-center gap-2 rounded-full bg-[#107E71] px-9 py-4 text-[15px] font-semibold text-white shadow-lg shadow-[#107E71]/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#0b5e54] hover:shadow-xl hover:shadow-[#107E71]/40 active:translate-y-0"
             >
-              Try NANTI for free
+              Try NANTI
             </Link>
           </div>
         </Reveal>

@@ -26,6 +26,16 @@ The following integrations are intentionally **not part of the initial public la
 
 Their implementation remains in the codebase behind launch flags.
 
+### Integration activation state — 2026-10-03
+
+The integration code is now **ready for controlled activation**, but all three launch flags remain off until their external acceptance check passes.
+
+- WhatsApp: configurable Meta Graph version, account-linking flow, inbound text extraction, clarification, reminder delivery path and live-schema logging are code-complete. Indonesian 08xx normalization and stale outbound logging fields were corrected. Enable only after Meta webhook/phone/template delivery is verified end to end.
+- Google Calendar: read-only OAuth, token refresh, rolling event cache, Ask NANTI context, manual sync/disconnect and scheduled sync are code-complete. OAuth redirect origin is pinned server-side to the configured production app URL. Enable only after Google Cloud registers `https://nanti-app-new.vercel.app/api/auth/google` and one real account completes connect → sync → Ask → disconnect.
+- Home Screen + Push: NANTI now ships an installable PWA manifest. VAPID push subscription/test/delivery code is complete. Enable public Push only after delivery is verified on supported desktop and a real phone. This is **not** a native iOS/Android lock-screen widget.
+- Activation flags: `VITE_WHATSAPP_LAUNCH_ENABLED`, `VITE_CALENDAR_LAUNCH_ENABLED`, `VITE_PUSH_LAUNCH_ENABLED`. Settings, cron workers, homepage status, and health diagnostics use the same launch state.
+
+
 ## Code-complete foundations
 
 - [x] Email/password signup supports both confirmation-required and instant-session Supabase modes.
@@ -43,8 +53,10 @@ Their implementation remains in the codebase behind launch flags.
 - [x] Customer data export is authenticated and excludes OAuth, delivery and link-code secrets.
 - [x] Account deletion removes the auth user and cascades NANTI-owned data.
 - [x] Reminder dispatch is active from Supabase every 5 minutes.
-- [x] WhatsApp delivery is hard-disabled for the initial launch.
-- [x] Calendar and Push customer surfaces are hidden for the initial launch.
+- [x] WhatsApp, Calendar and Push are deployment-flag controlled and remain disabled by default.
+- [x] Reminder/Calendar cron workers honor the same launch flags as customer Settings.
+- [x] Homepage integration cards show Live vs Private beta rather than implying unverified integrations are public.
+- [x] NANTI is installable as a Home Screen PWA; native lock-screen widgets are not claimed.
 - [x] 146 deterministic messy-language cases are a blocking CI gate.
 - [x] 66-case live-model benchmark exists as supplemental scheduled QA.
 - [x] Production AI smoke monitoring is scheduled from Supabase.
@@ -157,9 +169,9 @@ See `docs/LEGAL-LAUNCH-CHECKLIST.md`.
 ## Non-blocking post-launch / later activation
 
 - [ ] Add `GEMINI_API_KEY` to GitHub Actions if the nightly 66-case external live-model benchmark should run there. Production smoke monitoring already runs independently. This needs a GitHub PAT with the `repo` scope; the API rejects unauthenticated writes to repository secrets, so it cannot be done without owner credentials.
-- [ ] Validate Google Calendar with a real OAuth account before enabling `CALENDAR_LAUNCH_ENABLED`. The redirect URI is **confirmed missing**: `https://nanti-app-new.vercel.app/api/auth/google` returns Google's `redirect_uri_mismatch`, so Calendar Connect fails at Google. `https://qyfywekaorkwpzrvbrth.supabase.co/auth/v1/callback` is already registered, so Google sign-in is unaffected. Add the URI at https://console.cloud.google.com/apis/credentials before enabling the flag.
-- [ ] Validate Push on supported real devices before enabling `PUSH_LAUNCH_ENABLED`. `VAPID_PUBLIC_KEY`, `VITE_VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` are all set and `/api/health` reports `push: true`; only real-device delivery is unverified.
-- [ ] Finish WhatsApp Cloud API operational verification before enabling `WHATSAPP_LAUNCH_ENABLED`.
+- [ ] Validate Google Calendar with a real OAuth account before setting `VITE_CALENDAR_LAUNCH_ENABLED=true`. The redirect URI is **confirmed missing**: `https://nanti-app-new.vercel.app/api/auth/google` returns Google's `redirect_uri_mismatch`, so Calendar Connect fails at Google. `https://qyfywekaorkwpzrvbrth.supabase.co/auth/v1/callback` is already registered, so Google sign-in is unaffected. Add the URI at https://console.cloud.google.com/apis/credentials before enabling the flag.
+- [ ] Validate Push on supported real devices before setting `VITE_PUSH_LAUNCH_ENABLED=true`. `VAPID_PUBLIC_KEY`, `VITE_VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` are all set and `/api/health` reports `push: true`; only real-device delivery is unverified.
+- [ ] Finish WhatsApp Cloud API operational verification before setting `VITE_WHATSAPP_LAUNCH_ENABLED=true`.
 
 ## Release decision
 
