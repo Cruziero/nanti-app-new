@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/dialog";
 import type { Item } from "@/lib/nanti-types";
 import { fetchDailyBriefing } from "@/lib/nanti-briefing.functions";
+import { planDay } from "@/lib/nanti-planner";
+import type { DayPlan } from "@/lib/nanti-planner";
 import { RefreshCw } from "lucide-react";
 
 type DailyBriefingView = {
@@ -55,7 +57,7 @@ export const Route = createFileRoute("/app/today")({
 });
 
 export function Today() {
-  const { items, settings, hydrated, personOf, projectOf, complete, snooze } = useNanti();
+  const { items, settings, hydrated, personOf, projectOf, complete, snooze, editItem } = useNanti();
   const { view } = Route.useSearch();
   const [tab, setTab] = useState<"today" | "upcoming" | "undated">("today");
   const [pending, setPending] = useState<string | null>(null);
@@ -63,6 +65,9 @@ export function Today() {
   const [draft, setDraft] = useState<{ title: string; text: string } | null>(null);
   const [briefing, setBriefing] = useState<DailyBriefingView | null>(null);
   const [briefingLoading, setBriefingLoading] = useState(false);
+  const [plan, setPlan] = useState<DayPlan | null>(null);
+  const [applying, setApplying] = useState(false);
+  const [planFailed, setPlanFailed] = useState(false);
   const openDetail = useItemDetail();
 
   const loadBriefing = useCallback(async (force = false) => {
@@ -128,6 +133,58 @@ export function Today() {
       setPending(null);
     }
   };
+  const buildPlan = () => {
+    setPlanFailed(false);
+    try {
+      setPlan(
+        planDay(
+          tasks.map((item) => ({
+            id: item.id,
+            title: item.title,
+            status: item.status,
+            kind: item.kind,
+            due: item.due,
+            time: item.time,
+            priority: item.priority,
+          })),
+        ),
+      );
+    } catch (error) {
+      console.error("Failed to build the day plan:", error);
+      setPlanFailed(true);
+      setPlan(null);
+    }
+  };
+
+  const applyPlan = async () => {
+    if (!plan || applying) return;
+    setApplying(true);
+    let written = 0;
+    let failed = 0;
+    try {
+      for (const block of plan.blocks) {
+        if (block.fixed) continue;
+        const ok = await editItem(block.itemId, { time: block.start });
+        if (ok) written += 1;
+        else failed += 1;
+      }
+      setPlan(null);
+      if (failed > 0) {
+        toast.error(`${written} of ${written + failed} times saved. The rest need another try.`);
+      } else {
+        toast.success(
+          written === 0
+            ? "Your times were already in place."
+            : `Day planned. ${written} time${written === 1 ? "" : "s"} saved.`,
+        );
+      }
+    } catch (error) {
+      console.error("Failed to apply the day plan:", error);
+      toast.error("That plan couldn’t be saved. Please try again.");
+    } finally {
+      setApplying(false);
+    }
+  };
   const hour = jakartaHour();
   const salutation = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   const rowButton =
@@ -149,9 +206,7 @@ export function Today() {
             {salutation}
             {settings.name ? `, ${settings.name}` : ""}.
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Here’s what needs your attention.
-          </p>
+          <p className="mt-2 text-sm text-muted-foreground">Here’s what needs your attention.</p>
         </div>
         <Link
           to="/app/import"
@@ -161,10 +216,7 @@ export function Today() {
         </Link>
       </header>
 
-      <section
-        aria-label="Daily briefing"
-        className="border-b border-border pb-7"
-      >
+      <section aria-label="Daily briefing" className="border-b border-border pb-7">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
@@ -245,6 +297,106 @@ export function Today() {
             Your brief will appear here when NANTI can reach your workspace memory.
           </p>
         )}
+      </section>
+
+      <section aria-labelledby="plan-heading" className="rounded-lg bg-secondary/60 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h2 id="plan-heading" className="text-base font-semibold">
+              Auto-schedule your day
+            </h2>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+              Lay your open tasks across 09:00 to 18:00, keeping any times you already set. Nothing
+              is written until you approve the plan.
+            </p>
+          </div>
+          {!plan && tasks.length > 0 && (
+            <button
+              type="button"
+              onClick={buildPlan}
+              className="inline-flex min-h-11 shrink-0 items-center rounded-lg bg-primary px-4 text-sm text-primary-foreground hover:bg-primary/90"
+            >
+              Plan my day
+            </button>
+          )}
+        </div>
+
+        {!plan && tasks.length === 0 && (
+          <p className="mt-4 text-sm text-muted-foreground">
+            Nothing is open right now, so there is nothing to schedule.
+          </p>
+        )}
+
+        {planFailed && (
+          <p role="alert" className="mt-4 text-sm text-red-700 dark:text-red-300">
+            That plan couldn’t be built. Please try again.
+          </p>
+        )}
+
+        {plan && plan.blocks.length === 0 && plan.unscheduled.length === 0 ? (
+          <p className="mt-4 text-sm text-muted-foreground">
+            Nothing to schedule in today’s window.
+          </p>
+        ) : plan ? (
+          <div className="mt-4">
+            <ol>
+              {plan.blocks.map((block) => (
+                <li
+                  key={block.itemId}
+                  className="flex gap-3 border-t border-border/60 py-2.5 first:border-t-0 first:pt-0"
+                >
+                  <span className="w-14 shrink-0 pt-0.5">
+                    <span className="block text-sm font-semibold tabular-nums">{block.start}</span>
+                    <span className="block text-xs tabular-nums text-muted-foreground">
+                      {block.end}
+                    </span>
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium leading-5">{block.title}</span>
+                    <span className="block text-xs leading-5 text-muted-foreground">
+                      {block.reason}
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+
+            {plan.unscheduled.length > 0 && (
+              <div className="mt-4 border-t border-border pt-3">
+                <p className="text-xs font-semibold text-muted-foreground">No room left today</p>
+                <ul className="mt-1">
+                  {plan.unscheduled.map((left) => (
+                    <li key={left.itemId} className="py-1.5">
+                      <span className="block text-sm font-medium leading-5">{left.title}</span>
+                      <span className="block text-xs leading-5 text-muted-foreground">
+                        {left.reason}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => void applyPlan()}
+                disabled={applying}
+                className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              >
+                {applying ? "Saving the plan…" : "Use this plan"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPlan(null)}
+                disabled={applying}
+                className="inline-flex min-h-11 items-center rounded-lg border border-border bg-background px-4 text-sm font-medium hover:bg-secondary disabled:opacity-50"
+              >
+                Discard
+              </button>
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <div className="grid gap-10 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,1fr)]">
