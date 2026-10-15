@@ -40,6 +40,7 @@ import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-pas
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthSignupRouteImport } from './routes/auth.signup'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as LegalPrivacyRouteImport } from './routes/legal.privacy'
 import { Route as LegalTermsRouteImport } from './routes/legal.terms'
@@ -216,6 +217,11 @@ const AuthSignupRoute = AuthSignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => AuthRoute,
 } as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BlogRoute,
+} as any)
 const BlogSlugRoute = BlogSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -352,6 +358,7 @@ export interface FileRoutesByFullPath {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/app/': typeof AppIndexRoute
+  '/blog/': typeof BlogIndexRoute
   '/api/auth/google': typeof ApiAuthGoogleRoute
   '/api/cron/assistant-eval': typeof ApiCronAssistantEvalRoute
   '/api/cron/check-reminders': typeof ApiCronCheckRemindersRoute
@@ -376,7 +383,6 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/affiliates': typeof AffiliatesRoute
   '/auth': typeof AuthRouteWithChildren
-  '/blog': typeof BlogRouteWithChildren
   '/business': typeof BusinessRoute
   '/careers': typeof CareersRoute
   '/help': typeof HelpRoute
@@ -404,6 +410,7 @@ export interface FileRoutesByTo {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/app': typeof AppIndexRoute
+  '/blog': typeof BlogIndexRoute
   '/api/auth/google': typeof ApiAuthGoogleRoute
   '/api/cron/assistant-eval': typeof ApiCronAssistantEvalRoute
   '/api/cron/check-reminders': typeof ApiCronCheckRemindersRoute
@@ -458,6 +465,7 @@ export interface FileRoutesById {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/app/': typeof AppIndexRoute
+  '/blog/': typeof BlogIndexRoute
   '/api/auth/google': typeof ApiAuthGoogleRoute
   '/api/cron/assistant-eval': typeof ApiCronAssistantEvalRoute
   '/api/cron/check-reminders': typeof ApiCronCheckRemindersRoute
@@ -513,6 +521,7 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/terms'
     | '/app/'
+    | '/blog/'
     | '/api/auth/google'
     | '/api/cron/assistant-eval'
     | '/api/cron/check-reminders'
@@ -537,7 +546,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/affiliates'
     | '/auth'
-    | '/blog'
     | '/business'
     | '/careers'
     | '/help'
@@ -565,6 +573,7 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/terms'
     | '/app'
+    | '/blog'
     | '/api/auth/google'
     | '/api/cron/assistant-eval'
     | '/api/cron/check-reminders'
@@ -618,6 +627,7 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/terms'
     | '/app/'
+    | '/blog/'
     | '/api/auth/google'
     | '/api/cron/assistant-eval'
     | '/api/cron/check-reminders'
@@ -892,6 +902,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSignupRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/blog/': {
+      id: '/blog/'
+      path: '/'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof BlogRoute
+    }
     '/blog/$slug': {
       id: '/blog/$slug'
       path: '/$slug'
@@ -1087,10 +1104,12 @@ const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface BlogRouteChildren {
   BlogSlugRoute: typeof BlogSlugRoute
+  BlogIndexRoute: typeof BlogIndexRoute
 }
 
 const BlogRouteChildren: BlogRouteChildren = {
   BlogSlugRoute: BlogSlugRoute,
+  BlogIndexRoute: BlogIndexRoute,
 }
 
 const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
