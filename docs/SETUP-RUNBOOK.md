@@ -1,6 +1,6 @@
 # NANTI public-launch runbook
 
-Updated: 2026-09-25
+Updated: 2026-10-14
 
 The product core is already deployed and technically validated. Do not add another major feature before completing the external launch setup below.
 
@@ -128,11 +128,94 @@ Implemented, but **hidden from the initial public launch**.
 
 Do not enable `PUSH_LAUNCH_ENABLED` until real-device delivery is tested.
 
-### WhatsApp
+### WhatsApp (official Cloud API number)
 
-Implemented partially but intentionally **not part of the initial public launch**.
+The webhook, parser and senders are implemented. What is missing is the Meta
+console setup and eight environment variables. Meta-side first, Vercel-side
+second.
 
-Keep `WHATSAPP_LAUNCH_ENABLED=false` until the WhatsApp Cloud API workflow is operationally verified.
+#### What the code expects
+
+Endpoint, from `src/routes/api/webhooks/whatsapp.tsx`:
+
+```
+https://nanti-app-new.vercel.app/api/webhooks/whatsapp
+```
+
+| Variable | Where it comes from |
+|---|---|
+| `WHATSAPP_VERIFY_TOKEN` | You invent this string. The GET handshake only accepts when `hub.verify_token` equals it. |
+| `WHATSAPP_APP_SECRET` | Meta dashboard → Settings → Basic → App Secret. The POST handler checks `x-hub-signature-256` against it and returns 401 without a valid signature, 503 if the variable is missing entirely. |
+| `WHATSAPP_PHONE_NUMBER_ID` | Meta dashboard → WhatsApp → API Setup. |
+| `WHATSAPP_ACCESS_TOKEN` | System User token (see below), not the 24-hour temporary one. |
+| `WHATSAPP_GRAPH_VERSION` | Read at `webhooks/whatsapp.tsx:1411` and `cron/check-reminders.tsx:486`, both defaulting to `v26.0`. These are the only two outbound call sites. |
+| `WHATSAPP_REMINDER_TEMPLATE_NAME` | **No code default**, only `.env.example` shows `nanti_reminder`. If it is unset, reminders inside the 23.5-hour service window still send as plain text, but anything outside it is skipped silently (`check-reminders.tsx:540`) and only in-app/push fire. Set it explicitly. |
+| `WHATSAPP_REMINDER_TEMPLATE_LANGUAGE` | Defaults to `id` in code. |
+| `VITE_NANTI_WHATSAPP_NUMBER` | Your new number, digits only, `628…`. Displayed in Settings. |
+
+#### Note on `src/lib/nanti-whatsapp.ts`
+
+That module is imported by nothing. Its `sendWhatsAppMessage` and
+`sendWhatsAppTemplate` are dead code and it pins its own base URL to
+`v18.0`. The two call sites that actually send are the webhook reply at
+`webhooks/whatsapp.tsx:1415` and the reminder at
+`cron/check-reminders.tsx:546`. Do not use `nanti-whatsapp.ts` as the
+reference for what a configured setup does.
+
+#### Meta console, in order
+
+1. **Free the number.** A phone number can be on only one WhatsApp surface.
+   If the new number is already on WhatsApp Personal or WhatsApp Business,
+   delete that account first (WhatsApp → Settings → Account → Delete account),
+   or Meta will refuse to attach it.
+2. **developers.facebook.com → Create app → type Business.**
+3. **Add the WhatsApp product** to the app. Meta issues a test number and a
+   temporary token that expires in 24 hours. Do not put the temporary token in
+   Vercel.
+4. **Business Manager → Business Settings → Users → System Users.**
+   Create a system user, assign it the WhatsApp Business Account and the phone
+   number as assets, then generate a token with `whatsapp_business_messaging`,
+   `whatsapp_business_management` and `business_management`. This token is the
+   `WHATSAPP_ACCESS_TOKEN`.
+5. **Attach your new number** to the WhatsApp Business Account. Meta sends a
+   six-digit code by SMS or voice, so the number must be reachable. Landlines
+   work if they can take the call.
+6. **Business verification** in Business Manager. This is the slow part and it
+   is what separates a real number from a test one. Expect to supply legal
+   business name, address, website, a support email and possibly registration
+   paperwork.
+7. **Configure the webhook:** WhatsApp → Configuration → Callback URL, paste
+   the endpoint above, set Verify token to the same string you will store as
+   `WHATSAPP_VERIFY_TOKEN`, confirm, then subscribe to the **messages** field.
+8. **Create the reminder template** in the WABA: name `nanti_reminder`,
+   category Utility, language Indonesian. Proactive reminders can only be sent
+   as an approved template, and `/api/cron/check-reminders` sends one as soon
+   as WhatsApp reminders are switched on. A rejected or missing template is
+   the most common reason reminders silently stop.
+
+#### Access level caveat
+
+Development mode only delivers webhook events for the Meta test number and
+test users. Traffic on your own number needs the app in Live mode with the
+`messages` webhook subscription approved through Meta App Review. Budget days,
+not minutes, for that approval, and do not flip the launch flag until it has
+come back.
+
+#### Then Vercel
+
+1. Set the eight variables above on project **nanti-aja**, targets
+   production and preview.
+2. Redeploy.
+3. Confirm `GET https://nanti-app-new.vercel.app/api/webhooks/whatsapp`
+   returns `Forbidden` (403). That means the handler is reachable and simply
+   was not given a valid `hub.verify_token`, which is the expected result
+   outside a Meta handshake.
+4. Message the number from a normal phone. Watch the Vercel function logs for
+   the signature check, then confirm the message landed in the workspace.
+5. Only after that, flip `WHATSAPP_LAUNCH_ENABLED` to `true` at
+   `src/routes/app.settings.tsx:87`. The flag gates the Settings surface at
+   lines 149 and 1053; it does not gate the webhook, which is live as soon as
+   the environment variables exist.
 
 ---
 
