@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="NANTI">
+  <rect width="512" height="512" rx="146.29" fill="#067a3f"/>
+  <g fill="#ffffff">
+    <rect x="172.8" y="169.59" width="33.28" height="172.82"/>
+    <rect x="305.92" y="169.59" width="33.28" height="172.82"/>
+    <path d="M 172.8 169.59 L 206.08 169.59 L 339.2 342.41 L 305.92 342.41 Z"/>
+  </g>
+</svg>

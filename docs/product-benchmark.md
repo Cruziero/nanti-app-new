@@ -1,6 +1,6 @@
 # NANTI Product Benchmark
 
-Updated: 2026-10-14
+Updated: 2026-10-15
 
 The reference benchmark is a competitor feature sheet covering ease of use, AI
 features, WhatsApp, planning, and platform. This file records where NANTI
@@ -46,7 +46,7 @@ are unverifiable and are excluded from all copy.
 |---|---|---|
 | WhatsApp reminders | `DISABLED` | `WHATSAPP_LAUNCH_ENABLED = false` at `src/routes/app.settings.tsx:87`, surfaced as `hidden` at line 1053 |
 | Reminder open rate near 98% | `CANNOT CLAIM` | No delivery or open telemetry exists (R-17) |
-| 24h + 10 minute auto alerts | `PARTIAL` | Reminder dispatch runs from Supabase every 5 minutes and `/api/cron/check-reminders` is scheduled, but delivery is in-app, not WhatsApp |
+| 24h + 10 minute auto alerts | `PARTIAL` | Reminder dispatch runs from Supabase every 5 minutes and `/api/cron/check-reminders` is scheduled; delivery is in-app and web push (`PUSH_LAUNCH_ENABLED` is on, `GET /api/push/config` returns `configured: true`). WhatsApp delivery still needs Meta approval |
 
 ## 4. Planning and productivity
 
@@ -63,8 +63,8 @@ are unverifiable and are excluded from all copy.
 
 | Benchmark row | Verdict | Evidence |
 |---|---|---|
-| iOS | `NOT BUILT` | No native app, and no `manifest.webmanifest` or `manifest.json` in `public/`, so the site is not even installable to a home screen yet |
-| Android | `NOT BUILT` | Same as iOS |
+| iOS | `PARTIAL` | Installable to the home screen as a web app: `public/manifest.webmanifest`, `apple-touch-icon.png`, and the service worker already registered in `src/routes/__root.tsx:148`. Still no native app, so nothing about the App Store can be claimed |
+| Android | `PARTIAL` | Same install path, plus `maskable-192.png` / `maskable-512.png` so the adaptive icon is not letterboxed |
 | Apple Watch | `NOT BUILT` | Out of reach for a web app |
 | App store rating 5.0 | `CANNOT CLAIM` | No listing exists (R-17, R-36) |
 
@@ -80,8 +80,11 @@ Five benchmark rows are `SHIPPED` and can be stated in copy today:
 
 Two more capabilities exist in the app but have no benchmark row of their own:
 people and work-context memory (`resolvePersonMemory`, `resolveProjectMemory`
-in `src/lib/nanti-store.tsx`) and export with account deletion
-(`tests/account-export.cjs`, 7/7).
+in `src/lib/nanti-store.tsx`), export with account deletion
+(`tests/account-export.cjs`, 7/7), and web push reminders
+(`sendPushNotification` in `src/routes/api/cron/check-reminders.tsx:434`,
+channel selectable in settings since `PUSH_LAUNCH_ENABLED` is on). Real-device
+push delivery is still unvalidated.
 
 ## Build plan
 
@@ -90,9 +93,12 @@ needed.
 
 ### Tranche 1, no external dependency
 
-1. **PWA manifest, icons, service worker wiring.** Makes NANTI installable on
-   iOS and Android home screens. It does not make a native app, so the row stays
-   honest as "installable", never "available on the App Store".
+1. **PWA manifest, icons, service worker wiring.** Done: `public/manifest.webmanifest`
+   with `icon.svg`, `icon-192.png`, `icon-512.png`, `maskable-192.png`,
+   `maskable-512.png` and `apple-touch-icon.png`, all derived from the Logo mark
+   in `src/components/nanti/logo.tsx` and wired through `src/routes/__root.tsx`.
+   The service worker was already registered. It does not make a native app, so
+   the rows stay honest as "installable", never "available on the App Store".
 2. **Voice input.** Web Speech API, no paid service, works in Chromium and
    Android. Excluded on unsupported browsers rather than hidden.
 3. **Conflict detection.** Overlap check on create and reschedule, surfaced in

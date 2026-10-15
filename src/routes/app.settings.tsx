@@ -82,7 +82,7 @@ const toneOptions: { id: ConversationTone; label: string }[] = [
   { id: "direct", label: "Direct" },
 ];
 
-const PUSH_LAUNCH_ENABLED = false;
+const PUSH_LAUNCH_ENABLED = true;
 const CALENDAR_LAUNCH_ENABLED = false;
 const WHATSAPP_LAUNCH_ENABLED = false;
 

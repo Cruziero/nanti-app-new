@@ -141,7 +141,7 @@ Automated production E2E is green, but the following UI behavior still requires 
 - [ ] Download an export from that disposable account, then delete it through the UI.
 - [ ] Review production errors after that session.
 
-Calendar and Push do **not** block the initial launch because their public surfaces remain hidden.
+Calendar does **not** block the initial launch because its public surface remains hidden. Push is no longer hidden: `PUSH_LAUNCH_ENABLED` is on, and its only open item is real-device validation.
 
 ### 5. Legal / Indonesian operator setup - BLOCKER
 
@@ -157,8 +157,8 @@ See `docs/LEGAL-LAUNCH-CHECKLIST.md`.
 ## Non-blocking post-launch / later activation
 
 - [ ] Add `GEMINI_API_KEY` to GitHub Actions if the nightly 66-case external live-model benchmark should run there. Production smoke monitoring already runs independently. This needs a GitHub PAT with the `repo` scope; the API rejects unauthenticated writes to repository secrets, so it cannot be done without owner credentials.
-- [ ] Validate Google Calendar with a real OAuth account before enabling `CALENDAR_LAUNCH_ENABLED`. The redirect URI is **confirmed missing**: `https://nanti-app-new.vercel.app/api/auth/google` returns Google's `redirect_uri_mismatch`, so Calendar Connect fails at Google. `https://qyfywekaorkwpzrvbrth.supabase.co/auth/v1/callback` is already registered, so Google sign-in is unaffected. Add the URI at https://console.cloud.google.com/apis/credentials before enabling the flag.
-- [ ] Validate Push on supported real devices before enabling `PUSH_LAUNCH_ENABLED`. `VAPID_PUBLIC_KEY`, `VITE_VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` are all set and `/api/health` reports `push: true`; only real-device delivery is unverified.
+- [ ] Validate Google Calendar with a real OAuth account before enabling `CALENDAR_LAUNCH_ENABLED`. The redirect URI is **confirmed missing**: Google returns `redirect_uri_mismatch`, so Calendar Connect fails at Google. `src/lib/nanti-calendar.functions.ts:54` and `src/routes/api/auth/google.tsx:63` both build the URI from the request origin, so the value to add at https://console.cloud.google.com/apis/credentials is now **`https://nanti.site/api/auth/google`** (the previous `https://nanti-app-new.vercel.app/api/auth/google` is no longer used). `https://qyfywekaorkwpzrvbrth.supabase.co/auth/v1/callback` is already registered, so Google sign-in is unaffected. Add the URI before enabling the flag.
+- [ ] Validate Push delivery on a real device. `PUSH_LAUNCH_ENABLED` is **on**, so "Push Notifications" is selectable in settings and the reminder dispatcher already sends on that channel. `VAPID_PUBLIC_KEY`, `VITE_VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` are set, and `GET /api/push/config` returns `configured: true` with the public key. Real-device subscribe and delivery could not be verified from the build environment, so this is the one unproven step.
 - [ ] Finish WhatsApp Cloud API operational verification before enabling `WHATSAPP_LAUNCH_ENABLED`.
 
 ## Release decision
