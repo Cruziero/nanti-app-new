@@ -53,7 +53,7 @@ are unverifiable and are excluded from all copy.
 | Benchmark row | Verdict | Evidence |
 |---|---|---|
 | Calendar view, unified timeline | `NOT BUILT` | `src/components/ui/calendar.tsx` is a date-picker primitive, not a month, week or agenda view. No timeline route exists |
-| Google Calendar two-way sync | `DISABLED` | `CALENDAR_LAUNCH_ENABLED = false` at `app.settings.tsx:86`, plus the OAuth redirect URI `https://nanti-app-new.vercel.app/api/auth/google` is missing from the Google Cloud client, so the connect flow returns `redirect_uri_mismatch` |
+| Google Calendar two-way sync | `DISABLED` | `CALENDAR_LAUNCH_ENABLED = false` at `app.settings.tsx:86`. Both OAuth handlers build the redirect URI from the request origin, and Google returns `redirect_uri_mismatch` for `https://nanti.site/api/auth/google` (verified 2026-10-15 against the deployed `GOOGLE_CLIENT_ID`), so the URI is not registered in the Google Cloud client |
 | Habit tracking with streaks | `NOT BUILT` | Only hit is marketing prose at `app.settings.tsx:794`. No habit or streak table, no counter |
 | Focus / deep work mode | `NOT BUILT` | Zero hits for focus mode, time blocks, deep work, pomodoro |
 | Task management | `SHIPPED` | `src/routes/app.today.tsx`, task rows present in production |

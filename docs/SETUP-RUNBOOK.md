@@ -105,28 +105,49 @@ Required for launch and already active.
 
 ### Google Calendar
 
-Implemented, but **hidden from the initial public launch**.
+Implemented, but **hidden from the initial public launch**. The code is
+complete; the only thing missing is one redirect URI in the Google Cloud
+console.
 
-Do not enable `CALENDAR_LAUNCH_ENABLED` until a real Google account has completed:
+`src/lib/nanti-calendar.functions.ts:54` and `src/routes/api/auth/google.tsx:63`
+both build the redirect URI from the request origin, so on production the value
+is:
 
-- connect,
-- OAuth callback,
-- sync,
-- Ask NANTI schedule question,
-- disconnect.
+```
+https://nanti.site/api/auth/google
+```
 
-Google client configuration should include:
+Verified 2026-10-15 by requesting Google's authorize endpoint with the deployed
+`GOOGLE_CLIENT_ID` and that exact `redirect_uri`: Google returned
+`redirect_uri_mismatch`. It returned the same error for the previous
+`https://nanti-app-new.vercel.app/api/auth/google`, so neither URI has ever been
+registered. Add the first one under
+https://console.cloud.google.com/apis/credentials → OAuth 2.0 Client IDs →
+Authorized redirect URIs.
+
+Keep the Supabase callback as well. It is already registered and is what Google
+*sign-in* uses, so removing it would break login:
 
 ```
 https://qyfywekaorkwpzrvbrth.supabase.co/auth/v1/callback
-https://nanti-app-new.vercel.app/api/auth/google
 ```
+
+Only then turn on `CALENDAR_LAUNCH_ENABLED` at
+`src/routes/app.settings.tsx:86`, and only after a real Google account has
+completed connect, OAuth callback, sync, an Ask NANTI schedule question, and
+disconnect.
 
 ### Browser Push
 
-Implemented, but **hidden from the initial public launch**.
+Implemented, and **live**: `PUSH_LAUNCH_ENABLED` at
+`src/routes/app.settings.tsx:85` is `true`, so "Push Notifications" is a
+selectable reminder channel in Settings. `GET /api/push/config` returns
+`configured: true` with the public key, all three VAPID keys are set in Vercel
+for the production target, and `sendPushNotification` in
+`src/routes/api/cron/check-reminders.tsx:434` is not gated by the flag.
 
-Do not enable `PUSH_LAUNCH_ENABLED` until real-device delivery is tested.
+The one open item is real-device validation: subscribing from a phone and
+confirming a notification arrives cannot be done from the build environment.
 
 ### WhatsApp (official Cloud API number)
 
@@ -139,7 +160,7 @@ second.
 Endpoint, from `src/routes/api/webhooks/whatsapp.tsx`:
 
 ```
-https://nanti-app-new.vercel.app/api/webhooks/whatsapp
+https://nanti.site/api/webhooks/whatsapp
 ```
 
 | Variable | Where it comes from |
@@ -203,13 +224,26 @@ come back.
 
 #### Then Vercel
 
-1. Set the eight variables above on project **nanti-aja**, targets
-   production and preview.
+1. Set the variables above on project **nanti-aja**, targets
+   production and preview. Three were already created on 2026-10-15:
+   `WHATSAPP_VERIFY_TOKEN` (a generated string held in the operator's secret
+   store; it is the exact value to paste into Meta's Verify token field),
+   `WHATSAPP_REMINDER_TEMPLATE_NAME` = `nanti_reminder`, and
+   `WHATSAPP_REMINDER_TEMPLATE_LANGUAGE` = `id`. Still needed from Meta:
+   `WHATSAPP_APP_SECRET`, `WHATSAPP_PHONE_NUMBER_ID`,
+   `WHATSAPP_ACCESS_TOKEN`, plus `VITE_NANTI_WHATSAPP_NUMBER` (your number,
+   digits only).
 2. Redeploy.
-3. Confirm `GET https://nanti-app-new.vercel.app/api/webhooks/whatsapp`
-   returns `Forbidden` (403). That means the handler is reachable and simply
-   was not given a valid `hub.verify_token`, which is the expected result
-   outside a Meta handshake.
+3. Confirm the handshake with the token from step 1:
+
+   ```
+   https://nanti.site/api/webhooks/whatsapp?hub.mode=subscribe&hub.challenge=12345&hub.verify_token=THE_TOKEN
+   ```
+
+   Verified 2026-10-15: it returns `200` with the challenge echoed back, and
+   `403` for a wrong token or for a mode other than `subscribe`. A bare GET
+   with no query string still returns `403 Forbidden`, which is the expected
+   answer outside a Meta handshake.
 4. Message the number from a normal phone. Watch the Vercel function logs for
    the signature check, then confirm the message landed in the workspace.
 5. Only after that, flip `WHATSAPP_LAUNCH_ENABLED` to `true` at
@@ -291,13 +325,13 @@ Without that secret, the workflow skips safely.
 Public health:
 
 ```bash
-curl https://nanti-app-new.vercel.app/api/health
+curl https://nanti.site/api/health
 ```
 
 Detailed health:
 
 ```bash
-curl https://nanti-app-new.vercel.app/api/health \
+curl https://nanti.site/api/health \
   -H "Authorization: Bearer YOUR_CRON_SECRET"
 ```
 
