@@ -6,8 +6,8 @@ import { fetchPublishedArticles, type BlogArticle } from "@/lib/nanti-blog";
 import { canonical } from "@/lib/site";
 
 export const Route = createFileRoute("/blog")({
-  head: () => ({
-    links: [canonical("/blog")],
+  head: ({ matches, match }) => ({
+    links: matches[matches.length - 1]?.routeId === match.routeId ? [canonical("/blog")] : [],
     meta: [
       { title: "Blog · NANTI" },
       { name: "description", content: "Updates, tips, and stories from NANTI." },
