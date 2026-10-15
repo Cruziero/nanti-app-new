@@ -214,13 +214,39 @@ reference for what a configured setup does.
    as WhatsApp reminders are switched on. A rejected or missing template is
    the most common reason reminders silently stop.
 
-#### Access level caveat
+#### Making it official
 
-Development mode only delivers webhook events for the Meta test number and
-test users. Traffic on your own number needs the app in Live mode with the
-`messages` webhook subscription approved through Meta App Review. Budget days,
-not minutes, for that approval, and do not flip the launch flag until it has
-come back.
+Three separate things get conflated here, and only the first is a blocker.
+
+1. **Live mode.** Meta's own troubleshooting list says: "Make sure your app is
+   in Live mode; some webhooks will not be sent if your app is in Dev mode."
+   Development mode only delivers events for Meta's test number and test
+   users, so a real customer number will not work until the app is published.
+   Left nav → Publish. Publishing needs an app icon (512 to 1024 px, under
+   5 MB; `public/icon-512.png` fits), a Privacy Policy URL
+   (`https://nanti.site/legal/privacy`, live) and a data deletion URL
+   (`https://nanti.site/app/settings`, which has real account deletion wired
+   to `tests/account-export.cjs`).
+2. **App Review is not required here.** The permissions doc states: "If you
+   are a direct developer and only access your own business data, you do not
+   need to undergo App Review or obtain Advanced access for any permissions."
+   The App Review doc repeats it: "if you are using the API for yourself as a
+   Direct Developer, you do not need Advanced access or app review." App
+   Review exists for Tech Providers and Solution Partners serving other
+   businesses, which this deployment is not, so the "Become a Tech Provider"
+   card on the dashboard can be ignored and the three WhatsApp permissions
+   are already Standard Access on a Business app. Earlier notes in this repo
+   claimed App Review was needed; that was wrong.
+3. **Business verification** is separate from both, and is what raises the
+   messaging limit tier. Business Manager → Security Centre. Expect to supply
+   legal business name, address, website, a support email and possibly
+   registration paperwork. Without it the account stays on the low tier,
+   which is enough for launch volume but not for scale.
+
+Sources, checked 2026-10-15:
+https://developers.facebook.com/docs/whatsapp/cloud-api/guides/set-up-webhooks/
+and
+https://developers.facebook.com/documentation/business-messaging/whatsapp/permissions
 
 #### Then Vercel
 
