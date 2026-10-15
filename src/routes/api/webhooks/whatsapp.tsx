@@ -18,13 +18,22 @@ export const Route = createFileRoute("/api/webhooks/whatsapp")({
         const challenge = url.searchParams.get("hub.challenge");
 
         if (
-          mode === "subscribe" &&
+          (mode === "subscribe" || mode === "unsubscribe") &&
           challenge &&
           token &&
           token === process.env.WHATSAPP_VERIFY_TOKEN
         ) {
           return new Response(challenge, { status: 200 });
         }
+
+        // Meta's dashboard does a plain reachability check before the real
+        // handshake. A 403 there is rendered as "Forbidden" and reads as a
+        // broken endpoint, so acknowledge liveness without echoing anything.
+        // Verification itself still requires the token to match above.
+        if (!mode && !token && !challenge) {
+          return new Response("NANTI WhatsApp webhook endpoint.", { status: 200 });
+        }
+
         return new Response("Forbidden", { status: 403 });
       },
 
