@@ -1,9 +1,11 @@
 // FINAL PRODUCT DRAFT — requires Indonesian legal counsel sign-off before public commercial launch.
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { MarketingLayout } from "@/components/nanti/marketing";
+import { canonical } from "@/lib/site";
 
 export const Route = createFileRoute("/legal/privacy")({
   head: () => ({
+    links: [canonical("/legal/privacy")],
     meta: [
       { title: "Kebijakan Privasi · NANTI" },
       {

@@ -3,9 +3,11 @@ import { ArrowRight, Clock } from "lucide-react";
 import { MarketingLayout, Reveal } from "@/components/nanti/marketing";
 import { articles as staticArticles } from "@/data/articles";
 import { fetchPublishedArticles, type BlogArticle } from "@/lib/nanti-blog";
+import { canonical } from "@/lib/site";
 
 export const Route = createFileRoute("/blog")({
   head: () => ({
+    links: [canonical("/blog")],
     meta: [
       { title: "Blog · NANTI" },
       { name: "description", content: "Updates, tips, and stories from NANTI." },

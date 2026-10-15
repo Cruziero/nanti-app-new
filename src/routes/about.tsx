@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MarketingLayout } from "@/components/nanti/marketing";
 import { Brain } from "lucide-react";
+import { canonical } from "@/lib/site";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
+    links: [canonical("/about")],
     meta: [
       { title: "About · NANTI" },
       { name: "description", content: "About NANTI, your memory for WhatsApp." },

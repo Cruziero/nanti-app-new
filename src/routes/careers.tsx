@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MarketingLayout } from "@/components/nanti/marketing";
 import { Briefcase } from "lucide-react";
+import { canonical } from "@/lib/site";
 
 export const Route = createFileRoute("/careers")({
   head: () => ({
+    links: [canonical("/careers")],
     meta: [{ title: "Careers · NANTI" }, { name: "description", content: "Join the NANTI team." }],
   }),
   component: CareersPage,

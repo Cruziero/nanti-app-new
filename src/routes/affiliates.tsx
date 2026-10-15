@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MarketingLayout } from "@/components/nanti/marketing";
 import { Handshake } from "lucide-react";
+import { canonical } from "@/lib/site";
 
 export const Route = createFileRoute("/affiliates")({
   head: () => ({
+    links: [canonical("/affiliates")],
     meta: [
       { title: "Affiliate Program · NANTI" },
       { name: "description", content: "Earn by sharing NANTI with others." },

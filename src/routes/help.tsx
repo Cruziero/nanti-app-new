@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { MarketingLayout } from "@/components/nanti/marketing";
 import { MessageSquareText, Brain, Bell, Calendar, HelpCircle } from "lucide-react";
+import { canonical } from "@/lib/site";
 
 export const Route = createFileRoute("/help")({
   head: () => ({
+    links: [canonical("/help")],
     meta: [
       { title: "Help Center · NANTI" },
       { name: "description", content: "Get help with using NANTI." },

@@ -1,10 +1,11 @@
 ﻿import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
 import { MarketingLayout, Reveal } from "@/components/nanti/marketing";
-import { OG_IMAGE_URL, SITE_URL } from "@/lib/site";
+import { canonical, OG_IMAGE_URL, SITE_URL } from "@/lib/site";
 
 export const Route = createFileRoute("/")({
   head: () => ({
+    links: [canonical("/")],
     meta: [
       { title: "NANTI: You talk. NANTI remembers." },
       {

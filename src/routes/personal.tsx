@@ -7,9 +7,11 @@ import {
   ProofRows,
   SimpleCta,
 } from "@/components/nanti/marketing-proof";
+import { canonical } from "@/lib/site";
 
 export const Route = createFileRoute("/personal")({
   head: () => ({
+    links: [canonical("/personal")],
     meta: [
       { title: "NANTI for Personal" },
       {

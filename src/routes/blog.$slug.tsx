@@ -3,6 +3,7 @@ import { ArrowLeft, Clock } from "lucide-react";
 import { MarketingLayout, Reveal } from "@/components/nanti/marketing";
 import { articles as staticArticles } from "@/data/articles";
 import { fetchArticleBySlug, type BlogArticle } from "@/lib/nanti-blog";
+import { canonical } from "@/lib/site";
 
 export const Route = createFileRoute("/blog/$slug")({
   head: ({ params }) => {
@@ -10,6 +11,7 @@ export const Route = createFileRoute("/blog/$slug")({
       staticArticles.find((a) => a.slug === params.slug) ?? null;
     if (!article) return {};
     return {
+      links: [canonical(`/blog/${params.slug}`)],
       meta: [
         { title: `${article.title} · NANTI Blog` },
         { name: "description", content: article.excerpt },
