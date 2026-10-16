@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUp, Check, Loader2 } from "lucide-react";
+import { ArrowUp, Check, Loader2, Mic, Square } from "lucide-react";
 import { useNanti } from "@/lib/nanti-store";
 import { processAssistantTurn } from "@/lib/nanti-ai.functions";
 import {
   chatMessageToFallbackItems,
   draftToItem,
 } from "@/lib/nanti-import";
-import type { Item } from "@/lib/nanti-types";
+import type { AppLanguage, Item } from "@/lib/nanti-types";
 import { parseSmartDate } from "@/lib/nanti-dates";
 import {
   isDueToday,
@@ -19,6 +19,7 @@ import {
 } from "@/lib/nanti-language";
 import { recordLanguageMemory } from "@/lib/nanti-learning.functions";
 import { recordEntityAlias } from "@/lib/nanti-context-memory.functions";
+import { useSpeechToText } from "@/lib/nanti-speech";
 import {
   clearAiMessages,
   createAiMessage,
@@ -122,11 +123,19 @@ function directWorkspaceAnswer(
   return null;
 }
 
+function speechLanguageFor(language: AppLanguage) {
+  if (language === "indonesian") return "id-ID";
+  if (language === "english") return "en-US";
+  const browserLanguage = typeof navigator === "undefined" ? "" : navigator.language;
+  return browserLanguage || "id-ID";
+}
+
 export function SimpleAssistant() {
   const {
     items,
     people,
     projects,
+    settings,
     addItems,
     editItem,
     complete,
@@ -143,6 +152,12 @@ export function SimpleAssistant() {
   const field = useRef<HTMLTextAreaElement>(null);
   const end = useRef<HTMLDivElement>(null);
   const lock = useRef(false);
+
+  const speech = useSpeechToText({
+    lang: speechLanguageFor(settings.language),
+    read: () => input,
+    write: (next) => setInput(next),
+  });
 
   const recentItems = useMemo(
     () =>
@@ -586,11 +601,12 @@ export function SimpleAssistant() {
 
   const send = async (value?: string) => {
     const question = (value ?? input).trim();
-    if (!question || lock.current) return;
+    if (!question || lock.current || speech.listening) return;
 
     lock.current = true;
     setBusy(true);
     setError("");
+    speech.clearMessage();
 
     try {
       if (pending) {
@@ -818,7 +834,10 @@ export function SimpleAssistant() {
           <textarea
             ref={field}
             value={input}
-            onChange={(event) => setInput(event.target.value)}
+            onChange={(event) => {
+              setInput(event.target.value);
+              if (speech.listening) speech.stop();
+            }}
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();
@@ -829,17 +848,45 @@ export function SimpleAssistant() {
             placeholder="Message NANTI…"
             className="max-h-40 min-h-10 flex-1 resize-none bg-transparent px-2 py-2 text-[15px] leading-6 outline-none placeholder:text-muted-foreground"
           />
+          {speech.supported && (
+            <button
+              type="button"
+              onClick={speech.toggle}
+              disabled={busy}
+              aria-label={speech.listening ? "Stop voice input" : "Start voice input"}
+              aria-pressed={speech.listening}
+              className={[
+                "flex size-10 shrink-0 items-center justify-center rounded-xl disabled:opacity-35",
+                speech.listening
+                  ? "bg-primary text-primary-foreground"
+                  : "border border-border text-muted-foreground",
+              ].join(" ")}
+            >
+              {speech.listening ? <Square className="size-4" /> : <Mic className="size-4" />}
+            </button>
+          )}
           <button
             type="submit"
-            disabled={busy || !input.trim()}
+            disabled={busy || speech.listening || !input.trim()}
             aria-label="Send"
             className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground disabled:opacity-35"
           >
             <ArrowUp className="size-4" />
           </button>
         </div>
-        <p className="mt-2 px-1 text-[11px] text-muted-foreground">
-          One conversation. Tasks, reminders, changes, and answers happen here.
+        <p
+          role={speech.message ? "alert" : speech.listening ? "status" : undefined}
+          className={
+            speech.message
+              ? "mt-2 px-1 text-[11px] text-destructive"
+              : "mt-2 px-1 text-[11px] text-muted-foreground"
+          }
+        >
+          {speech.message
+            ? speech.message
+            : speech.listening
+              ? "Listening. Say what you need, then press the mic again to stop."
+              : "One conversation. Tasks, reminders, changes, and answers happen here."}
         </p>
       </form>
     </div>
