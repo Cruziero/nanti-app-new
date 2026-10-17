@@ -288,3 +288,100 @@ test("toMinutes rejects malformed and out-of-range times", () => {
   assert.equal(toMinutes(null), -1);
   assert.equal(toMinutes(undefined), -1);
 });
+
+test("two anchors that cover the same time are reported as a conflict", () => {
+  const plan = planDay(
+    [
+      task({ id: "standup", title: "Standup", time: "09:30" }),
+      task({ id: "review", title: "Review", time: "09:45" }),
+    ],
+    { now: new Date(2026, 9, 13, 8, 0), today: TODAY },
+  );
+
+  assert.equal(plan.conflicts.length, 1);
+  const clash = plan.conflicts[0];
+  assert.equal(clash.itemId, "standup");
+  assert.equal(clash.start, "09:30");
+  assert.equal(clash.end, "10:00");
+  assert.equal(clash.otherItemId, "review");
+  assert.equal(clash.otherStart, "09:45");
+  assert.equal(clash.reason, "Both times were set by hand, so they were left as they are.");
+});
+
+test("anchors that end where the next begins are not a conflict", () => {
+  const plan = planDay(
+    [
+      task({ id: "a", title: "A", time: "09:00" }),
+      task({ id: "b", title: "B", time: "09:30" }),
+      task({ id: "c", title: "C", time: "10:00" }),
+    ],
+    { now: new Date(2026, 9, 13, 8, 0), today: TODAY },
+  );
+
+  assert.equal(plan.conflicts.length, 0);
+});
+
+test("a flexible task placed around an anchor is never a conflict", () => {
+  const plan = planDay(
+    [task({ id: "anchor", title: "Anchor", time: "15:00" }), task({ id: "flex", title: "Flex" })],
+    { now: NOW_MIDDAY, today: TODAY },
+  );
+
+  assert.equal(plan.conflicts.length, 0);
+  assert.equal(plan.anchorCount, 1);
+  assert.equal(plan.flexibleCount, 1);
+});
+
+test("every clashing pair is reported once, in start order", () => {
+  const plan = planDay(
+    [
+      task({ id: "c", title: "Third", time: "10:15" }),
+      task({ id: "a", title: "First", time: "10:00" }),
+      task({ id: "b", title: "Second", time: "10:10" }),
+    ],
+    { now: new Date(2026, 9, 13, 8, 0), today: TODAY },
+  );
+
+  const pairs = plan.conflicts.map((clash) => `${clash.itemId}/${clash.otherItemId}`);
+  assert.deepEqual(Array.from(pairs), ["a/b", "a/c", "b/c"]);
+});
+
+test("a conflict never moves the blocks the user set", () => {
+  const plan = planDay(
+    [
+      task({ id: "a", title: "A", time: "09:00" }),
+      task({ id: "b", title: "B", time: "09:15" }),
+    ],
+    { now: new Date(2026, 9, 13, 8, 0), today: TODAY },
+  );
+
+  assert.equal(plan.conflicts.length, 1);
+  const a = plan.blocks.find((block) => block.itemId === "a");
+  const b = plan.blocks.find((block) => block.itemId === "b");
+  assert.equal(a.start, "09:00");
+  assert.equal(b.start, "09:15");
+  assert.equal(a.fixed, true);
+  assert.equal(b.fixed, true);
+});
+
+test("conflict reasons are human and free of em dashes", () => {
+  const plan = planDay(
+    [task({ id: "a", title: "A", time: "09:00" }), task({ id: "b", title: "B", time: "09:10" })],
+    { now: new Date(2026, 9, 13, 8, 0), today: TODAY },
+  );
+
+  assert.ok(plan.conflicts.length > 0);
+  for (const clash of plan.conflicts) {
+    assert.ok(clash.reason.length > 0, "reason present");
+    assert.equal(/[—\u2014]/.test(clash.reason), false, `em dash in "${clash.reason}"`);
+  }
+});
+
+test("a clash inside a single-item day is not a conflict", () => {
+  const plan = planDay([task({ id: "a", title: "A", time: "09:00" })], {
+    now: new Date(2026, 9, 13, 8, 0),
+    today: TODAY,
+  });
+
+  assert.equal(plan.conflicts.length, 0);
+});

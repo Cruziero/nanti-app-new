@@ -339,6 +339,26 @@ export function Today() {
           </p>
         ) : plan ? (
           <div className="mt-4">
+            {plan.conflicts.length > 0 && (
+              <div className="mb-3 border-t border-border pt-3 first:border-t-0 first:pt-0">
+                <p className="text-xs font-semibold text-red-700 dark:text-red-300">
+                  Fixed times that overlap
+                </p>
+                <ul className="mt-1">
+                  {plan.conflicts.map((clash) => (
+                    <li key={`${clash.itemId}:${clash.otherItemId}`} className="py-1.5">
+                      <span className="block text-sm font-medium leading-5">
+                        {clash.title} at {clash.start} overlaps {clash.otherTitle} at{" "}
+                        {clash.otherStart}
+                      </span>
+                      <span className="block text-xs leading-5 text-muted-foreground">
+                        {clash.reason}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <ol>
               {plan.blocks.map((block) => (
                 <li

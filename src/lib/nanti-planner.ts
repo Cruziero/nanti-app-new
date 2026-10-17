@@ -12,6 +12,8 @@
  *   3. Order is urgency: overdue, due today, upcoming soonest-first, then
  *      items with no deadline fill whatever gap is left.
  *   4. Anything that does not fit is reported back instead of silently dropped.
+ *   5. Two anchors that cover the same time are reported as a conflict instead
+ *      of being silently moved, because both were set by hand.
  */
 
 export interface PlannerItem {
@@ -39,9 +41,22 @@ export interface UnscheduledItem {
   reason: string;
 }
 
+export interface PlanConflict {
+  itemId: string;
+  title: string;
+  start: string;
+  end: string;
+  otherItemId: string;
+  otherTitle: string;
+  otherStart: string;
+  otherEnd: string;
+  reason: string;
+}
+
 export interface DayPlan {
   blocks: PlanBlock[];
   unscheduled: UnscheduledItem[];
+  conflicts: PlanConflict[];
   windowStart: string;
   windowEnd: string;
   blockMinutes: number;
@@ -175,6 +190,42 @@ function findGap(
   return position + duration <= windowEnd ? position : null;
 }
 
+/**
+ * Anchor pairs whose spans cover the same time, one entry per pair, ordered
+ * by start time so the report is stable between runs. Flexible items never
+ * appear here: they are placed around the anchors, so only anchors collide.
+ */
+function detectConflicts(anchors: PlannerItem[], blockMinutes: number): PlanConflict[] {
+  const spans = anchors
+    .map((item) => {
+      const start = toMinutes(item.time);
+      return { item, start, end: start + blockMinutes };
+    })
+    .sort((a, b) => a.start - b.start || a.item.id.localeCompare(b.item.id));
+
+  const conflicts: PlanConflict[] = [];
+  for (let i = 0; i < spans.length; i += 1) {
+    const left = spans[i];
+    if (!left) continue;
+    for (let j = i + 1; j < spans.length; j += 1) {
+      const right = spans[j];
+      if (!right || right.start >= left.end) continue;
+      conflicts.push({
+        itemId: left.item.id,
+        title: left.item.title,
+        start: toHHMM(left.start),
+        end: toHHMM(left.end),
+        otherItemId: right.item.id,
+        otherTitle: right.item.title,
+        otherStart: toHHMM(right.start),
+        otherEnd: toHHMM(right.end),
+        reason: "Both times were set by hand, so they were left as they are.",
+      });
+    }
+  }
+  return conflicts;
+}
+
 export function planDay(items: PlannerItem[], options: PlanOptions = {}): DayPlan {
   const now = options.now ?? new Date();
   const today = options.today ?? todayKey(now);
@@ -258,6 +309,7 @@ export function planDay(items: PlannerItem[], options: PlanOptions = {}): DayPla
   return {
     blocks,
     unscheduled,
+    conflicts: detectConflicts(anchors, blockMinutes),
     windowStart: toHHMM(windowStart),
     windowEnd: toHHMM(windowEnd),
     blockMinutes,
