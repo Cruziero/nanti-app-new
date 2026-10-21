@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 
-const WHATSAPP_API_URL = "https://graph.facebook.com/v18.0";
+const WHATSAPP_API_URL = "https://graph.facebook.com/v26.0";
 
 export async function sendWhatsAppMessage(
   to: string,
