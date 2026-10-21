@@ -1,10 +1,13 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { toast } from "sonner";
+import { CalendarPlus, Loader2 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { KindBadge } from "./kind-badge";
 import { useNanti } from "@/lib/nanti-store";
 import { dueLabel, formatDate, priorityLabel } from "@/lib/nanti-utils";
+import { createGoogleCalendarEvent } from "@/lib/nanti-calendar.functions";
+import { CALENDAR_LAUNCH_ENABLED } from "@/lib/nanti-flags";
 import type { Item } from "@/lib/nanti-types";
 
 const sourceTypeLabel: Record<string, string> = {
@@ -44,10 +47,31 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 
 export function ItemDetailProvider({ children }: { children: ReactNode }) {
   const [id, setId] = useState<string | null>(null);
+  const [calendarSaving, setCalendarSaving] = useState(false);
   const { items, personOf, projectOf, complete, snooze, followUp, remove, update, projects } = useNanti();
   const item = items.find((i) => i.id === id);
   const person = personOf(item?.personId);
   const project = projectOf(item?.projectId);
+
+  const saveToCalendar = async () => {
+    if (!item || calendarSaving) return;
+    setCalendarSaving(true);
+    try {
+      const result = await createGoogleCalendarEvent({ data: { task_id: item.id } });
+      toast.success(
+        result.already ? "Item ini sudah ada di Google Calendar" : "Disimpan ke Google Calendar",
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      toast.error(
+        /connect/i.test(message)
+          ? "Hubungkan Google Calendar di Pengaturan dulu."
+          : message || "Gagal menyimpan ke Google Calendar.",
+      );
+    } finally {
+      setCalendarSaving(false);
+    }
+  };
 
   return (
     <Ctx.Provider value={setId}>
@@ -226,6 +250,21 @@ export function ItemDetailProvider({ children }: { children: ReactNode }) {
                       >
                         Ubah ke minggu depan
                       </Button>
+                      {CALENDAR_LAUNCH_ENABLED && item.due && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={calendarSaving}
+                          onClick={() => void saveToCalendar()}
+                        >
+                          {calendarSaving ? (
+                            <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                          ) : (
+                            <CalendarPlus className="mr-1.5 size-3.5" />
+                          )}
+                          Simpan ke Google Calendar
+                        </Button>
+                      )}
                     </>
                   )}
                   <select

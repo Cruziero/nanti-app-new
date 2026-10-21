@@ -106,8 +106,8 @@ Required for launch and already active.
 ### Google Calendar
 
 Implemented, but **hidden from the initial public launch**. The code is
-complete; the only thing missing is one redirect URI in the Google Cloud
-console.
+complete; what is missing is one redirect URI and the write scope below in the
+Google Cloud console.
 
 `src/lib/nanti-calendar.functions.ts:54` and `src/routes/api/auth/google.tsx:63`
 both build the redirect URI from the request origin, so on production the value
@@ -132,10 +132,19 @@ Keep the Supabase callback as well. It is already registered and is what Google
 https://qyfywekaorkwpzrvbrth.supabase.co/auth/v1/callback
 ```
 
-Only then turn on `CALENDAR_LAUNCH_ENABLED` at
-`src/routes/app.settings.tsx:86`, and only after a real Google account has
-completed connect, OAuth callback, sync, an Ask NANTI schedule question, and
-disconnect.
+The requested scope is `https://www.googleapis.com/auth/calendar.events`
+(read and write events), declared at
+`src/lib/nanti-calendar.functions.ts:59`. It must be present on the OAuth
+consent screen's scopes at
+https://console.cloud.google.com/apis/credentials/consent. Connections made
+before this scope was added only hold `calendar.readonly`; they keep syncing
+but "Simpan ke Google Calendar" fails until the user reconnects. To grant
+write access to an existing connection, disconnect and reconnect it.
+
+Only then turn on `CALENDAR_LAUNCH_ENABLED` in `src/lib/nanti-flags.ts`, and
+only after a real Google account has completed connect, OAuth callback, sync,
+"Simpan ke Google Calendar" from a dated item, an Ask NANTI schedule question,
+and disconnect.
 
 ### Browser Push
 

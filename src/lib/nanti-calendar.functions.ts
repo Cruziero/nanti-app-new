@@ -56,7 +56,7 @@ export const startGoogleCalendarConnect = createServerFn({ method: "POST" })
     authUrl.searchParams.set("client_id", clientId);
     authUrl.searchParams.set("redirect_uri", redirectUri);
     authUrl.searchParams.set("response_type", "code");
-    authUrl.searchParams.set("scope", "https://www.googleapis.com/auth/calendar.readonly");
+    authUrl.searchParams.set("scope", "https://www.googleapis.com/auth/calendar.events");
     authUrl.searchParams.set("access_type", "offline");
     authUrl.searchParams.set("prompt", "consent");
     authUrl.searchParams.set("include_granted_scopes", "true");
@@ -151,32 +151,7 @@ export async function syncGoogleCalendarForUser(
   if (!connection) throw new Error("Google Calendar is not connected.");
 
   const now = new Date();
-  let accessToken = String(connection.access_token || "");
-  let tokenExpiry = connection.token_expiry
-    ? new Date(connection.token_expiry)
-    : new Date(0);
-
-  if (!accessToken || tokenExpiry.getTime() <= now.getTime() + 60_000) {
-    if (!connection.refresh_token) {
-      await markCalendarFailed(supabase, userId);
-      throw new Error("Google Calendar needs to be reconnected.");
-    }
-    const refreshed = await refreshGoogleToken(String(connection.refresh_token));
-    accessToken = refreshed.access_token;
-    tokenExpiry = new Date(Date.now() + refreshed.expires_in * 1000);
-
-    const { error: refreshError } = await supabase
-      .from("calendar_connections")
-      .update({
-        access_token: accessToken,
-        token_expiry: tokenExpiry.toISOString(),
-        status: "connected",
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", userId)
-      .eq("provider", "google");
-    if (refreshError) throw refreshError;
-  }
+  const accessToken = await ensureAccessToken(supabase, userId, connection);
 
   const timeMin = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
   const timeMax = new Date(now.getTime() + 45 * 24 * 60 * 60 * 1000).toISOString();
@@ -291,6 +266,182 @@ export async function syncGoogleCalendarForUser(
 
   return { connected: true, synced: saved, last_synced_at: syncedAt };
 }
+
+async function ensureAccessToken(
+  supabase: any,
+  userId: string,
+  connection: any,
+) {
+  const accessToken = String(connection.access_token || "");
+  const expiry = connection.token_expiry
+    ? new Date(connection.token_expiry).getTime()
+    : 0;
+
+  if (accessToken && expiry > Date.now() + 60_000) return accessToken;
+
+  if (!connection.refresh_token) {
+    await markCalendarFailed(supabase, userId);
+    throw new Error("Google Calendar needs to be reconnected.");
+  }
+
+  const refreshed = await refreshGoogleToken(String(connection.refresh_token));
+  const tokenExpiry = new Date(Date.now() + refreshed.expires_in * 1000);
+  const { error } = await supabase
+    .from("calendar_connections")
+    .update({
+      access_token: refreshed.access_token,
+      token_expiry: tokenExpiry.toISOString(),
+      status: "connected",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId)
+    .eq("provider", "google");
+  if (error) throw error;
+  return refreshed.access_token;
+}
+
+const JAKARTA_OFFSET = "+07:00";
+
+export const createGoogleCalendarEvent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        task_id: z.string().uuid(),
+        duration_minutes: z.number().int().min(5).max(1440).optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    const supabase = adminClient();
+
+    const { data: task, error: taskError } = await supabase
+      .from("tasks")
+      .select("id,title,description,due_date,time,person_name,project_name")
+      .eq("id", data.task_id)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (taskError) throw taskError;
+    if (!task) throw new Error("That item no longer exists.");
+    if (!task.due_date) {
+      throw new Error("Add a due date before saving to Google Calendar.");
+    }
+
+    const { data: connection, error: connectionError } = await supabase
+      .from("calendar_connections")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("provider", "google")
+      .maybeSingle();
+    if (connectionError) throw connectionError;
+    if (!connection || connection.status !== "connected") {
+      throw new Error("Connect Google Calendar in Settings first.");
+    }
+
+    const { data: existing } = await supabase
+      .from("calendar_events")
+      .select("external_event_id")
+      .eq("user_id", userId)
+      .eq("provider", "google")
+      .filter("raw_json->extendedProperties->private->>nanti_task_id", "eq", task.id)
+      .maybeSingle();
+    if (existing?.external_event_id) {
+      return { event_id: String(existing.external_event_id), already: true };
+    }
+
+    const accessToken = await ensureAccessToken(supabase, userId, connection);
+    const dueDate = String(task.due_date).slice(0, 10);
+    const startTime =
+      typeof task.time === "string" && /^\d{2}:\d{2}/.test(task.time)
+        ? task.time.slice(0, 5)
+        : null;
+    const duration = data.duration_minutes ?? 30;
+
+    let start: Record<string, string>;
+    let end: Record<string, string>;
+    if (startTime) {
+      const startIso = `${dueDate}T${startTime}:00${JAKARTA_OFFSET}`;
+      start = { dateTime: startIso, timeZone: "Asia/Jakarta" };
+      end = {
+        dateTime: new Date(
+          new Date(startIso).getTime() + duration * 60_000,
+        ).toISOString(),
+        timeZone: "Asia/Jakarta",
+      };
+    } else {
+      const nextDay = new Date(`${dueDate}T00:00:00Z`);
+      nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+      start = { date: dueDate };
+      end = { date: nextDay.toISOString().slice(0, 10) };
+    }
+
+    const description = [
+      task.description,
+      task.person_name ? `Person: ${task.person_name}` : "",
+      task.project_name ? `Project: ${task.project_name}` : "",
+      "Saved from NANTI",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const endpoint = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(
+      String(connection.calendar_id || "primary"),
+    )}/events`;
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        summary: task.title,
+        description,
+        start,
+        end,
+        extendedProperties: { private: { nanti_task_id: task.id } },
+      }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      console.error("Google Calendar event create failed:", response.status, body.slice(0, 300));
+      if (response.status === 403 && /insufficient|scope/i.test(body)) {
+        throw new Error("Reconnect Google Calendar to allow adding events.");
+      }
+      throw new Error("Google Calendar rejected the event.");
+    }
+
+    const created = (await response.json()) as {
+      id?: string;
+      htmlLink?: string;
+    };
+    if (!created.id) throw new Error("Google Calendar returned no event id.");
+
+    const { error: cacheError } = await supabase.from("calendar_events").upsert(
+      {
+        user_id: userId,
+        provider: "google",
+        external_event_id: created.id,
+        title: task.title,
+        description: description.slice(0, 10000),
+        start_date: start["dateTime"] || start["date"],
+        end_date: end["dateTime"] || end["date"],
+        location: "",
+        attendees: [],
+        raw_json: created,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,external_event_id" },
+    );
+    if (cacheError) throw cacheError;
+
+    return {
+      event_id: created.id,
+      html_link: created.htmlLink ?? null,
+      already: false,
+    };
+  });
 
 async function refreshGoogleToken(refreshToken: string) {
   const { clientId, clientSecret } = googleConfig();

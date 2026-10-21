@@ -58,6 +58,11 @@ import {
   syncGoogleCalendarNow,
 } from "@/lib/nanti-calendar.functions";
 import {
+  CALENDAR_LAUNCH_ENABLED,
+  PUSH_LAUNCH_ENABLED,
+  WHATSAPP_LAUNCH_ENABLED,
+} from "@/lib/nanti-flags";
+import {
   deleteMyNantiAccount,
   exportMyNantiData,
 } from "@/lib/nanti-account.functions";
@@ -81,10 +86,6 @@ const toneOptions: { id: ConversationTone; label: string }[] = [
   { id: "loving", label: "Loving" },
   { id: "direct", label: "Direct" },
 ];
-
-const PUSH_LAUNCH_ENABLED = true;
-const CALENDAR_LAUNCH_ENABLED = false;
-const WHATSAPP_LAUNCH_ENABLED = true;
 
 const channelOpts: { id: ReminderChannel; label: string }[] = [
   ...(PUSH_LAUNCH_ENABLED
