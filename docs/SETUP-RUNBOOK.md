@@ -272,10 +272,21 @@ https://developers.facebook.com/documentation/business-messaging/whatsapp/permis
    answer outside a Meta handshake.
 4. Message the number from a normal phone. Watch the Vercel function logs for
    the signature check, then confirm the message landed in the workspace.
-5. Only after that, flip `WHATSAPP_LAUNCH_ENABLED` to `true` at
-   `src/routes/app.settings.tsx:87`. The flag gates the Settings surface at
-   lines 149 and 1053; it does not gate the webhook, which is live as soon as
-   the environment variables exist.
+5. Both `WHATSAPP_LAUNCH_ENABLED` flags — `src/routes/app.settings.tsx:87` and
+   `src/routes/api/cron/check-reminders.tsx:4` — were flipped to `true` on
+   2026-10-16, ahead of steps 1-4, so the Settings surface is already visible
+   and reminder dispatch already attempts WhatsApp sends. Completing steps 1-4
+   is what makes them functional; until then the sends fail soft (the webhook
+   answers 503 without `WHATSAPP_APP_SECRET`, and the reminder dispatcher
+   returns 0 without credentials). The flag gates the Settings surface and
+   WhatsApp reminder sends; it does not gate the webhook.
+
+   Behavior added on 2026-10-16: a successful `LINK` now also switches the
+   WhatsApp reminder channel on in the user's settings (Settings → Reminder
+   Channels), and disconnecting switches it off again. Tasks captured from
+   WhatsApp bake the user's channel selection at capture time, and the
+   dispatcher re-checks the current setting on every send, so unchecking the
+   channel stops WhatsApp reminders without affecting in-app or push.
 
 ---
 

@@ -113,6 +113,8 @@ type WhatsAppWebhook = {
   }>;
 };
 
+const DEFAULT_REMINDER_CHANNELS = ["in_app", "push"];
+
 function adminClient() {
   const url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "";
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
@@ -206,6 +208,55 @@ function semanticContext(item: ExtractedItem, date: string | null, time: string 
   };
 }
 
+async function reminderChannelsFor(
+  supabase: ReturnType<typeof adminClient>,
+  userId: string,
+): Promise<string[]> {
+  const { data, error } = await supabase
+    .from("user_settings")
+    .select("settings")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw error;
+
+  const stored = (data?.settings as { reminderChannels?: unknown } | null)?.reminderChannels;
+  if (Array.isArray(stored)) return stored as string[];
+
+  const { data: link, error: linkError } = await supabase
+    .from("whatsapp_user_links")
+    .select("id")
+    .eq("user_id", userId)
+    .not("verified_at", "is", null)
+    .maybeSingle();
+  if (linkError) throw linkError;
+  return link ? [...DEFAULT_REMINDER_CHANNELS, "whatsapp"] : DEFAULT_REMINDER_CHANNELS;
+}
+
+async function enableWhatsAppReminderChannel(
+  supabase: ReturnType<typeof adminClient>,
+  userId: string,
+) {
+  const { data, error } = await supabase
+    .from("user_settings")
+    .select("settings")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw error;
+
+  const settings = (data?.settings as Record<string, unknown> | null) || {};
+  const current = Array.isArray(settings.reminderChannels)
+    ? (settings.reminderChannels as string[])
+    : DEFAULT_REMINDER_CHANNELS;
+  if (current.includes("whatsapp")) return;
+
+  const { error: upsertError } = await supabase.from("user_settings").upsert({
+    user_id: userId,
+    settings: { ...settings, reminderChannels: [...current, "whatsapp"] },
+    updated_at: new Date().toISOString(),
+  });
+  if (upsertError) throw upsertError;
+}
+
 async function handleMessage(message: IncomingMessage) {
   if (!message.id || !message.from) return;
 
@@ -258,6 +309,8 @@ async function handleMessage(message: IncomingMessage) {
       .eq("user_id", link.user_id);
     if (updateError) throw updateError;
 
+    await enableWhatsAppReminderChannel(supabase, link.user_id);
+
     const linkClaimed = await claimInboundMessage(supabase, link.user_id, message, content);
     if (linkClaimed) await updateMessageStatus(supabase, message.id, "processed");
     await supabase.from("product_events").insert({
@@ -289,6 +342,8 @@ async function handleMessage(message: IncomingMessage) {
   const claimed = await claimInboundMessage(supabase, link.user_id, message, content);
   if (!claimed) return; // Already processed, or another delivery is actively processing it.
 
+  const reminderChannels = await reminderChannelsFor(supabase, link.user_id);
+
   try {
     if (link.pending_inbox_id && message.type === "text" && content) {
       const resolved = await resolvePendingClarification(
@@ -296,6 +351,7 @@ async function handleMessage(message: IncomingMessage) {
         link.user_id,
         link.pending_inbox_id,
         content,
+        reminderChannels,
       );
       if (resolved) {
         await clearPendingClarification(supabase, link.user_id);
@@ -423,6 +479,7 @@ async function handleMessage(message: IncomingMessage) {
         item,
         content,
         `${message.id}:${index}`,
+        reminderChannels,
       );
       created.push(result);
       if (result.entity === "inbox" && !clarification) {
@@ -553,6 +610,7 @@ async function persistExtractedItem(
   item: ExtractedItem,
   original: string,
   sourceExternalId: string,
+  reminderChannels: string[],
 ): Promise<{ entity: "task" | "waiting" | "inbox"; id: string; title: string; question?: string }> {
   const { date, time } = extractedDate(item, original);
   const semantics = semanticContext(item, date, time);
@@ -667,7 +725,7 @@ async function persistExtractedItem(
       reminder_time: enableReminder
         ? reminderAt(date, time, item.reminder?.offsetMinutes)
         : null,
-      reminder_channels: enableReminder ? ["in_app", "push"] : [],
+      reminder_channels: enableReminder ? reminderChannels : [],
       reminder_intensity: "normal",
       semantic_context: semantics,
     }, { onConflict: "user_id,source_external_id" })
@@ -709,6 +767,7 @@ async function resolvePendingClarification(
   userId: string,
   inboxId: string,
   answer: string,
+  reminderChannels: string[],
 ) {
   const { data: inbox, error } = await supabase
     .from("inbox_items")
@@ -754,7 +813,7 @@ async function resolvePendingClarification(
     details.time = parsed.time || undefined;
   }
 
-  const promoted = await promoteInboxAdmin(supabase, userId, inbox, details);
+  const promoted = await promoteInboxAdmin(supabase, userId, inbox, details, reminderChannels);
   if (inbox.clarification_type === "person" || inbox.clarification_type === "date" || inbox.clarification_type === "time") {
     await recordLanguageMemoryAdmin(supabase, {
       userId,
@@ -783,6 +842,7 @@ async function promoteInboxAdmin(
   userId: string,
   inbox: Record<string, any>,
   details: { personName?: string; due?: string; time?: string },
+  reminderChannels: string[],
 ) {
   const personName = details.personName || inbox.person_name;
   const person = personName
@@ -864,7 +924,7 @@ async function promoteInboxAdmin(
             Number(inbox.semantic_context?.reminder?.offsetMinutes ?? (details.time ? 60 : 0)),
           )
         : null,
-      reminder_channels: due || details.time ? ["in_app", "push"] : [],
+      reminder_channels: due || details.time ? reminderChannels : [],
       reminder_intensity: "normal",
     })
     .select("id,title")

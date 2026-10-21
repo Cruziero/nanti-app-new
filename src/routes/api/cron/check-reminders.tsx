@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 
-const WHATSAPP_LAUNCH_ENABLED = false;
+const WHATSAPP_LAUNCH_ENABLED = true;
 
 export const Route = createFileRoute("/api/cron/check-reminders")({
   server: {
@@ -494,6 +494,16 @@ async function sendWhatsAppNotification(
     .maybeSingle();
   if (error) throw error;
   if (!link?.phone_number) return 0;
+
+  const { data: settingsRow, error: settingsError } = await supabase
+    .from("user_settings")
+    .select("settings")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (settingsError) throw settingsError;
+  const storedChannels = (settingsRow as { settings?: { reminderChannels?: unknown } } | null)
+    ?.settings?.reminderChannels;
+  if (Array.isArray(storedChannels) && !storedChannels.includes("whatsapp")) return 0;
 
   const { data: lastInbound, error: inboundError } = await supabase
     .from("whatsapp_messages")

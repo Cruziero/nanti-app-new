@@ -44,7 +44,7 @@ are unverifiable and are excluded from all copy.
 
 | Benchmark row | Verdict | Evidence |
 |---|---|---|
-| WhatsApp reminders | `DISABLED` | `WHATSAPP_LAUNCH_ENABLED = false` at `src/routes/app.settings.tsx:87`, surfaced as `hidden` at line 1053 |
+| WhatsApp reminders | `ENABLED` | `WHATSAPP_LAUNCH_ENABLED = true` at `src/routes/app.settings.tsx:87` and `src/routes/api/cron/check-reminders.tsx:4` (flipped 2026-10-16). Sends still require the Meta credentials in Vercel and an approved `nanti_reminder` template |
 | Reminder open rate near 98% | `CANNOT CLAIM` | No delivery or open telemetry exists (R-17) |
 | 24h + 10 minute auto alerts | `PARTIAL` | Reminder dispatch runs from Supabase every 5 minutes and `/api/cron/check-reminders` is scheduled; delivery is in-app and web push (`PUSH_LAUNCH_ENABLED` is on, `GET /api/push/config` returns `configured: true`). WhatsApp delivery still needs Meta approval |
 
@@ -117,9 +117,10 @@ needed.
 
 8. **Google Calendar two-way sync.** Blocked until the redirect URI is added at
    https://console.cloud.google.com/apis/credentials, then `CALENDAR_LAUNCH_ENABLED`.
-9. **WhatsApp reminders.** Blocked on WhatsApp Cloud API credentials, then
-   `WHATSAPP_LAUNCH_ENABLED`. The 98 percent open-rate row stays `CANNOT CLAIM`
-   regardless.
+9. **WhatsApp reminders.** Code path is enabled (`WHATSAPP_LAUNCH_ENABLED = true`
+   since 2026-10-16). Blocked on the Cloud API credentials in Vercel, the Meta
+   webhook subscription, and the approved `nanti_reminder` template. The
+   98 percent open-rate row stays `CANNOT CLAIM` regardless.
 
 ### Not achievable in this codebase
 

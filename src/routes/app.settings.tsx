@@ -84,13 +84,14 @@ const toneOptions: { id: ConversationTone; label: string }[] = [
 
 const PUSH_LAUNCH_ENABLED = true;
 const CALENDAR_LAUNCH_ENABLED = false;
-const WHATSAPP_LAUNCH_ENABLED = false;
+const WHATSAPP_LAUNCH_ENABLED = true;
 
 const channelOpts: { id: ReminderChannel; label: string }[] = [
   ...(PUSH_LAUNCH_ENABLED
     ? [{ id: "push" as ReminderChannel, label: "Push Notifications" }]
     : []),
   { id: "in_app", label: "In-app" },
+  ...(WHATSAPP_LAUNCH_ENABLED ? [{ id: "whatsapp" as ReminderChannel, label: "WhatsApp" }] : []),
 ];
 
 type WhatsAppLinkState = {
