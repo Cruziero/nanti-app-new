@@ -92,7 +92,7 @@ Supabase's default outbound is **not** broken: `POST /auth/v1/signup` returns 20
 - [ ] Configure a real transactional email provider for Supabase Auth.
 - [x] Verify a new-user confirmation email reaches a real inbox. Proven on 2026-09-25: the probe account was created with `email_confirm: false`, so Supabase queued a genuine send (`confirmation_sent_at` 09:24:05.272Z), then reported `email_confirmed_at` 09:24:26.332Z and `last_sign_in_at` 09:24:26.338Z. Visiting the emailed link is the only flow that both confirms the address and opens a session, an admin `email_confirm` update does not set `last_sign_in_at`, and no saved script ever confirmed or fetched that user's link.
 - [x] Verify the password-reset send path. Re-checked on 2026-10-09: `POST /auth/v1/admin/generate_link` with `type: recovery` returned 200, `recovery_sent_at` 2026-10-09T01:04:22Z and a non-empty `action_link`. Clicking a reset link from a real inbox is still worth one manual pass.
-- [ ] Confirm `support@nanti.app` and `privacy@nanti.app` receive mail.
+- [ ] Confirm `appnanti@gmail.com` receives mail.
 
 A Resend integration is available and can be used once connected. A send-only Resend API key was provided on 2026-09-27 and validated end to end:
 

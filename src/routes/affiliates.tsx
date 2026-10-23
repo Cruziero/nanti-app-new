@@ -51,7 +51,7 @@ function AffiliatesPage() {
             Contact us to learn more about the program.
           </p>
           <a
-            href="mailto:affiliates@nanti.app"
+            href="mailto:appnanti@gmail.com"
             className="mt-5 inline-flex items-center gap-2 rounded-xl bg-foreground px-6 py-3 text-[14px] font-semibold text-background transition-opacity hover:opacity-90"
           >
             Get in touch

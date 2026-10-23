@@ -44,7 +44,7 @@ export const Route = createFileRoute("/api/push/test")({
 
           const webpush = await import("web-push");
           webpush.setVapidDetails(
-            "mailto:noreply@nanti-app.com",
+            "mailto:appnanti@gmail.com",
             publicKey,
             privateKey,
           );

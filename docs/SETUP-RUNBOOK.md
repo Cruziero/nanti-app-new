@@ -47,10 +47,9 @@ Verify all of these with a disposable account:
 - reset-password link opens the production NANTI reset page,
 - the new password can be used to sign in.
 
-Also verify that these mailboxes receive real mail:
+Also verify that the contact mailbox receives real mail:
 
-- `support@nanti.app`
-- `privacy@nanti.app`
+- `appnanti@gmail.com`
 
 NANTI already requires 12+ character new passwords and checks them against HIBP Pwned Passwords using k-anonymity.
 
@@ -346,7 +345,7 @@ Before broad public promotion:
 - document PDP processing purposes, retention, subprocessors and cross-border safeguards,
 - define the incident-response owner,
 - define the data-subject-request process,
-- confirm `support@nanti.app` and `privacy@nanti.app` are monitored.
+- confirm `appnanti@gmail.com` is monitored.
 
 Do not remove the source-level legal-review comments until counsel has approved the final text.
 

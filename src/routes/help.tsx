@@ -74,7 +74,7 @@ function HelpPage() {
           <h2 className="text-[20px] font-semibold">Still need help?</h2>
           <p className="mt-2 text-[15px] text-muted-foreground">Reach out to our support team.</p>
           <a
-            href="mailto:support@nanti.app"
+            href="mailto:appnanti@gmail.com"
             className="mt-5 inline-flex items-center gap-2 rounded-xl bg-foreground px-6 py-3 text-[14px] font-semibold text-background transition-opacity hover:opacity-90"
           >
             Contact Support

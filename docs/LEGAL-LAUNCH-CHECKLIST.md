@@ -17,8 +17,7 @@ This is an operational checklist, not a substitute for Indonesian legal advice.
   - age eligibility
   - liability / consumer-protection wording
   - operator identity and contact details
-- [ ] **Privacy mailbox.** Ensure `privacy@nanti.app` receives mail and has an owner + response process.
-- [ ] **Support mailbox.** Ensure `support@nanti.app` receives mail and has an owner + response process.
+- [ ] **Contact mailbox.** Ensure `appnanti@gmail.com` receives mail, handles both support and privacy requests, and has an owner + response process.
 - [ ] **PDP processing inventory.** Keep a simple record of:
   - categories of personal data processed,
   - purpose / lawful basis,

@@ -37,10 +37,10 @@ export function PrivacyPage() {
               diproses guna menyediakan layanan NANTI. Pertanyaan atau permintaan terkait privasi
               dapat dikirim ke{" "}
               <a
-                href="mailto:privacy@nanti.app"
+                href="mailto:appnanti@gmail.com"
                 className="text-[var(--accent-emerald)] underline underline-offset-2"
               >
-                privacy@nanti.app
+                appnanti@gmail.com
               </a>
               .
             </p>
@@ -212,10 +212,10 @@ export function PrivacyPage() {
             <p className="mt-3">
               Untuk permintaan lain, hubungi{" "}
               <a
-                href="mailto:privacy@nanti.app"
+                href="mailto:appnanti@gmail.com"
                 className="text-[var(--accent-emerald)] underline underline-offset-2"
               >
-                privacy@nanti.app
+                appnanti@gmail.com
               </a>
               . Kami dapat meminta verifikasi identitas sebelum memenuhi permintaan.
             </p>
@@ -274,10 +274,10 @@ export function PrivacyPage() {
             <p>
               Pertanyaan privasi dapat dikirim ke{" "}
               <a
-                href="mailto:privacy@nanti.app"
+                href="mailto:appnanti@gmail.com"
                 className="text-[var(--accent-emerald)] underline underline-offset-2"
               >
-                privacy@nanti.app
+                appnanti@gmail.com
               </a>
               . Lihat juga{" "}
               <Link

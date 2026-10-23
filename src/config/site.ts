@@ -352,7 +352,8 @@ export const defaultConfig: SiteConfig = {
     legal: [
       { label: "Privacy Policy", href: "/legal/privacy" },
       { label: "Terms of Service", href: "/legal/terms" },
-      { label: "Contact", href: "mailto:support@nanti.app" },
+      { label: "Contact", href: "mailto:appnanti@gmail.com" },
+      { label: "Instagram", href: "https://instagram.com/nantiapp" },
     ],
   },
   effects: {

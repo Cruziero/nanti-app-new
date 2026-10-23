@@ -450,7 +450,7 @@ async function sendPushNotification(
 
   const webpush = await import("web-push");
   webpush.setVapidDetails(
-    "mailto:noreply@nanti-app.com",
+    "mailto:appnanti@gmail.com",
     publicKey,
     privateKey,
   );

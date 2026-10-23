@@ -16,7 +16,8 @@ const columns = [
     links: [
       { label: "Help", to: "/help" },
       { label: "Blog", to: "/blog" },
-      { label: "Contact", href: "mailto:support@nanti.app" },
+      { label: "Contact", href: "mailto:appnanti@gmail.com" },
+      { label: "Instagram", href: "https://instagram.com/nantiapp" },
     ],
   },
   {
@@ -50,6 +51,8 @@ export function SiteFooter() {
                     {"href" in link ? (
                       <a
                         href={link.href}
+                        target={link.href.startsWith("http") ? "_blank" : undefined}
+                        rel={link.href.startsWith("http") ? "noreferrer" : undefined}
                         className="text-[14px] text-[#5F6368] hover:text-foreground"
                       >
                         {link.label}

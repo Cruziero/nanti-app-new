@@ -223,10 +223,10 @@ function TermsPage() {
             <p>
               Pertanyaan tentang Ketentuan ini dapat dikirim ke{" "}
               <a
-                href="mailto:support@nanti.app"
+                href="mailto:appnanti@gmail.com"
                 className="text-[var(--accent-emerald)] underline underline-offset-2"
               >
-                support@nanti.app
+                appnanti@gmail.com
               </a>
               .
             </p>

@@ -31,7 +31,7 @@ function CareersPage() {
             But we&apos;re always interested in meeting talented people.
           </p>
           <a
-            href="mailto:careers@nanti.app"
+            href="mailto:appnanti@gmail.com"
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-foreground px-6 py-3 text-[14px] font-semibold text-background transition-opacity hover:opacity-90"
           >
             Send your interest
