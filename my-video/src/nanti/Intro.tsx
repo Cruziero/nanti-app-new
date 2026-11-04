@@ -2,6 +2,7 @@ import { ArrowUp, ClipboardPaste, Forward } from "lucide-react";
 import React from "react";
 import { AbsoluteFill, Sequence, interpolate, useCurrentFrame } from "remotion";
 import { BigLine, CommitmentCard, ReminderNotice } from "./cards";
+import { VoiceLine, layout, sceneLength } from "./timing";
 import {
   Bubble,
   C,
@@ -17,7 +18,15 @@ import {
 } from "./ui";
 
 /* How-to video: what a new user actually does in NANTI, in three steps. 1080x1920, 30fps, 32s. */
-export const INTRO_DURATION = 960;
+const LENGTHS = [
+  sceneLength("intro-0", 90),
+  sceneLength("intro-1", 240),
+  sceneLength("intro-2", 240),
+  sceneLength("intro-3", 240),
+  sceneLength("intro-4", 150),
+];
+const { starts: STARTS, total: TOTAL } = layout(LENGTHS);
+export const INTRO_DURATION = TOTAL;
 const MSG = "nanti saya kirim invoice tgl 28 agustus ya pak Tom";
 
 /** Cross-fade wrapper so scenes don't hard-cut. */
@@ -34,7 +43,7 @@ const Scene: React.FC<{ len: number; children: React.ReactNode; bg?: string }> =
 const Title: React.FC = () => {
   const p = useIn(4);
   return (
-    <Scene len={90}>
+    <Scene len={LENGTHS[0]!}>
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 70 }}>
         <div style={{ opacity: p, transform: `scale(${0.9 + p * 0.1})` }}>
           <Logo size={120} />
@@ -66,7 +75,7 @@ const StepOne: React.FC = () => {
   const toNanti = fade(frame, 110, 130);
   const sent = frame >= 200;
   return (
-    <Scene len={240}>
+    <Scene len={LENGTHS[1]!}>
       <div style={{ position: "absolute", top: 150, width: "100%" }}>
         <StepCaption n={1} text="Teruskan atau tempel chat yang berisi janji." delay={4} />
       </div>
@@ -190,7 +199,7 @@ const StepOne: React.FC = () => {
 
 /** Step 2: NANTI pulls out who, what, when. */
 const StepTwo: React.FC = () => (
-  <Scene len={240} bg={C.sand}>
+  <Scene len={LENGTHS[2]!} bg={C.sand}>
     <div style={{ position: "absolute", top: 150, width: "100%" }}>
       <StepCaption n={2} text="NANTI menemukan siapa, apa, dan kapan." delay={4} />
     </div>
@@ -208,7 +217,7 @@ const StepTwo: React.FC = () => (
 const StepThree: React.FC = () => {
   const frame = useCurrentFrame();
   return (
-    <Scene len={240}>
+    <Scene len={LENGTHS[3]!}>
       <div style={{ position: "absolute", top: 150, width: "100%" }}>
         <StepCaption n={3} text="NANTI mengingatkan sebelum tenggat." delay={4} />
       </div>
@@ -252,7 +261,7 @@ const StepThree: React.FC = () => {
 const Outro: React.FC = () => {
   const frame = useCurrentFrame();
   return (
-    <Scene len={150} bg={C.forest}>
+    <Scene len={LENGTHS[4]!} bg={C.forest}>
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 80 }}>
         <Logo size={110} dark />
         <BigLine a="Anda bicara." b="NANTI yang mengingat." delay={10} dark />
@@ -274,22 +283,15 @@ const Outro: React.FC = () => {
   );
 };
 
+const SCENES = [Title, StepOne, StepTwo, StepThree, Outro];
+
 export const Intro: React.FC = () => (
   <AbsoluteFill style={{ background: C.paper }}>
-    <Sequence durationInFrames={90}>
-      <Title />
-    </Sequence>
-    <Sequence from={90} durationInFrames={240}>
-      <StepOne />
-    </Sequence>
-    <Sequence from={330} durationInFrames={240}>
-      <StepTwo />
-    </Sequence>
-    <Sequence from={570} durationInFrames={240}>
-      <StepThree />
-    </Sequence>
-    <Sequence from={810} durationInFrames={150}>
-      <Outro />
-    </Sequence>
+    {SCENES.map((S, i) => (
+      <Sequence key={i} from={STARTS[i]!} durationInFrames={LENGTHS[i]!}>
+        <S />
+        <VoiceLine id={`intro-${i}` as "intro-0"} />
+      </Sequence>
+    ))}
   </AbsoluteFill>
 );

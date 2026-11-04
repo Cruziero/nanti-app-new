@@ -55,10 +55,12 @@ Note that for some entities a company license is needed. [Read the terms here](h
 
 ## NANTI videos
 
-Two vertical (1080×1920, 30fps) Indonesian videos live in `src/nanti/`:
+Two vertical (1080×1920, 30fps) Indonesian videos with AI voice-over live in `src/nanti/`:
 
 - `NantiIntro`: 32s how-to (forward or paste a chat → NANTI finds who/what/when → reminder)
-- `NantiPromo`: 20s marketing promo
+- `NantiPromo`: ~42s promo, including a "Hitung sendiri" scene where viewers work out what a forgotten promise costs them
+
+Voice-over: the spoken lines are in `scripts/voiceover.json` (spelled the way the voice should pronounce them). Edit a line, then run `scripts/make-voiceover.sh` to regenerate `public/vo/*.wav` and `src/nanti/vo-durations.json`. Scenes stretch to fit each line automatically. To use a human recording instead, replace the WAV with the same name and rerun only the duration step.
 
 Preview: `npm run dev`. Render:
 
