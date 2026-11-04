@@ -3,36 +3,112 @@ import { Check } from "lucide-react";
 import { MarketingLayout, Reveal } from "@/components/nanti/marketing";
 import { loadConfig } from "@/config/site";
 import { canonical } from "@/lib/site";
+import { useLang, type Bilingual } from "@/lib/i18n";
+
+type PlanText = { period: string; desc: string; features: string[]; cta: string };
+
+const PRICING_COPY: Bilingual<{
+  label: string;
+  headline?: string;
+  subtitle?: string;
+  includes: string;
+  noCard: string;
+}> = {
+  id: {
+    label: "Harga",
+    headline: "Harga sederhana untuk semua jenis pekerjaan.",
+    subtitle: "Mulai gratis. Upgrade saat Anda butuh lebih.",
+    includes: "Semua paket termasuk impor percakapan, ringkasan harian, dan integrasi WhatsApp.",
+    noCard: "Tanpa kartu kredit. Bisa berhenti kapan saja.",
+  },
+  en: {
+    label: "Pricing",
+    includes: "All plans include conversation import, daily briefings, and WhatsApp integration.",
+    noCard: "No credit card required. Cancel anytime.",
+  },
+};
+
+/* Indonesian text per plan name. Prices and names come from the site config; anything not listed here falls back to the config text. */
+const PLANS_ID: Record<string, PlanText> = {
+  Free: {
+    period: "selamanya",
+    desc: "Untuk mencoba NANTI dengan percakapan yang paling penting.",
+    features: [
+      "Hingga 50 item terlacak",
+      "Impor percakapan dengan AI",
+      "Ringkasan harian",
+      "1 workspace",
+    ],
+    cta: "Buat akun gratis",
+  },
+  Pro: {
+    period: "/bulan",
+    desc: "Untuk profesional yang hidup di WhatsApp.",
+    features: [
+      "Item terlacak tanpa batas",
+      "Impor percakapan dengan AI",
+      "Ringkasan harian & rekap akhir hari",
+      "Asisten Tanya NANTI",
+      "Ingatan orang & proyek",
+      "Pemrosesan AI prioritas",
+    ],
+    cta: "Buat akun gratis",
+  },
+  Business: {
+    period: "",
+    desc: "Untuk tim yang bekerja lewat WhatsApp.",
+    features: [
+      "Semua fitur Pro",
+      "Workspace bersama",
+      "Kolaborasi tim",
+      "Akses API",
+      "Pelatihan AI khusus",
+      "Dukungan khusus",
+    ],
+    cta: "Hubungi kami",
+  },
+};
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     links: [canonical("/pricing")],
     meta: [
-      { title: "Pricing · NANTI" },
-      { name: "description", content: "Simple pricing for NANTI, your memory for WhatsApp." },
+      { title: "Harga · NANTI" },
+      { name: "description", content: "Harga sederhana untuk NANTI, ingatan Anda untuk WhatsApp." },
     ],
   }),
   component: PricingPage,
 });
 
 function PricingPage() {
-  const config = loadConfig();
-  const { headline, subtitle, plans } = config.pricing;
-
   return (
     <MarketingLayout>
+      <PricingContent />
+    </MarketingLayout>
+  );
+}
+
+function PricingContent() {
+  const { lang } = useLang();
+  const t = PRICING_COPY[lang];
+  const config = loadConfig();
+  const headline = t.headline ?? config.pricing.headline;
+  const subtitle = t.subtitle ?? config.pricing.subtitle;
+  const plans = config.pricing.plans.map((plan) => {
+    const id = lang === "id" ? PLANS_ID[plan.name] : undefined;
+    return id ? { ...plan, ...id, price: plan.price === "Custom" ? "Kustom" : plan.price } : plan;
+  });
+
+  return (
+    <>
       <section className="bg-white pt-24 pb-16 sm:pt-32 sm:pb-20">
         <div className="mx-auto max-w-[800px] px-5 text-center sm:px-8">
           <Reveal>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#067a3f]/10 px-4 py-1.5">
-              <span className="text-[12px] font-semibold text-[#067a3f]">Pricing</span>
-            </div>
+            <p className="mb-3 text-[13px] font-semibold text-[#067a3f]">{t.label}</p>
             <h1 className="mt-3 text-[28px] font-bold tracking-tight text-[#111111] sm:text-[36px]">
               {headline}
             </h1>
-            <p className="mt-3 text-[15px] text-[#5F6368]">
-              {subtitle}
-            </p>
+            <p className="mt-3 text-[15px] text-[#5F6368]">{subtitle}</p>
           </Reveal>
         </div>
       </section>
@@ -52,7 +128,9 @@ function PricingPage() {
                   <h3 className="text-[18px] font-semibold text-[#111111]">{plan.name}</h3>
                   <p className="mt-1.5 text-[13px] text-[#5F6368]">{plan.desc}</p>
                   <div className="mt-5 flex items-baseline gap-1">
-                    <span className="text-[32px] font-bold tracking-tight text-[#111111]">{plan.price}</span>
+                    <span className="text-[32px] font-bold tracking-tight text-[#111111]">
+                      {plan.price}
+                    </span>
                     <span className="text-[14px] text-[#5F6368]">{plan.period}</span>
                   </div>
                   <ul className="mt-6 flex-1 space-y-3">
@@ -83,15 +161,11 @@ function PricingPage() {
       <section className="bg-white py-16 sm:py-20">
         <div className="mx-auto max-w-[500px] px-5 text-center sm:px-8">
           <Reveal>
-            <p className="text-[14px] text-[#5F6368]">
-              All plans include conversation import, daily briefings, and WhatsApp integration.
-            </p>
-            <p className="mt-2 text-[12px] text-[#5F6368]">
-              No credit card required. Cancel anytime.
-            </p>
+            <p className="text-[14px] text-[#5F6368]">{t.includes}</p>
+            <p className="mt-2 text-[12px] text-[#5F6368]">{t.noCard}</p>
           </Reveal>
         </div>
       </section>
-    </MarketingLayout>
+    </>
   );
 }
