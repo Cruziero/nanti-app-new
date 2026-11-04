@@ -42,7 +42,7 @@ export function SiteFooter() {
           </div>
           {columns.map((col) => (
             <div key={col.title}>
-              <p className="text-[12px] font-semibold uppercase tracking-wider text-[#5F6368]">
+              <p className="text-[13px] font-semibold text-[#171c24]">
                 {col.title}
               </p>
               <ul className="mt-3 space-y-2.5">
