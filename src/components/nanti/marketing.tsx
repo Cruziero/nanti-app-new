@@ -4,19 +4,39 @@ import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "./logo";
 import { SiteFooter } from "./footer";
+import { LangProvider, LangToggle, useCopy } from "@/lib/i18n";
 
 /* ─── Navigation ─── */
 
-const navLinks = [
-  { to: "/how-it-works", label: "How it works" },
-  { to: "/business", label: "For Business" },
-  { to: "/personal", label: "For Personal" },
-];
+const NAV = {
+  id: {
+    links: [
+      { to: "/how-it-works", label: "Cara kerja" },
+      { to: "/business", label: "Untuk Bisnis" },
+      { to: "/personal", label: "Untuk Pribadi" },
+    ],
+    login: "Masuk",
+    cta: "Coba NANTI gratis",
+    menu: "Menu",
+  },
+  en: {
+    links: [
+      { to: "/how-it-works", label: "How it works" },
+      { to: "/business", label: "For Business" },
+      { to: "/personal", label: "For Personal" },
+    ],
+    login: "Log in",
+    cta: "Try NANTI for free",
+    menu: "Menu",
+  },
+};
 
 export function MarketingNav() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const t = useCopy(NAV);
+  const navLinks = t.links;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -45,9 +65,7 @@ export function MarketingNav() {
               to={l.to}
               className={cn(
                 "text-[14px] font-medium transition-colors",
-                path === l.to
-                  ? "text-foreground"
-                  : "text-[#5F6368] hover:text-foreground",
+                path === l.to ? "text-foreground" : "text-[#5F6368] hover:text-foreground",
               )}
             >
               {l.label}
@@ -56,27 +74,32 @@ export function MarketingNav() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
+          <LangToggle />
           <Link
             to="/auth/login"
             className="text-[14px] font-medium text-[#5F6368] transition-colors hover:text-foreground"
           >
-            Log in
+            {t.login}
           </Link>
           <Link
             to="/welcome"
             className="inline-flex items-center rounded-full bg-[#107E71] px-4 py-2 text-[13.5px] font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#0b5e54] hover:shadow-md"
           >
-            Try NANTI for free
+            {t.cta}
           </Link>
         </div>
 
-        <button
-          className="flex size-9 items-center justify-center rounded-lg text-foreground md:hidden"
-          onClick={() => setOpen(!open)}
-          aria-label="Menu"
-        >
-          {open ? <X className="size-5" /> : <Menu className="size-5" />}
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          <LangToggle />
+          <button
+            className="flex size-9 items-center justify-center rounded-lg text-foreground md:hidden"
+            onClick={() => setOpen(!open)}
+            aria-label={t.menu}
+            aria-expanded={open}
+          >
+            {open ? <X className="size-5" /> : <Menu className="size-5" />}
+          </button>
+        </div>
       </div>
 
       {open && (
@@ -98,14 +121,14 @@ export function MarketingNav() {
                 onClick={() => setOpen(false)}
                 className="flex-1 rounded-lg border border-border px-4 py-2.5 text-center text-[14px] font-medium"
               >
-                Log in
+                {t.login}
               </Link>
               <Link
                 to="/welcome"
                 onClick={() => setOpen(false)}
                 className="flex-1 rounded-full bg-[#107E71] px-4 py-2.5 text-center text-[14px] font-semibold text-white"
               >
-                Try NANTI for free
+                {t.cta}
               </Link>
             </div>
           </nav>
@@ -119,11 +142,13 @@ export function MarketingNav() {
 
 export function MarketingLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col bg-white">
-      <MarketingNav />
-      <main className="flex-1 pt-16">{children}</main>
-      <SiteFooter />
-    </div>
+    <LangProvider>
+      <div className="flex min-h-screen flex-col bg-white">
+        <MarketingNav />
+        <main className="flex-1 pt-16">{children}</main>
+        <SiteFooter />
+      </div>
+    </LangProvider>
   );
 }
 

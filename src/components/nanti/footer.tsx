@@ -1,35 +1,74 @@
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./logo";
+import { useCopy } from "@/lib/i18n";
 
-const columns = [
-  {
-    title: "Product",
-    links: [
-      { label: "How it works", to: "/how-it-works" },
-      { label: "Pricing", to: "/pricing" },
-      { label: "For Business", to: "/business" },
-      { label: "For Personal", to: "/personal" },
+const FOOTER = {
+  id: {
+    tagline: "Ingatan untuk percakapan yang penting.",
+    rights: "Hak cipta dilindungi.",
+    columns: [
+      {
+        title: "Produk",
+        links: [
+          { label: "Cara kerja", to: "/how-it-works" },
+          { label: "Harga", to: "/pricing" },
+          { label: "Untuk Bisnis", to: "/business" },
+          { label: "Untuk Pribadi", to: "/personal" },
+        ],
+      },
+      {
+        title: "Sumber",
+        links: [
+          { label: "Bantuan", to: "/help" },
+          { label: "Blog", to: "/blog" },
+          { label: "Kontak", href: "mailto:appnanti@gmail.com" },
+          { label: "Instagram", href: "https://instagram.com/nantiapp" },
+        ],
+      },
+      {
+        title: "Legal",
+        links: [
+          { label: "Privasi", to: "/legal/privacy" },
+          { label: "Ketentuan", to: "/legal/terms" },
+        ],
+      },
     ],
   },
-  {
-    title: "Resources",
-    links: [
-      { label: "Help", to: "/help" },
-      { label: "Blog", to: "/blog" },
-      { label: "Contact", href: "mailto:appnanti@gmail.com" },
-      { label: "Instagram", href: "https://instagram.com/nantiapp" },
+  en: {
+    tagline: "{t.tagline}",
+    rights: "All rights reserved.",
+    columns: [
+      {
+        title: "Product",
+        links: [
+          { label: "How it works", to: "/how-it-works" },
+          { label: "Pricing", to: "/pricing" },
+          { label: "For Business", to: "/business" },
+          { label: "For Personal", to: "/personal" },
+        ],
+      },
+      {
+        title: "Resources",
+        links: [
+          { label: "Help", to: "/help" },
+          { label: "Blog", to: "/blog" },
+          { label: "Contact", href: "mailto:appnanti@gmail.com" },
+          { label: "Instagram", href: "https://instagram.com/nantiapp" },
+        ],
+      },
+      {
+        title: "Legal",
+        links: [
+          { label: "Privacy", to: "/legal/privacy" },
+          { label: "Terms", to: "/legal/terms" },
+        ],
+      },
     ],
   },
-  {
-    title: "Legal",
-    links: [
-      { label: "Privacy", to: "/legal/privacy" },
-      { label: "Terms", to: "/legal/terms" },
-    ],
-  },
-];
+};
 
 export function SiteFooter() {
+  const t = useCopy(FOOTER);
   return (
     <footer className="border-t border-[#E7E9E7] bg-[#F7F8F6]">
       <div className="mx-auto max-w-[1200px] px-5 py-16 sm:px-8">
@@ -37,14 +76,12 @@ export function SiteFooter() {
           <div className="md:col-span-2">
             <Logo />
             <p className="mt-4 max-w-[240px] text-[14px] leading-relaxed text-[#5F6368]">
-              Memory for the conversations that matter.
+              {t.tagline}
             </p>
           </div>
-          {columns.map((col) => (
+          {t.columns.map((col) => (
             <div key={col.title}>
-              <p className="text-[13px] font-semibold text-[#171c24]">
-                {col.title}
-              </p>
+              <p className="text-[13px] font-semibold text-[#171c24]">{col.title}</p>
               <ul className="mt-3 space-y-2.5">
                 {col.links.map((link) => (
                   <li key={link.label}>
@@ -73,7 +110,7 @@ export function SiteFooter() {
         </div>
         <div className="mt-14 border-t border-[#E7E9E7] pt-6">
           <p className="text-[12.5px] text-[#5F6368]">
-            &copy; {new Date().getFullYear()} NANTI. All rights reserved.
+            &copy; {new Date().getFullYear()} NANTI. {t.rights}
           </p>
         </div>
       </div>

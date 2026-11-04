@@ -2,6 +2,22 @@ import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { Check, ArrowRight } from "lucide-react";
 import { Reveal } from "./marketing";
+import { useCopy } from "@/lib/i18n";
+
+const PROOF = {
+  id: {
+    ask: "Tanya NANTI",
+    boundary: "Apa yang NANTI lakukan, dan apa yang tidak ia klaim.",
+    button: "Coba NANTI",
+    noCard: "Tanpa kartu kredit.",
+  },
+  en: {
+    ask: "Ask NANTI",
+    boundary: "What NANTI does, and what it does not pretend to do.",
+    button: "Try NANTI",
+    noCard: "No credit card required.",
+  },
+};
 
 export function MarketingHero({
   eyebrow,
@@ -22,13 +38,9 @@ export function MarketingHero({
           <h1 className="mt-4 max-w-[780px] text-[40px] font-semibold leading-[1.08] tracking-[-0.035em] text-[#171c24] sm:text-[56px]">
             {title}
           </h1>
-          <p className="mt-6 max-w-[680px] text-[17px] leading-7 text-[#555a5e]">
-            {description}
-          </p>
+          <p className="mt-6 max-w-[680px] text-[17px] leading-7 text-[#555a5e]">{description}</p>
           {note ? (
-            <p className="mt-4 max-w-[640px] text-[13px] leading-5 text-[#6b7075]">
-              {note}
-            </p>
+            <p className="mt-4 max-w-[640px] text-[13px] leading-5 text-[#6b7075]">{note}</p>
           ) : null}
         </Reveal>
       </div>
@@ -49,12 +61,13 @@ export function ProductConversation({
   saved?: string;
   footer?: string;
 }) {
+  const p = useCopy(PROOF);
   return (
     <Reveal>
       <div className="overflow-hidden rounded-2xl border border-[#dfe4df] bg-white shadow-[0_14px_40px_rgba(25,44,38,0.06)]">
         <div className="flex items-center justify-between border-b border-[#edf0ed] px-5 py-4">
           <div>
-            <p className="text-[13px] font-semibold text-[#171c24]">Ask NANTI</p>
+            <p className="text-[13px] font-semibold text-[#171c24]">{p.ask}</p>
             <p className="mt-0.5 text-[11px] text-[#686d71]">{label}</p>
           </div>
           <span className="rounded-full bg-[#eef8f4] px-2.5 py-1 text-[10px] font-semibold text-[#0b6b5f]">
@@ -131,18 +144,20 @@ export function ProofRows({
 }
 
 export function HonestBoundary({
-  title = "What NANTI does, and what it does not pretend to do.",
+  title,
   items,
 }: {
   title?: string;
   items: Array<{ label: string; description: string }>;
 }) {
+  const p = useCopy(PROOF);
+  const heading = title ?? p.boundary;
   return (
     <section className="border-y border-[#e1e7e2] bg-[#f5f8f6] py-16 sm:py-20">
       <div className="mx-auto max-w-[1040px] px-5 sm:px-8">
         <Reveal>
           <h2 className="max-w-[720px] text-[26px] font-semibold tracking-[-0.025em] text-[#171c24] sm:text-[32px]">
-            {title}
+            {heading}
           </h2>
         </Reveal>
         <div className="mt-8 grid gap-6 md:grid-cols-2">
@@ -163,12 +178,14 @@ export function HonestBoundary({
 export function SimpleCta({
   title,
   description,
-  button = "Try NANTI",
+  button,
 }: {
   title: string;
   description: string;
   button?: string;
 }) {
+  const p = useCopy(PROOF);
+  const buttonLabel = button ?? p.button;
   return (
     <section className="bg-white py-20 sm:py-24">
       <div className="mx-auto max-w-[720px] px-5 text-center sm:px-8">
@@ -183,10 +200,10 @@ export function SimpleCta({
             to="/welcome"
             className="mt-7 inline-flex items-center gap-2 rounded-full bg-[#107e71] px-6 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-[#0b6b5f]"
           >
-            {button}
+            {buttonLabel}
             <ArrowRight className="size-4" />
           </Link>
-          <p className="mt-3 text-[11px] text-[#686d71]">No credit card required.</p>
+          <p className="mt-3 text-[11px] text-[#686d71]">{p.noCard}</p>
         </Reveal>
       </div>
     </section>
