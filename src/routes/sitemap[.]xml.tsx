@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { SITE_URL } from "@/lib/site";
+import { articles as staticArticles } from "@/data/articles";
 
 const STATIC_PATHS: Array<{ path: string; priority: string; changefreq: string }> = [
   { path: "/", priority: "1.0", changefreq: "daily" },
@@ -26,7 +27,10 @@ function escapeXml(value: string) {
     .replace(/'/g, "&apos;");
 }
 
-function urlEntry(loc: string, options?: { lastmod?: string; changefreq?: string; priority?: string }) {
+function urlEntry(
+  loc: string,
+  options?: { lastmod?: string; changefreq?: string; priority?: string },
+) {
   const parts = [`    <loc>${escapeXml(loc)}</loc>`];
   if (options?.lastmod) parts.push(`    <lastmod>${escapeXml(options.lastmod)}</lastmod>`);
   if (options?.changefreq) parts.push(`    <changefreq>${options.changefreq}</changefreq>`);
@@ -64,7 +68,16 @@ export const Route = createFileRoute("/sitemap.xml")({
           }),
         );
 
-        for (const article of await fetchBlogSlugs()) {
+        // Database articles plus built-in ones (src/data/articles.ts), without duplicates.
+        const dbSlugs = await fetchBlogSlugs();
+        const seen = new Set(dbSlugs.map((a) => a.slug));
+        const allArticles = [
+          ...dbSlugs,
+          ...staticArticles
+            .filter((a) => !seen.has(a.slug))
+            .map((a) => ({ slug: a.slug, date: a.date })),
+        ];
+        for (const article of allArticles) {
           const lastmod = article.date ? String(article.date).slice(0, 10) : undefined;
           entries.push(
             urlEntry(`${SITE_URL}/blog/${encodeURIComponent(article.slug)}`, {
