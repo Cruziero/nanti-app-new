@@ -34,17 +34,17 @@ function BlogPage() {
     category: string;
     date: string;
     readTime: string;
-  }> =
-    dbArticles && dbArticles.length > 0
-      ? dbArticles.map((a: BlogArticle) => ({
-          slug: a.slug,
-          title: a.title,
-          excerpt: a.excerpt,
-          category: a.category,
-          date: a.date,
-          readTime: a.read_time,
-        }))
-      : staticArticles;
+  }> = mergeArticles(
+    (dbArticles ?? []).map((a: BlogArticle) => ({
+      slug: a.slug,
+      title: a.title,
+      excerpt: a.excerpt,
+      category: a.category,
+      date: a.date,
+      readTime: a.read_time,
+    })),
+    staticArticles,
+  );
 
   return (
     <MarketingLayout>
@@ -107,5 +107,17 @@ function BlogPage() {
         </div>
       </section>
     </MarketingLayout>
+  );
+}
+
+/**
+ * Show database articles and built-in articles together, newest first.
+ * Previously the built-in list was hidden whenever the database had any article.
+ * If both have the same slug, the database version wins.
+ */
+function mergeArticles<T extends { slug: string; date: string }>(db: T[], builtIn: T[]): T[] {
+  const seen = new Set(db.map((a) => a.slug));
+  return [...db, ...builtIn.filter((a) => !seen.has(a.slug))].sort((a, b) =>
+    String(b.date).localeCompare(String(a.date)),
   );
 }
