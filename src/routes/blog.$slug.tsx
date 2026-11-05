@@ -3,15 +3,62 @@ import { ArrowLeft, Clock } from "lucide-react";
 import { MarketingLayout, Reveal } from "@/components/nanti/marketing";
 import { articles as staticArticles } from "@/data/articles";
 import { fetchArticleBySlug, type BlogArticle } from "@/lib/nanti-blog";
-import { canonical } from "@/lib/site";
+import { canonical, SITE_URL } from "@/lib/site";
+import { articleLang, extractFaq } from "@/lib/nanti-articles";
 
 export const Route = createFileRoute("/blog/$slug")({
-  head: ({ params }) => {
+  head: ({ params, loaderData }) => {
+    // Database articles come from the loader; the old static list is only a fallback.
     const article =
-      staticArticles.find((a) => a.slug === params.slug) ?? null;
+      (
+        loaderData as
+          | {
+              article?: {
+                title: string;
+                excerpt: string;
+                date: string;
+                category: string;
+                content: string;
+              };
+            }
+          | undefined
+      )?.article ??
+      staticArticles.find((a) => a.slug === params.slug) ??
+      null;
     if (!article) return {};
+    const url = `${SITE_URL}/blog/${params.slug}`;
+    const faq = extractFaq(article.content);
+    const structured: Record<string, unknown>[] = [
+      {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        headline: article.title,
+        description: article.excerpt,
+        datePublished: article.date,
+        inLanguage: articleLang(article.category) === "id" ? "id-ID" : "en",
+        articleSection: article.category,
+        mainEntityOfPage: url,
+        author: { "@type": "Organization", name: "NANTI", url: SITE_URL },
+        publisher: { "@type": "Organization", name: "NANTI", url: SITE_URL },
+      },
+    ];
+    if (faq.length > 0) {
+      structured.push({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faq.map((f) => ({
+          "@type": "Question",
+          name: f.q,
+          acceptedAnswer: { "@type": "Answer", text: f.a },
+        })),
+      });
+    }
     return {
       links: [canonical(`/blog/${params.slug}`)],
+      scripts: structured.map((data) => ({
+        type: "application/ld+json",
+        children: JSON.stringify(data),
+      })),
       meta: [
         { title: `${article.title} · NANTI Blog` },
         { name: "description", content: article.excerpt },
@@ -92,6 +139,19 @@ function ArticlePage() {
                 const trimmed = block.trim();
                 if (!trimmed) return null;
 
+                if (trimmed.startsWith("### ")) {
+                  // FAQ items often arrive as "### question" with the answer on the next line.
+                  const [heading, ...rest] = trimmed.split("\n");
+                  return (
+                    <div key={i}>
+                      <h3 className="mt-6 text-[17px] font-semibold text-[#111111]">
+                        {heading!.replace("### ", "")}
+                      </h3>
+                      {rest.length > 0 && <p className="mt-2">{renderInline(rest.join(" "))}</p>}
+                    </div>
+                  );
+                }
+
                 if (trimmed.startsWith("## ")) {
                   return (
                     <h2 key={i} className="mt-8 text-[20px] font-bold text-[#111111]">
@@ -107,7 +167,7 @@ function ArticlePage() {
                       {items.map((item: string, j: number) => (
                         <li key={j} className="flex items-start gap-2">
                           <span className="mt-2 size-1.5 shrink-0 rounded-full bg-[#067a3f]" />
-                          <span>{item.replace("- ", "")}</span>
+                          <span>{renderInline(item.replace("- ", ""))}</span>
                         </li>
                       ))}
                     </ul>
@@ -123,23 +183,21 @@ function ArticlePage() {
                           <span className="mt-0.5 text-[13px] font-semibold text-[#067a3f]">
                             {j + 1}.
                           </span>
-                          <span>{item.replace(/^\d+\.\s*/, "")}</span>
+                          <span>{renderInline(item.replace(/^\d+\.\s*/, ""))}</span>
                         </li>
                       ))}
                     </ol>
                   );
                 }
 
-                return <p key={i}>{trimmed}</p>;
+                return <p key={i}>{renderInline(trimmed)}</p>;
               })}
             </div>
           </Reveal>
 
           <Reveal delay={200}>
             <div className="mt-12 rounded-2xl border border-[#E7E9E7] bg-[#F7F8F6] p-6 text-center">
-              <p className="text-[15px] font-semibold text-[#111111]">
-                Ready to try NANTI?
-              </p>
+              <p className="text-[15px] font-semibold text-[#111111]">Ready to try NANTI?</p>
               <p className="mt-1 text-[13px] text-[#5F6368]">
                 Start tracking commitments from your WhatsApp conversations.
               </p>
@@ -154,5 +212,18 @@ function ArticlePage() {
         </div>
       </article>
     </MarketingLayout>
+  );
+}
+
+/** Renders **bold** spans as <strong>; everything else stays plain text (no HTML injection). */
+function renderInline(text: string) {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+    part.startsWith("**") && part.endsWith("**") ? (
+      <strong key={i} className="font-semibold text-[#111111]">
+        {part.slice(2, -2)}
+      </strong>
+    ) : (
+      part
+    ),
   );
 }
