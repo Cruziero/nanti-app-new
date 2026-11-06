@@ -289,6 +289,12 @@ export function normalizeActionTitle(text: string) {
     /^(hari\s+ini|besok|lusa)\s+/i,
     /^(harus|perlu|mesti|wajib|need\s+to|have\s+to|must)\s+/i,
     /^(jangan\s+lupa|tolong\s+ingatkan(?:\s+saya)?|ingatkan\s+saya)\s+/i,
+    // "pls remind me to call ..." arrives here as "pls ingatkan saya to call ..."
+    /^(pls|please|plz|tolong)\s+/i,
+    /^(i\s+will|i'll|i\s+am\s+going\s+to|i'm\s+going\s+to|i\s+need\s+to|i\s+have\s+to)\s+/i,
+    /^(to|untuk|buat)\s+/i,
+    // Leading clock time: "jam 9 pagi saya harus ketemu ..."
+    /^(?:jam|pukul)\s+\d{1,2}(?:[.:]\d{2})?(?:\s*(?:pagi|siang|sore|malam|am|pm))?\s+/i,
   ];
   let changed = true;
   while (changed) {
@@ -311,7 +317,13 @@ export function normalizeActionTitle(text: string) {
       /\s+(?:pada\s+)?tanggal\s+\d{1,2}(?:\s+[A-Za-z]+(?:\s+\d{4})?)?\s*$/i,
       "",
     )
-    .replace(/\s+(?:hari\s+ini|besok|lusa)\s*$/i, "")
+    .replace(/\s+(?:hari\s+ini|besok|lusa)(?:\s+(?:pagi|siang|sore|malam))?\s*$/i, "")
+    // English trailing time words: "... next friday 9am", "... tomorrow at 2 pm"
+    .replace(/\s+(?:at\s+)?\d{1,2}(?:[.:]\d{2})?\s*(?:am|pm)\s*$/i, "")
+    .replace(
+      /\s+(?:(?:next|this)\s+)?(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today|tonight|week)\s*$/i,
+      "",
+    )
     .replace(/[.!?,;:]+\s*$/, "")
     .trim();
 

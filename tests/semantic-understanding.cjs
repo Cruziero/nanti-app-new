@@ -219,6 +219,45 @@ assert.ok(screenshotItems[1].title.toLowerCase().includes("solat jumat"));
 assert.equal(screenshotItems[1].time, "12:00");
 assert.equal(screenshotItems[0].due, screenshotItems[1].due);
 
+// "<weekday> depan" means that weekday in next calendar week (Monday start),
+// never two weeks out. Checked against an independent calculation for today.
+{
+  const utils = load(path.join(root, "src/lib/nanti-utils.ts"));
+  const today = utils.todayISO();
+  const [y, m, d] = today.split("-").map(Number);
+  const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  const nextMonday = utils.addDays(today, dow === 0 ? 1 : 8 - dow);
+  const expectNextWeek = (phrase, mondayOffset) => {
+    assert.equal(
+      dates.parseSmartDate(phrase).date,
+      utils.addDays(nextMonday, mondayOffset),
+      `"${phrase}" must land in next calendar week`,
+    );
+  };
+  expectNextWeek("senin depan jam 9 pagi", 0);
+  expectNextWeek("jumat depan jam 3 sore", 4);
+  expectNextWeek("rabu minggu depan", 2);
+  expectNextWeek("minggu depan kamis", 3);
+  expectNextWeek("next week tuesday 3pm", 1);
+
+  const [ty, tm] = today.split("-").map(Number);
+  const lastDay = new Date(Date.UTC(ty, tm, 0)).getUTCDate();
+  assert.equal(
+    dates.parseSmartDate("akhir bulan bayar sewa").date,
+    `${ty}-${String(tm).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`,
+  );
+  const awal = dates.parseSmartDate("awal bulan bayar listrik").date;
+  assert.ok(awal >= today && awal.endsWith("-01"), "awal bulan must be a 1st that is not in the past");
+}
+
+// A leading clock time must not stay in the task title.
+const leadingTime = importer.chatMessageToFallbackItem(
+  "besok jam 9 pagi saya harus ketemu mas dimas di cikini",
+  { people: [], projects: [] },
+);
+assert.equal(leadingTime.title, "Ketemu mas dimas di cikini");
+assert.equal(leadingTime.personName, "mas dimas");
+
 console.log(
   "PASS: typo/slang normalization, semantic extraction, teaching detection, people/place disambiguation and reminder strategy.",
 );

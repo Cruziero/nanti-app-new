@@ -55,7 +55,7 @@ function inferLocation(text: string) {
 
 function inferRelatedPerson(text: string) {
   const normalized = normalizeCasualIndonesian(text);
-  const match = /\b(pak|bapak|bu|ibu|mbak|mas|si)\s+([A-Za-z][A-Za-z'-]*(?:\s+(?!(?:jam|pukul|tanggal|besok|hari|di|ke|dari|untuk|soal|tentang|via|lewat)\b)[A-Za-z][A-Za-z'-]*)?)/i.exec(
+  const match = /\b(pak|bapak|bu|ibu|mbak|mas|si)\s+([A-Za-z][A-Za-z'-]*(?:\s+(?!(?:jam|pukul|tanggal|besok|lusa|hari|di|ke|dari|untuk|soal|tentang|via|lewat|abis|habis|setelah|minggu|senin|selasa|rabu|kamis|jumat|sabtu|next|tomorrow|today|tonight|at|on|about|by|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b)[A-Za-z][A-Za-z'-]*)?)/i.exec(
     normalized,
   );
   if (!match) return undefined;
@@ -256,7 +256,7 @@ export function chatMessageToFallbackItem(
       lower,
     );
   const futureIntent =
-    /\b(?:saya|aku|gue|gw)\s+(?:mau|akan)\b/i.test(lower) &&
+    /\b(?:(?:saya|aku|gue|gw)\s+(?:mau|akan)|i\s+will|i'll|i\s+am\s+going\s+to|i'm\s+going\s+to)\b/i.test(lower) &&
     Boolean(parsed.date || parsed.time);
   if (!explicitObligation && !futureIntent) return null;
   const title = normalizeActionTitle(normalized);

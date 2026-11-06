@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "total": 146,
+  "total": 175,
   "normalize": [
     {
       "id": "norm-01",
@@ -409,6 +409,76 @@
       "id": "date-45",
       "input": "jam setengah 8 pagi",
       "time": "07:30"
+    },
+    {
+      "id": "date-46",
+      "input": "abis maghrib telp bu wati",
+      "time": "18:30"
+    },
+    {
+      "id": "date-47",
+      "input": "lusa abis isya meeting zoom sama tim",
+      "dateOffset": 2,
+      "time": "19:30"
+    },
+    {
+      "id": "date-48",
+      "input": "setelah subuh berangkat",
+      "time": "05:30"
+    },
+    {
+      "id": "date-49",
+      "input": "I will send it tomorrow at 2 pm",
+      "dateOffset": 1,
+      "time": "14:00"
+    },
+    {
+      "id": "date-50",
+      "input": "tmrw 9am",
+      "dateOffset": 1,
+      "time": "09:00"
+    },
+    {
+      "id": "date-51",
+      "input": "day after tomorrow 10am",
+      "dateOffset": 2,
+      "time": "10:00"
+    },
+    {
+      "id": "date-52",
+      "input": "tonight",
+      "dateOffset": 0,
+      "time": "20:00"
+    },
+    {
+      "id": "date-53",
+      "input": "minggu depan rabu jam 10 pagi presentasi ke klien",
+      "weekday": 3,
+      "time": "10:00"
+    },
+    {
+      "id": "date-54",
+      "input": "jumat depan jam 3 sore meeting sama pak hendra",
+      "weekday": 5,
+      "time": "15:00"
+    },
+    {
+      "id": "date-55",
+      "input": "next week tuesday 3pm",
+      "weekday": 2,
+      "time": "15:00"
+    },
+    {
+      "id": "date-56",
+      "input": "end of the month",
+      "hasDate": true,
+      "dateValid": true
+    },
+    {
+      "id": "date-57",
+      "input": "awal bulan bayar listrik",
+      "hasDate": true,
+      "dateValid": true
     }
   ],
   "fallbackTask": [
@@ -698,6 +768,44 @@
       "titleIncludes": "ketemu",
       "whereAbsent": true,
       "hasDue": true
+    },
+    {
+      "id": "task-37",
+      "input": "pls remind me to call Bu Sinta next friday 9am",
+      "titleIncludes": "call bu sinta",
+      "person": "bu sinta",
+      "time": "09:00",
+      "hasDue": true
+    },
+    {
+      "id": "task-38",
+      "input": "I will send the quotation to Pak Rudi tomorrow at 2 pm",
+      "titleIncludes": "send the quotation",
+      "person": "pak rudi",
+      "time": "14:00",
+      "hasDue": true
+    },
+    {
+      "id": "task-39",
+      "input": "besok jam 9 pagi saya harus ketemu mas dimas di cikini",
+      "titleIncludes": "ketemu mas dimas",
+      "person": "mas dimas",
+      "where": "cikini",
+      "time": "09:00",
+      "hasDue": true
+    },
+    {
+      "id": "task-40",
+      "input": "saya hrs follow up pak arif soal PO bsk pagi",
+      "titleIncludes": "followup pak arif",
+      "person": "pak arif",
+      "hasDue": true
+    },
+    {
+      "id": "task-41",
+      "input": "jgn lupa bayar gaji karyawan akhir bulan",
+      "titleIncludes": "bayar gaji karyawan",
+      "hasDue": true
     }
   ],
   "rejectTask": [
@@ -780,6 +888,54 @@
     {
       "id": "reject-20",
       "input": "saya susah tidur"
+    },
+    {
+      "id": "reject-21",
+      "input": "nanti dia kirim invoicenya"
+    },
+    {
+      "id": "reject-22",
+      "input": "Bu Tini bilang besok dia transfer DP"
+    },
+    {
+      "id": "reject-23",
+      "input": "Pak Andi will transfer the DP tomorrow"
+    },
+    {
+      "id": "reject-24",
+      "input": "otw kantor bro"
+    },
+    {
+      "id": "reject-25",
+      "input": "gpp santai aja"
+    },
+    {
+      "id": "reject-26",
+      "input": "udah sy kirim ya pak"
+    },
+    {
+      "id": "reject-27",
+      "input": "wkwkwk iya bener"
+    },
+    {
+      "id": "reject-28",
+      "input": "selamat pagi semua"
+    },
+    {
+      "id": "reject-29",
+      "input": "makasih banyak ya kak"
+    },
+    {
+      "id": "reject-30",
+      "input": "tolong dicek ya grup"
+    },
+    {
+      "id": "reject-31",
+      "input": "sabar ya kak, bsk sy kabari"
+    },
+    {
+      "id": "reject-32",
+      "input": "kalau besok hujan saya tetap datang"
     }
   ],
   "teaching": [

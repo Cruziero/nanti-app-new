@@ -59,6 +59,28 @@ function getNextWeekday(targetDay: number): string {
   return addDays(today, diff);
 }
 
+// "senin depan" / "jumat depan" = that weekday in next calendar week (weeks start Monday).
+// On a Friday, "jumat depan" is 7 days away and "senin depan" is 3 days away.
+function getWeekdayNextWeek(targetDay: number): string {
+  const today = todayISO();
+  const current = getDayOfWeek(today);
+  const daysToNextMonday = ((8 - current) % 7) || 7;
+  const offsetFromMonday = (targetDay + 6) % 7;
+  return addDays(today, daysToNextMonday + offsetFromMonday);
+}
+
+// Weekday mentioned next to "minggu depan" / "next week" ("rabu minggu depan").
+// Index 0 ("minggu") is skipped because it is the week word itself.
+function findWeekdayIndex(lower: string): number | null {
+  for (let i = 1; i < DAY_NAMES_ID.length; i++) {
+    if (new RegExp(`\\b${DAY_NAMES_ID[i]}\\b`).test(lower)) return i;
+  }
+  for (let i = 0; i < DAY_NAMES_EN.length; i++) {
+    if (new RegExp(`\\b${DAY_NAMES_EN[i]}\\b`).test(lower)) return i;
+  }
+  return null;
+}
+
 function daysInMonth(year: number, month: number): number {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
@@ -139,8 +161,31 @@ function parseTime(text: string): string | null {
   const bareMeridiem = /(?<![:\d.])\b(\d{1,2})\s*(am|pm)\b/i.exec(text);
   if (bareMeridiem) return normalize(bareMeridiem[1]!, undefined, bareMeridiem[2]);
 
+  // Prayer-time anchors common in Indonesian chat: "abis maghrib", "setelah isya".
+  // Defaults are rough Jakarta times shortly after each prayer; the user can edit them.
+  const prayer =
+    /\b(?:abis|habis|setelah|sesudah|bada|ba'da|selesai)\s+(subuh|shubuh|dzuhur|zuhur|zhuhur|lohor|ashar|asar|maghrib|magrib|isya|isa)\b/i.exec(
+      text,
+    );
+  if (prayer) return PRAYER_AFTER_TIME[prayer[1]!.toLowerCase()] ?? null;
+
   return null;
 }
+
+const PRAYER_AFTER_TIME: Record<string, string> = {
+  subuh: "05:30",
+  shubuh: "05:30",
+  dzuhur: "12:30",
+  zuhur: "12:30",
+  zhuhur: "12:30",
+  lohor: "12:30",
+  ashar: "15:30",
+  asar: "15:30",
+  maghrib: "18:30",
+  magrib: "18:30",
+  isya: "19:30",
+  isa: "19:30",
+};
 
 function parseMonthDay(
   text: string,
@@ -205,6 +250,23 @@ export function parseIndonesianDate(text: string): DateParseResult {
     return { date: today, time, confidence: 1.0, raw: normalizedText };
   }
 
+  // English: "day after tomorrow" before "tomorrow"
+  if (/\bday\s+after\s+tomorrow\b/.test(lower)) {
+    return { date: addDays(today, 2), time, confidence: 1.0, raw: normalizedText };
+  }
+
+  if (/\b(tomorrow|tmrw|tmr)\b/.test(lower)) {
+    return { date: addDays(today, 1), time, confidence: 1.0, raw: normalizedText };
+  }
+
+  if (/\btonight\b/.test(lower)) {
+    return { date: today, time: time || PERIOD_DEFAULT_TIME["malam"]!, confidence: 0.9, raw: normalizedText };
+  }
+
+  if (/\btoday\b/.test(lower)) {
+    return { date: today, time, confidence: 1.0, raw: normalizedText };
+  }
+
   // "besok" and common chat shorthand ("bsk")
   if (/\b(besok|bsk)\b/.test(lower)) {
     return { date: addDays(today, 1), time, confidence: 1.0, raw: normalizedText };
@@ -244,8 +306,13 @@ export function parseIndonesianDate(text: string): DateParseResult {
     return { date: addDays(today, days), time, confidence: 0.95, raw: normalizedText };
   }
 
-  // "minggu depan" = next week same day
-  if (/minggu\s+depan/.test(lower)) {
+  // "minggu depan" / "next week" = next week same day,
+  // or the named weekday of next week ("rabu minggu depan", "next week tuesday")
+  if (/minggu\s+depan|\bnext\s+week\b/.test(lower)) {
+    const weekday = findWeekdayIndex(lower);
+    if (weekday != null) {
+      return { date: getWeekdayNextWeek(weekday), time, confidence: 0.85, raw: normalizedText };
+    }
     return { date: addDays(today, 7), time, confidence: 0.85, raw: normalizedText };
   }
 
@@ -254,19 +321,18 @@ export function parseIndonesianDate(text: string): DateParseResult {
     return { date: addMonths(today, 1), time, confidence: 0.8, raw: normalizedText };
   }
 
-  // "akhir bulan" = last day of current month
-  if (/akhir\s+bul(an)?/.test(lower)) {
-    const now = new Date();
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    const lastDayStr = `${lastDay.getFullYear()}-${String(lastDay.getMonth() + 1).padStart(2, "0")}-${String(lastDay.getDate()).padStart(2, "0")}`;
+  // "akhir bulan" / "end of the month" = last day of the current Jakarta month
+  const [todayYear, todayMonth] = today.split("-").map(Number) as [number, number];
+  if (/akhir\s+bul(an)?|\bend\s+of\s+(?:the\s+)?month\b/.test(lower)) {
+    const lastDayStr = `${todayYear}-${String(todayMonth).padStart(2, "0")}-${String(daysInMonth(todayYear, todayMonth)).padStart(2, "0")}`;
     return { date: lastDayStr, time, confidence: 0.85, raw: normalizedText };
   }
 
-  // "awal bulan" = 1st of current month
+  // "awal bulan" = the 1st; once the 1st has passed it means next month's 1st
   if (/awal\s+bul(an)?/.test(lower)) {
-    const now = new Date();
-    const firstDay = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
-    return { date: firstDay, time, confidence: 0.85, raw: normalizedText };
+    const firstDay = `${todayYear}-${String(todayMonth).padStart(2, "0")}-01`;
+    const date = firstDay < today ? addMonths(firstDay, 1) : firstDay;
+    return { date, time, confidence: 0.85, raw: normalizedText };
   }
 
   // "tanggal 28", "28 agustus", "28 agustus 2026" — explicit dates win over weekday names
@@ -315,10 +381,7 @@ export function parseIndonesianDate(text: string): DateParseResult {
       const nextMatch = /depan/.test(lower);
       let targetDate: string;
       if (nextMatch) {
-        const today_dow = getDayOfWeek(today);
-        let diff = i - today_dow;
-        if (diff <= 0) diff += 7;
-        targetDate = addDays(today, diff + 7); // next week
+        targetDate = getWeekdayNextWeek(i);
       } else {
         targetDate = getNextWeekday(i);
       }

@@ -235,7 +235,7 @@ export function topicsForDay(lang: ArticleLang, dayIndex: number): Topic[] {
 /* What NANTI can truthfully be said to do. Matches src/lib/nanti-support.ts. */
 const NANTI_FACTS = `NANTI (nanti.site) is a web app that turns chat conversations into tracked tasks, promises, deadlines, "Waiting" items (things other people promised you) and reminders.
 Verified, working today: type in "Ask NANTI" / "Tanya NANTI"; paste a copied WhatsApp chat or upload a chat screenshot; NANTI finds who, what and when; edit items by chatting ("move it to Friday", "done"); in-app reminders, daily briefing, browser push notifications; understands Indonesian, English, mixed language and typos; free plan (up to 50 tracked items, no credit card).
-NOT available yet, never claim: forwarding directly from WhatsApp, WhatsApp reminders, Google Calendar sync, team workspaces, mobile app store apps, online payment.`;
+NOT available yet, never claim: forwarding directly from WhatsApp, WhatsApp reminders, Google Calendar sync, team workspaces, voice input or voice notes, mobile app store apps, online payment.`;
 
 export function buildArticlePrompt(lang: ArticleLang, topic: Topic) {
   const language =
