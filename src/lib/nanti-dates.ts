@@ -117,15 +117,41 @@ const SETENGAH_WORD_NUMBERS: Record<string, number> = {
   "dua belas": 12,
 };
 
+const DAY_PART_ALIASES: Record<string, string> = {
+  subuh: "pagi",
+  ashar: "sore",
+  asar: "sore",
+  maghrib: "malam",
+  magrib: "malam",
+  isya: "malam",
+  isa: "malam",
+};
+
+function lastDayPeriod(text: string): string | undefined {
+  const words = text.toLowerCase().match(/[a-z]+/g) ?? [];
+  for (let i = words.length - 1; i >= 0; i--) {
+    const word = words[i]!;
+    if (["pagi", "siang", "sore", "malam"].includes(word)) return word;
+    if (DAY_PART_ALIASES[word]) return DAY_PART_ALIASES[word];
+  }
+  return undefined;
+}
+
 function parseTime(text: string): string | null {
   const normalize = (hourValue: string, minuteValue?: string, periodValue?: string) => {
     let hour = parseInt(hourValue, 10);
     const minute = minuteValue ? parseInt(minuteValue, 10) : 0;
     const period = (periodValue || "").toLowerCase();
 
-    if (period === "sore" || period === "pm" || period === "siang" || period === "malam") {
+    if (period === "siang") {
+      // "jam 11 siang" is late morning; only 1-6 roll into the afternoon.
+      if (hour >= 1 && hour <= 6) hour += 12;
+    } else if (period === "malam" && hour <= 4) {
+      // "jam 2 malam" means 02:00, "jam 12 malam" means midnight.
+    } else if (period === "malam" && hour === 12) {
+      hour = 0;
+    } else if (period === "sore" || period === "pm" || period === "malam") {
       if (hour < 12) hour += 12;
-      else if (period === "malam" && hour === 12) hour = 0;
     } else if (period === "pagi" || period === "am") {
       if (hour === 12) hour = 0;
     }
@@ -138,7 +164,11 @@ function parseTime(text: string): string | null {
     /\b(?:jam|pukul)\s+(\d{1,2})(?:[.:](\d{2}))?(?:\s*(pagi|siang|sore|malam|am|pm))?\b/i.exec(
       text,
     );
-  if (labelled) return normalize(labelled[1]!, labelled[2], labelled[3]);
+  if (labelled) {
+    // The day part often comes before the clock: "besok sore jam 4", "abis isya jam 8".
+    const leadingPeriod = labelled[3] ? undefined : lastDayPeriod(text.slice(0, labelled.index));
+    return normalize(labelled[1]!, labelled[2], labelled[3] ?? leadingPeriod);
+  }
 
   // Indonesian "setengah tiga" = half to three = 02:30 (also word numbers: "setengah tujuh")
   const setengah =
@@ -318,6 +348,22 @@ export function parseIndonesianDate(text: string): DateParseResult {
 
   // "bulan depan" = same day next month
   if (/bulan\s+depan/.test(lower)) {
+    // "tanggal 3 bulan depan" names the day; plain "bulan depan" keeps today's day.
+    const dayNext = /tanggal\s+(\d{1,2})\b/.exec(lower);
+    if (dayNext) {
+      const [ty, tm] = today.split("-").map(Number) as [number, number];
+      const ny = tm === 12 ? ty + 1 : ty;
+      const nm = tm === 12 ? 1 : tm + 1;
+      const d = Math.min(parseInt(dayNext[1]!, 10), daysInMonth(ny, nm));
+      if (d >= 1) {
+        return {
+          date: `${ny}-${String(nm).padStart(2, "0")}-${String(d).padStart(2, "0")}`,
+          time,
+          confidence: 0.9,
+          raw: normalizedText,
+        };
+      }
+    }
     return { date: addMonths(today, 1), time, confidence: 0.8, raw: normalizedText };
   }
 

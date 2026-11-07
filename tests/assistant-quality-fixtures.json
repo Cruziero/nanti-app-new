@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "total": 175,
+  "total": 190,
   "normalize": [
     {
       "id": "norm-01",
@@ -479,6 +479,50 @@
       "input": "awal bulan bayar listrik",
       "hasDate": true,
       "dateValid": true
+    },
+    {
+      "id": "date-58",
+      "input": "ntar malem jam 8 call supplier",
+      "dateOffset": 0,
+      "time": "20:00"
+    },
+    {
+      "id": "date-59",
+      "input": "bsk sore jam 4 ambil barang",
+      "dateOffset": 1,
+      "time": "16:00"
+    },
+    {
+      "id": "date-60",
+      "input": "habis isya jam 8 rapat RT",
+      "time": "20:00"
+    },
+    {
+      "id": "date-61",
+      "input": "tgl 3 bulan depan bayar pajak",
+      "futureDate": true,
+      "day": 3
+    },
+    {
+      "id": "date-62",
+      "input": "jam 11 siang ketemu klien di kantor",
+      "time": "11:00"
+    },
+    {
+      "id": "date-63",
+      "input": "jam 2 malam cek server",
+      "time": "02:00"
+    },
+    {
+      "id": "date-64",
+      "input": "lusa jam 10 pagi kirim sample",
+      "dateOffset": 2,
+      "time": "10:00"
+    },
+    {
+      "id": "date-65",
+      "input": "abis maghrib jam 7 telpon bu ratna",
+      "time": "19:00"
     }
   ],
   "fallbackTask": [
@@ -806,6 +850,38 @@
       "input": "jgn lupa bayar gaji karyawan akhir bulan",
       "titleIncludes": "bayar gaji karyawan",
       "hasDue": true
+    },
+    {
+      "id": "task-42",
+      "input": "I need to call Kak Nina lusa at 3pm",
+      "titleIncludes": "call kak nina",
+      "titleExcludes": "lusa",
+      "person": "kak nina",
+      "time": "15:00",
+      "hasDue": true
+    },
+    {
+      "id": "task-43",
+      "input": "aku mau anter dokumen ke Mas Joko besok jam 1 siang",
+      "titleIncludes": "anter dokumen",
+      "titleExcludes": "mau",
+      "person": "mas joko",
+      "time": "13:00",
+      "hasDue": true
+    },
+    {
+      "id": "task-44",
+      "input": "ntar sy hrs cek stok gudang abis maghrib",
+      "titleIncludes": "cek stok gudang",
+      "titleExcludes": "maghrib",
+      "time": "18:30"
+    },
+    {
+      "id": "task-45",
+      "input": "Pak Andi harus kirim laporan besok",
+      "titleIncludes": "kirim laporan",
+      "person": "pak andi",
+      "hasDue": true
     }
   ],
   "rejectTask": [
@@ -936,6 +1012,18 @@
     {
       "id": "reject-32",
       "input": "kalau besok hujan saya tetap datang"
+    },
+    {
+      "id": "reject-33",
+      "input": "selamat pagi semua, jangan lupa bahagia"
+    },
+    {
+      "id": "reject-34",
+      "input": "jangan lupa sarapan ya guys"
+    },
+    {
+      "id": "reject-35",
+      "input": "otw kak, 10 menit lagi"
     }
   ],
   "teaching": [

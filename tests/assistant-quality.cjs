@@ -88,6 +88,10 @@ for (const fixture of fixtures.dateTime) {
     if (fixture.hasDate) {
       assert.ok(result.date, "expected a date");
     }
+    if (fixture.day != null) {
+      assert.ok(result.date, "expected a date");
+      assert.equal(Number(result.date.slice(8, 10)), fixture.day, "day of month mismatch");
+    }
     if (fixture.dateAbsent) {
       assert.equal(result.date, null, "expected no date");
     }
@@ -129,6 +133,12 @@ for (const fixture of fixtures.fallbackTask) {
       assert.ok(
         item.title.toLowerCase().includes(fixture.titleIncludes.toLowerCase()),
         `title "${item.title}" should include "${fixture.titleIncludes}"`,
+      );
+    }
+    if (fixture.titleExcludes) {
+      assert.ok(
+        !item.title.toLowerCase().split(/\s+/).includes(fixture.titleExcludes.toLowerCase()),
+        `title "${item.title}" should not contain "${fixture.titleExcludes}"`,
       );
     }
     if (fixture.time) {

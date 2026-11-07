@@ -55,11 +55,20 @@ function inferLocation(text: string) {
 
 function inferRelatedPerson(text: string) {
   const normalized = normalizeCasualIndonesian(text);
-  const match = /\b(pak|bapak|bu|ibu|mbak|mas|si)\s+([A-Za-z][A-Za-z'-]*(?:\s+(?!(?:jam|pukul|tanggal|besok|lusa|hari|di|ke|dari|untuk|soal|tentang|via|lewat|abis|habis|setelah|minggu|senin|selasa|rabu|kamis|jumat|sabtu|next|tomorrow|today|tonight|at|on|about|by|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b)[A-Za-z][A-Za-z'-]*)?)/i.exec(
+  const match = /\b(pak|bapak|bu|ibu|mbak|mas|kak|kakak|si)\s+([A-Za-z][A-Za-z'-]*(?:\s+(?!(?:harus|perlu|mesti|wajib|mau|akan|sudah|udah|belum|bilang|minta|janji|nanti|yang|dan|sama|ya|will|need|has|said|jam|pukul|tanggal|besok|lusa|hari|di|ke|dari|untuk|soal|tentang|via|lewat|abis|habis|setelah|minggu|senin|selasa|rabu|kamis|jumat|sabtu|next|tomorrow|today|tonight|at|on|about|by|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b)[A-Za-z][A-Za-z'-]*)?)/i.exec(
     normalized,
   );
   if (!match) return undefined;
   return `${match[1]} ${match[2]}`.trim();
+}
+
+const PLEASANTRY_REMINDER =
+  /\bjangan\s+lupa\s+(?:bahagia|senyum|sarapan|makan|minum|istirahat|bersyukur|berdoa|olahraga|tidur|jaga\s+kesehatan)\b/i;
+
+function isPleasantryReminder(lower: string) {
+  return (
+    PLEASANTRY_REMINDER.test(lower) && !/\b(?:pak|bapak|bu|ibu|mbak|mas|kak)\s+[a-z]/i.test(lower)
+  );
 }
 
 function inferMethod(text: string) {
@@ -259,6 +268,9 @@ export function chatMessageToFallbackItem(
     /\b(?:(?:saya|aku|gue|gw)\s+(?:mau|akan)|i\s+will|i'll|i\s+am\s+going\s+to|i'm\s+going\s+to)\b/i.test(lower) &&
     Boolean(parsed.date || parsed.time);
   if (!explicitObligation && !futureIntent) return null;
+  // Group-chat pleasantries ("jangan lupa bahagia", "jangan lupa sarapan ya guys")
+  // use the reminder phrase but carry no task.
+  if (!parsed.date && !parsed.time && isPleasantryReminder(lower)) return null;
   const title = normalizeActionTitle(normalized);
   const where = inferLocation(normalized);
   const how = inferMethod(normalized);

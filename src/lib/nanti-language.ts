@@ -285,7 +285,9 @@ export function normalizeActionTitle(text: string) {
 
   // Remove conversational ownership / timing / obligation prefixes repeatedly.
   const prefixes = [
+    /^(nanti|ntar)\s+/i,
     /^(saya|aku|gue|gw)\s+/i,
+    /^(mau|akan)\s+(?=\S+\s+\S)/i,
     /^(hari\s+ini|besok|lusa)\s+/i,
     /^(harus|perlu|mesti|wajib|need\s+to|have\s+to|must)\s+/i,
     /^(jangan\s+lupa|tolong\s+ingatkan(?:\s+saya)?|ingatkan\s+saya)\s+/i,
@@ -317,6 +319,7 @@ export function normalizeActionTitle(text: string) {
       /\s+(?:pada\s+)?tanggal\s+\d{1,2}(?:\s+[A-Za-z]+(?:\s+\d{4})?)?\s*$/i,
       "",
     )
+    .replace(/\s+(?:abis|habis|setelah|sesudah)\s+(?:subuh|ashar|maghrib|magrib|isya)\s*$/i, "")
     .replace(/\s+(?:hari\s+ini|besok|lusa)(?:\s+(?:pagi|siang|sore|malam))?\s*$/i, "")
     // English trailing time words: "... next friday 9am", "... tomorrow at 2 pm"
     .replace(/\s+(?:at\s+)?\d{1,2}(?:[.:]\d{2})?\s*(?:am|pm)\s*$/i, "")
@@ -324,6 +327,8 @@ export function normalizeActionTitle(text: string) {
       /\s+(?:(?:next|this)\s+)?(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today|tonight|week)\s*$/i,
       "",
     )
+    // Mixed text puts the Indonesian day before the English clock: "call Kak Nina lusa at 3pm".
+    .replace(/\s+(?:hari\s+ini|besok|lusa)\s*$/i, "")
     .replace(/[.!?,;:]+\s*$/, "")
     .trim();
 
