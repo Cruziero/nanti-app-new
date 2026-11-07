@@ -17,8 +17,8 @@ export const Route = createFileRoute("/help")({
 const faqs = [
   {
     icon: MessageSquareText,
-    q: "How do I forward a conversation to NANTI?",
-    a: "Open any WhatsApp chat, select the messages you want, tap Forward, and choose NANTI as the destination. You can also copy-paste text directly into the Import page, or upload a screenshot.",
+    q: "How do I get a WhatsApp conversation into NANTI?",
+    a: "Copy the messages from WhatsApp and paste them into NANTI, or upload a screenshot of the chat. Forwarding straight from WhatsApp to NANTI is not available yet.",
   },
   {
     icon: Brain,
@@ -28,12 +28,12 @@ const faqs = [
   {
     icon: Bell,
     q: "How do reminders work?",
-    a: "When NANTI detects a commitment with a due date, it sets a reminder. You can receive reminders via WhatsApp, push notification, Google Calendar, or in-app. Configure your channels in Settings.",
+    a: "When NANTI detects a commitment with a due date, it sets a reminder. You get reminders in the app and as browser push notifications, plus a daily briefing. Turn on push notifications in Settings. WhatsApp reminders are not available yet.",
   },
   {
     icon: Calendar,
     q: "Can I connect Google Calendar?",
-    a: "Yes. Go to Settings → Integrations → Google Calendar and click Connect. NANTI will sync your schedule and can create calendar events for detected deadlines.",
+    a: "Not yet. Google Calendar sync is not available today. For now, NANTI reminds you inside the app and through browser push notifications.",
   },
   {
     icon: HelpCircle,
