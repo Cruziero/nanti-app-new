@@ -8,6 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode, useState } from "react";
+import { Analytics, type BeforeSendEvent } from "@vercel/analytics/react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -16,6 +17,13 @@ import { NantiProvider } from "@/lib/nanti-store";
 import { ItemDetailProvider } from "@/components/nanti/item-detail";
 import { Toaster } from "@/components/ui/sonner";
 import { OG_IMAGE_URL } from "@/lib/site";
+
+// Auth and password-reset links carry one-time codes in the query string or
+// hash, so only the path is sent to analytics.
+function stripQueryAndHash(event: BeforeSendEvent): BeforeSendEvent {
+  const url = new URL(event.url);
+  return { ...event, url: url.origin + url.pathname };
+}
 
 function NotFoundComponent() {
   return (
@@ -138,6 +146,7 @@ function RootShell({ children }: { children: ReactNode }) {
       </head>
       <body>
         {children}
+        <Analytics beforeSend={stripQueryAndHash} />
         <Scripts />
       </body>
     </html>
