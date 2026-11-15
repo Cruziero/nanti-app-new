@@ -22,11 +22,21 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import type { Item } from "@/lib/nanti-types";
+import type { Item, ItemKind } from "@/lib/nanti-types";
 import { fetchDailyBriefing } from "@/lib/nanti-briefing.functions";
 import { planDay } from "@/lib/nanti-planner";
 import type { DayPlan } from "@/lib/nanti-planner";
-import { Clock, RefreshCw } from "lucide-react";
+import {
+  CalendarClock,
+  ClipboardList,
+  Clock,
+  Handshake,
+  Hourglass,
+  ReceiptText,
+  RefreshCw,
+  Send,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 type DailyBriefingView = {
   brief_date: string;
@@ -45,6 +55,17 @@ type DailyBriefingView = {
   inbox: string[];
   generated_at: string;
 };
+
+const kindMark: Record<ItemKind, { label: string; icon: LucideIcon }> = {
+  task: { label: "Task", icon: ClipboardList },
+  commitment: { label: "Promise", icon: Handshake },
+  deadline: { label: "Deadline", icon: CalendarClock },
+  followup: { label: "Follow-up", icon: Send },
+  waiting: { label: "Waiting", icon: Hourglass },
+  invoice: { label: "Invoice", icon: ReceiptText },
+};
+
+const card = "rounded-2xl bg-card p-4";
 
 export const Route = createFileRoute("/app/today")({
   validateSearch: (search: Record<string, unknown>): { view?: "all" | undefined } => ({
@@ -106,6 +127,15 @@ export function Today() {
   const dayTasks = dueOn(day);
   const dayName = (iso: string, weekday: "short" | "long") =>
     new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { weekday, timeZone: "UTC" });
+  const monthName = (iso: string) =>
+    new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { month: "short", timeZone: "UTC" });
+  // Counts tasks dated today only, so the ring never reports progress on overdue work.
+  const dueToday = tasks.filter(isDueToday).length;
+  const doneToday = items.filter(
+    (i) => i.status === "done" && i.kind !== "waiting" && normalizeDay(i.due) === todayDay,
+  ).length;
+  const plannedToday = dueToday + doneToday;
+  const progress = plannedToday > 0 ? Math.round((doneToday / plannedToday) * 100) : null;
   const dayLabel = day === todayDay ? "Today" : `${dayName(day, "short")} ${Number(day.slice(8))}`;
   const visible =
     view === "all"
@@ -235,25 +265,56 @@ export function Today() {
 
       <section
         aria-label="Today at a glance"
-        className="rounded-2xl bg-primary p-5 text-primary-foreground sm:p-6"
+        className="flex items-center gap-4 rounded-3xl bg-primary p-5 text-primary-foreground sm:p-6"
       >
-        <p className="font-serif text-2xl font-semibold leading-tight sm:text-3xl">
-          {today.length > 0
-            ? `${today.length} task${today.length === 1 ? "" : "s"} for today`
-            : "Your day is clear"}
-        </p>
-        <p className="mt-2 text-sm text-primary-foreground/90">
-          {glance.length > 0 ? glance.join(" · ") : "Nothing overdue and nobody to chase."}
-        </p>
-        <a
-          href="#priorities"
-          className="mt-4 inline-flex min-h-11 items-center rounded-lg bg-primary-foreground px-4 text-sm font-semibold text-primary hover:opacity-90 active:opacity-80 focus-visible:outline-primary-foreground!"
-        >
-          See your tasks
-        </a>
+        <div className="min-w-0 flex-1">
+          <p className="text-lg font-semibold leading-snug">
+            {progress === null
+              ? today.length > 0
+                ? `${today.length} overdue task${today.length === 1 ? "" : "s"} to clear`
+                : "Your day is clear"
+              : progress === 100
+                ? "Today’s tasks are all done"
+                : `${doneToday} of ${plannedToday} tasks done today`}
+          </p>
+          <p className="mt-1 text-sm text-primary-foreground/90">
+            {glance.length > 0 ? glance.join(" · ") : "Nothing overdue and nobody to chase."}
+          </p>
+          <a
+            href="#priorities"
+            className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-primary-foreground px-5 text-sm font-semibold text-primary hover:opacity-90 active:opacity-80 focus-visible:outline-primary-foreground!"
+          >
+            View tasks
+          </a>
+        </div>
+        {progress !== null && (
+          <div
+            role="img"
+            aria-label={`${progress}% of today’s tasks done`}
+            className="relative size-20 shrink-0"
+          >
+            <svg viewBox="0 0 36 36" className="size-20 -rotate-90" aria-hidden="true">
+              <circle cx="18" cy="18" r="15.5" fill="none" strokeWidth="3" className="stroke-primary-foreground/25" />
+              <circle
+                cx="18"
+                cy="18"
+                r="15.5"
+                fill="none"
+                strokeWidth="3"
+                strokeLinecap="round"
+                pathLength="100"
+                strokeDasharray={`${progress} 100`}
+                className="stroke-primary-foreground"
+              />
+            </svg>
+            <span className="absolute inset-0 flex items-center justify-center text-sm font-semibold tabular-nums">
+              {progress}%
+            </span>
+          </div>
+        )}
       </section>
 
-      <section aria-label="Daily briefing" className="border-b border-border pb-7">
+      <section aria-label="Daily briefing" className="rounded-2xl bg-card p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
@@ -322,7 +383,7 @@ export function Today() {
         )}
       </section>
 
-      <section aria-labelledby="plan-heading" className="rounded-lg bg-secondary/60 p-5">
+      <section aria-labelledby="plan-heading" className="rounded-2xl bg-card p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <h2 id="plan-heading" className="text-base font-semibold">
@@ -446,12 +507,23 @@ export function Today() {
         <div className="min-w-0">
           <section id="priorities" aria-labelledby="priorities-heading">
             <div className="flex flex-wrap items-baseline justify-between gap-3">
-              <h2 id="priorities-heading" className="text-xl font-semibold sm:text-2xl">
+              <h2
+                id="priorities-heading"
+                className="flex items-center gap-2 text-xl font-semibold sm:text-2xl"
+              >
                 {view === "all" ? "All tasks" : "Your priorities"}
+                <span className="rounded-full bg-card px-2 py-0.5 text-xs font-semibold tabular-nums text-primary">
+                  {visible.length}
+                  <span className="sr-only"> shown</span>
+                </span>
               </h2>
-              {overdue > 0 && (
-                <p className="text-sm text-red-700 dark:text-red-300">{overdue} overdue</p>
-              )}
+              <Link
+                to="/app/today"
+                search={{ view: view === "all" ? undefined : "all" }}
+                className="inline-flex min-h-11 items-center px-2 text-sm underline underline-offset-4"
+              >
+                {view === "all" ? "Today’s priorities" : "All tasks"}
+              </Link>
             </div>
             {view !== "all" && (
               <div role="group" aria-label="Pick a day" className="mt-4 grid grid-cols-7 gap-1">
@@ -468,14 +540,15 @@ export function Today() {
                         setDay(iso);
                         setTab("day");
                       }}
-                      className={`flex min-h-16 min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl border text-xs ${selected ? "border-primary bg-primary font-semibold text-primary-foreground" : "border-border text-muted-foreground hover:bg-secondary active:bg-secondary"}`}
+                      className={`flex min-h-20 min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl text-[11px] ${selected ? "bg-primary font-semibold text-primary-foreground" : "bg-card text-muted-foreground hover:bg-background active:bg-background"}`}
                     >
-                      <span>{dayName(iso, "short")}</span>
+                      <span>{monthName(iso)}</span>
                       <span
-                        className={`text-base font-semibold tabular-nums ${selected ? "" : "text-foreground"}`}
+                        className={`text-lg font-semibold leading-none tabular-nums ${selected ? "" : "text-foreground"}`}
                       >
                         {Number(iso.slice(8))}
                       </span>
+                      <span>{dayName(iso, "short")}</span>
                       <span
                         aria-hidden="true"
                         className={`size-1.5 rounded-full ${count === 0 ? "bg-transparent" : selected ? "bg-primary-foreground" : "bg-primary"}`}
@@ -499,19 +572,12 @@ export function Today() {
                     type="button"
                     aria-pressed={tab === value}
                     onClick={() => setTab(value)}
-                    className={`min-h-11 rounded-lg border px-3 text-sm ${tab === value ? "border-primary bg-secondary font-semibold text-foreground" : "border-border text-muted-foreground hover:bg-secondary active:bg-secondary"}`}
+                    className={`min-h-11 rounded-full px-4 text-sm ${tab === value ? "bg-primary font-semibold text-primary-foreground" : "bg-card text-foreground hover:bg-background active:bg-background"}`}
                   >
                     {label} <span className="ml-1 text-xs tabular-nums">{count}</span>
                   </button>
                 ),
               )}
-              <Link
-                to="/app/today"
-                search={{ view: view === "all" ? undefined : "all" }}
-                className="ml-auto inline-flex min-h-11 items-center px-2 text-sm underline underline-offset-4"
-              >
-                {view === "all" ? "Today’s priorities" : "All tasks"}
-              </Link>
             </div>
             {visible.length === 0 ? (
               <div className="py-10">
@@ -531,53 +597,62 @@ export function Today() {
             ) : (
               <ul className="mt-4 space-y-3">
                 {visible.map((item) => (
-                  <li key={item.id} className="rounded-2xl border border-border bg-card p-4">
-                    <p className="break-words text-xs leading-5 text-muted-foreground">
-                      {[
-                        projectOf(item.projectId)?.name || item.projectName,
-                        personOf(item.personId)?.name || item.personName,
-                        item.source ||
-                          (item.sourceType === "paste" ? "Pasted conversation" : "Saved task"),
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </p>
+                  <li key={item.id} className={card}>
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="min-w-0 break-words text-xs leading-5 text-muted-foreground">
+                        {[
+                          projectOf(item.projectId)?.name || item.projectName,
+                          personOf(item.personId)?.name || item.personName,
+                          item.source ||
+                            (item.sourceType === "paste" ? "Pasted conversation" : "Saved task"),
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                      <KindMark kind={item.kind} />
+                    </div>
                     <button
                       type="button"
                       onClick={() => openDetail(item.id)}
-                      className="mt-1 min-h-11 text-left text-base font-semibold leading-6 hover:underline"
+                      className="min-h-11 text-left text-base font-semibold leading-6 hover:underline"
                     >
                       {item.title}
                     </button>
-                    <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-                      <p
-                        className={`flex items-center gap-1.5 text-xs ${isOverdue(item) ? "font-medium text-red-700 dark:text-red-300" : "text-muted-foreground"}`}
-                      >
+                    <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                      <p className="flex items-center gap-1.5 text-xs font-medium text-primary">
                         <Clock aria-hidden="true" className="size-3.5 shrink-0" />
-                        {isOverdue(item) ? "Overdue · " : isDueToday(item) ? "Today · " : ""}
                         {item.due || "No deadline"}
                         {item.time ? ` · ${item.time}` : ""}
                       </p>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          disabled={pending !== null}
-                          onClick={() => void action(item, "complete")}
-                          aria-label={`Mark ${item.title} done`}
-                          className="min-h-11 rounded-lg border border-primary px-4 text-sm font-semibold text-primary hover:bg-secondary active:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                          {pending === item.id ? "Saving…" : "Done"}
-                        </button>
-                        <button
-                          type="button"
-                          disabled={pending !== null}
-                          onClick={() => void action(item, "snooze")}
-                          aria-label={`Postpone ${item.title} by one day`}
-                          className={rowButton}
-                        >
-                          Later
-                        </button>
-                      </div>
+                      {isOverdue(item) ? (
+                        <span className="rounded-md bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-800 dark:bg-red-950 dark:text-red-200">
+                          Overdue
+                        </span>
+                      ) : isDueToday(item) ? (
+                        <span className="rounded-md bg-accent px-2 py-0.5 text-[11px] font-semibold text-accent-foreground">
+                          Today
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        type="button"
+                        disabled={pending !== null}
+                        onClick={() => void action(item, "complete")}
+                        aria-label={`Mark ${item.title} done`}
+                        className="min-h-11 flex-1 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90 active:bg-primary/80 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        {pending === item.id ? "Saving…" : "Done"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={pending !== null}
+                        onClick={() => void action(item, "snooze")}
+                        aria-label={`Postpone ${item.title} by one day`}
+                        className="min-h-11 flex-1 rounded-xl bg-secondary px-4 text-sm font-medium hover:bg-secondary/70 active:bg-secondary/70 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        Later
+                      </button>
                     </div>
                   </li>
                 ))}
@@ -634,7 +709,7 @@ export function Today() {
             {waiting.length ? (
               <ul className="mt-2 space-y-3">
                 {waiting.slice(0, 5).map((item) => (
-                  <li key={item.id} className="rounded-2xl border border-border bg-card p-4">
+                  <li key={item.id} className={card}>
                     <button
                       onClick={() => openDetail(item.id)}
                       className="min-h-11 text-left text-sm font-semibold hover:underline"
@@ -670,7 +745,7 @@ export function Today() {
               </p>
             )}
           </section>
-          <section id="connections" className="mt-7 rounded-lg bg-secondary/60 p-5">
+          <section id="connections" className="mt-7 rounded-2xl bg-card p-5">
             <h2 className="text-base font-semibold">Connect your tools</h2>
             <dl className="mt-3 divide-y divide-border text-sm">
               <div className="flex flex-wrap justify-between gap-2 py-4">
@@ -740,5 +815,15 @@ export function Today() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function KindMark({ kind }: { kind: ItemKind }) {
+  const { label, icon: Icon } = kindMark[kind];
+  return (
+    <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+      <Icon aria-hidden="true" className="size-4" />
+      <span className="sr-only">{label}</span>
+    </span>
   );
 }
