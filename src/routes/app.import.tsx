@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   ClipboardPaste,
@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useNanti } from "@/lib/nanti-store";
 import { analyzeConversation, analyzeScreenshot } from "@/lib/nanti-ai.functions";
 import { draftToItem, type Draft } from "@/lib/nanti-import";
+import { latestChatSlice, takeSharedContent } from "@/lib/nanti-share";
 import type { SourceType } from "@/lib/nanti-types";
 import { cn } from "@/lib/utils";
 
@@ -143,11 +144,31 @@ function ImportPage() {
       void analyzeImage(dataUrl);
       return;
     }
-    const content = await file.text();
+    loadChatText(await file.text());
+  };
+
+  const loadChatText = (raw: string) => {
+    const { text: content, trimmed } = latestChatSlice(raw);
+    if (!content) return;
+    if (trimmed) toast("This chat is long, so NANTI will analyze only the most recent messages.");
     setMethod("paste");
+    setPreview(null);
     setText(content);
     void analyzeText(content, "paste");
   };
+
+  const sharedChecked = useRef(false);
+  useEffect(() => {
+    // The ref keeps a second effect run from finding the stash already emptied.
+    if (sharedChecked.current) return;
+    sharedChecked.current = true;
+    void takeSharedContent().then((shared) => {
+      if (!shared) return;
+      if (typeof shared === "string") loadChatText(shared);
+      else void onFile(shared);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const track = async (indexes: number[]) => {
     if (!drafts || saveInProgress.current) return;

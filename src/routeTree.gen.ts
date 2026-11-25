@@ -25,6 +25,7 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as ApiShareTargetRouteImport } from './routes/api/share-target'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppFollowUpsRouteImport } from './routes/app.follow-ups'
 import { Route as AppImportRouteImport } from './routes/app.import'
@@ -140,6 +141,11 @@ const WelcomeRoute = WelcomeRouteImport.update({
 const ApiHealthRoute = ApiHealthRouteImport.update({
   id: '/api/health',
   path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiShareTargetRoute = ApiShareTargetRouteImport.update({
+  id: '/api/share-target',
+  path: '/api/share-target',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -340,6 +346,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/welcome': typeof WelcomeRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/share-target': typeof ApiShareTargetRoute
   '/app/follow-ups': typeof AppFollowUpsRoute
   '/app/import': typeof AppImportRoute
   '/app/inbox': typeof AppInboxRoute
@@ -392,6 +399,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/welcome': typeof WelcomeRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/share-target': typeof ApiShareTargetRoute
   '/app/follow-ups': typeof AppFollowUpsRoute
   '/app/import': typeof AppImportRoute
   '/app/inbox': typeof AppInboxRoute
@@ -447,6 +455,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/welcome': typeof WelcomeRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/share-target': typeof ApiShareTargetRoute
   '/app/follow-ups': typeof AppFollowUpsRoute
   '/app/import': typeof AppImportRoute
   '/app/inbox': typeof AppInboxRoute
@@ -503,6 +512,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/welcome'
     | '/api/health'
+    | '/api/share-target'
     | '/app/follow-ups'
     | '/app/import'
     | '/app/inbox'
@@ -555,6 +565,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/welcome'
     | '/api/health'
+    | '/api/share-target'
     | '/app/follow-ups'
     | '/app/import'
     | '/app/inbox'
@@ -609,6 +620,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/welcome'
     | '/api/health'
+    | '/api/share-target'
     | '/app/follow-ups'
     | '/app/import'
     | '/app/inbox'
@@ -664,6 +676,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   WelcomeRoute: typeof WelcomeRoute
   ApiHealthRoute: typeof ApiHealthRoute
+  ApiShareTargetRoute: typeof ApiShareTargetRoute
   LegalPrivacyRoute: typeof LegalPrivacyRoute
   LegalTermsRoute: typeof LegalTermsRoute
   ApiAuthGoogleRoute: typeof ApiAuthGoogleRoute
@@ -795,6 +808,13 @@ declare module '@tanstack/react-router' {
       path: '/api/health'
       fullPath: '/api/health'
       preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/share-target': {
+      id: '/api/share-target'
+      path: '/api/share-target'
+      fullPath: '/api/share-target'
+      preLoaderRoute: typeof ApiShareTargetRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/': {
@@ -1131,6 +1151,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   WelcomeRoute: WelcomeRoute,
   ApiHealthRoute: ApiHealthRoute,
+  ApiShareTargetRoute: ApiShareTargetRoute,
   LegalPrivacyRoute: LegalPrivacyRoute,
   LegalTermsRoute: LegalTermsRoute,
   ApiAuthGoogleRoute: ApiAuthGoogleRoute,
