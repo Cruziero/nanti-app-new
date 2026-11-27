@@ -7,6 +7,7 @@ import {
   UsersRound,
   Settings,
   LogOut,
+  Plus,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -21,6 +22,9 @@ const destinations = [
   { to: "/app/waiting", label: "Waiting", icon: Hourglass },
   { to: "/app/people", label: "People", icon: UsersRound },
 ] as const;
+
+// The phone bar holds four destinations around the capture button; People moves to the header.
+const mobileSides = [destinations.slice(0, 2), destinations.slice(2, 4)] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { items, hydrated, settings } = useNanti();
@@ -43,8 +47,15 @@ export function AppShell({ children }: { children: ReactNode }) {
       setLeaving(false);
     }
   };
+  // Today sits on a tinted page so its white cards read as cards without borders or shadows.
+  const tinted = location.pathname.replace(/\/$/, "") === "/app/today";
   return (
-    <div className="nanti-workspace min-h-screen bg-background text-foreground">
+    <div
+      className={cn(
+        "nanti-workspace min-h-screen text-foreground",
+        tinted ? "bg-secondary" : "bg-background",
+      )}
+    >
       <a
         href="#workspace-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-background focus:p-3"
@@ -112,17 +123,26 @@ export function AppShell({ children }: { children: ReactNode }) {
           )}
         </div>
       </aside>
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background px-4 py-2 lg:hidden">
+      <header
+        className={cn(
+          "sticky top-0 z-30 flex items-center justify-between border-b px-4 py-2 lg:hidden",
+          tinted ? "border-transparent bg-secondary" : "border-border bg-background",
+        )}
+      >
         <Link to="/app" className="font-serif text-2xl font-semibold text-primary">
           NANTI
         </Link>
         <div className="flex gap-2">
           <Link
-            to="/app/today"
-            search={{ view: "all" }}
-            className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm hover:bg-secondary"
+            to="/app/people"
+            aria-current={active("People", "/app/people") ? "page" : undefined}
+            className={cn(
+              "inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm hover:bg-secondary",
+              active("People", "/app/people") && "font-semibold text-primary",
+            )}
           >
-            All tasks
+            <UsersRound aria-hidden="true" className="size-5" />
+            People
           </Link>
           <Link
             to="/app/settings"
@@ -148,22 +168,39 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
       <nav
         aria-label="Mobile navigation"
-        className="fixed inset-x-0 bottom-0 z-30 flex justify-around gap-1 border-t border-border bg-background px-2 pb-[env(safe-area-inset-bottom)] lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 flex items-end gap-1 rounded-t-3xl border-t border-border bg-sidebar px-2 pb-[env(safe-area-inset-bottom)] lg:hidden"
       >
-        {destinations.map((item) => (
-          <Link
-            key={item.label}
-            to={item.to}
-            aria-current={active(item.label, item.to) ? "page" : undefined}
-            className={cn(
-              "flex min-h-16 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg text-[11px]",
-              active(item.label, item.to) ? "font-semibold text-primary" : "text-muted-foreground",
-            )}
-          >
-            <item.icon aria-hidden="true" className="size-5" />
-            {item.label === "Ask NANTI" ? "Ask" : item.label}
-          </Link>
+        {mobileSides.map((side, index) => (
+          <div key={index} className={cn("flex flex-1", index === 0 ? "order-1" : "order-3")}>
+            {side.map((item) => (
+              <Link
+                key={item.label}
+                to={item.to}
+                aria-current={active(item.label, item.to) ? "page" : undefined}
+                className={cn(
+                  "flex min-h-16 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg text-[11px] active:bg-sidebar-accent",
+                  active(item.label, item.to)
+                    ? "font-semibold text-primary"
+                    : "text-muted-foreground",
+                )}
+              >
+                <item.icon aria-hidden="true" className="size-5" />
+                {item.label === "Ask NANTI" ? "Ask" : item.label}
+              </Link>
+            ))}
+          </div>
         ))}
+        <Link
+          to="/app/import"
+          aria-current={active("Add", "/app/import") ? "page" : undefined}
+          className="order-2 flex min-h-16 w-16 shrink-0 flex-col items-center justify-end gap-1 pb-3 text-[11px] font-semibold text-primary"
+        >
+          <span className="-mt-5 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lift ring-4 ring-sidebar active:opacity-90">
+            <Plus aria-hidden="true" className="size-6" />
+          </span>
+          Add
+          <span className="sr-only"> a conversation to NANTI</span>
+        </Link>
       </nav>
     </div>
   );
